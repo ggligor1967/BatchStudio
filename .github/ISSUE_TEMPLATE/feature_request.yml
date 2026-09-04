@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a user problem for future roadmap consideration.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow gap
+      description: Describe the user need without assuming a particular implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: impact
+    attributes:
+      label: Security, dependency, and release impact
+      description: Note any expected handling of untrusted files, output paths, new dependencies, or compatibility changes.

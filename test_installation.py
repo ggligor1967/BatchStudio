@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
-def test_imports():
+def check_imports():
     """Test that all required modules can be imported."""
     print("Testing imports...")
     
@@ -34,7 +34,7 @@ def test_imports():
         return False
 
 
-def test_operations():
+def check_operations():
     """Test that operations can be instantiated."""
     print("\nTesting operations...")
     
@@ -62,7 +62,7 @@ def test_operations():
         return False
 
 
-def test_workflow():
+def check_workflow():
     """Test workflow creation and management."""
     print("\nTesting workflows...")
     
@@ -89,7 +89,7 @@ def test_workflow():
         return False
 
 
-def test_processor():
+def check_processor():
     """Test batch processor initialization."""
     print("\nTesting processor...")
     
@@ -106,6 +106,22 @@ def test_processor():
         return False
 
 
+def test_imports():
+    assert check_imports(), "Import checks failed"
+
+
+def test_operations():
+    assert check_operations(), "Operation checks failed"
+
+
+def test_workflow():
+    assert check_workflow(), "Workflow checks failed"
+
+
+def test_processor():
+    assert check_processor(), "Processor checks failed"
+
+
 def main():
     """Run all tests."""
     print("""
@@ -115,10 +131,10 @@ def main():
     """)
     
     tests = [
-        ("Imports", test_imports),
-        ("Operations", test_operations),
-        ("Workflows", test_workflow),
-        ("Processor", test_processor)
+        ("Imports", check_imports),
+        ("Operations", check_operations),
+        ("Workflows", check_workflow),
+        ("Processor", check_processor)
     ]
     
     results = []
