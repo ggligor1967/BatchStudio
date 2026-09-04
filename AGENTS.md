@@ -16,6 +16,13 @@ Choose checks proportionate to the changed surface. Documentation-only changes s
 
 Never claim a command passed unless its exit code was observed. Never claim an artifact, file, tag, or release exists without verifying it in the relevant filesystem or service.
 
+## GitHub governance
+
+- Changes to `main` must arrive through pull requests; direct pushes, force pushes, and branch deletion are prohibited by the active `main-protection` ruleset.
+- Required GitHub check names and local validation commands are canonical in [Testing](docs/TESTING.md).
+- Workflows must declare minimum permissions, avoid untrusted secret exposure, and pin every external action to a full 40-character commit SHA from its official upstream repository.
+- Published release tags matching `v*` cannot be updated or deleted. Follow the canonical [Release process](docs/RELEASE_PROCESS.md).
+
 ## Documentation governance
 
 - **DOC-01** One canonical document per subject.

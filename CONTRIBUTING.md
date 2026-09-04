@@ -7,6 +7,16 @@
 3. Keep feature, bug, documentation, and packaging changes separable.
 4. Do not move or recreate published tags.
 
+## GitHub pull-request boundary
+
+All changes to `main` must use a topic branch and pull request. Direct pushes, force pushes, and deletion of `main` are blocked. The branch must be current with `main`; only squash or rebase merges are allowed so history remains linear. Every review conversation must be resolved and every check listed in [Testing](docs/TESTING.md#required-github-checks) must pass.
+
+The solo-maintainer policy requires zero approving reviews and does not require CODEOWNER approval. `CODEOWNERS` still records repository ownership. GitHub Actions use explicit least-privilege permissions, and every external action reference must remain pinned to a full 40-character commit SHA from the official upstream repository.
+
+Dependabot checks pip and GitHub Actions weekly with at most five open pull requests per ecosystem. Updates are reviewed through the same protected pull-request path; auto-merge is not enabled, and Actions updates must preserve full-SHA pins.
+
+Signed commits are not yet required because the current release history contains unsigned commits and tags, and a verified signing setup is not configured. Follow-up: Configure verified commit/tag signing before enabling Require signed commits. Do not rewrite published history to introduce signatures.
+
 ## Development workflow
 
 Create a virtual environment, install the project and development tools, then run the focused tests while developing. Before proposing a change, run the complete validation listed in [Testing](docs/TESTING.md). Do not add generated `build/`, `dist/`, caches, coverage data, virtual environments, or agent transcripts.

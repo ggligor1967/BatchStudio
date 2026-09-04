@@ -13,6 +13,10 @@ python -m pip install ".[dev]"
 
 OCR development additionally needs the runtime described in [OCR](OCR.md). Keep external executables outside the repository.
 
+## Branch workflow
+
+Start from an up-to-date `main`, create a focused topic branch, and submit changes through a pull request. Direct pushes to `main` are prohibited. The contribution boundary is canonical in [Contributing](../CONTRIBUTING.md), and required local and GitHub checks are canonical in [Testing](TESTING.md).
+
 ## Source layout
 
 - `main.py`: application entrypoint.
