@@ -1,139 +1,43 @@
-# 🚀 BatchStudio Quick Start Guide
+# BatchStudio quick start
 
-Get up and running with BatchStudio in 5 minutes!
+This path uses an image resize because it needs no optional OCR runtime.
 
-## 📦 Installation (2 minutes)
+## 1. Install from source
 
-```bash
-# 1. Navigate to BatchStudio directory
-cd BatchStudio
+From the repository root on Windows PowerShell:
 
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Verify installation (optional)
-python test_installation.py
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install .
 ```
 
-That's it! BatchStudio is ready to use.
+## 2. Start the application
 
-## 🎯 Your First Batch (3 minutes)
-
-### Example: Resize 100 Photos
-
-**Step 1: Add Files** (30 seconds)
-1. Launch BatchStudio: `python main.py`
-2. Go to "📁 Input Files" tab
-3. Click "Add Folder" → Select your photos folder
-4. See preview and stats
-
-**Step 2: Build Workflow** (1 minute)
-1. Go to "🔧 Workflow" tab
-2. Double-click "📋 Image Resizer" template
-3. Or manually:
-   - Select "🔧 Image Resize" from operations
-   - Click "➕ Add to Workflow"
-   - Configure: Width 1920, Height 1080
-   - Check "Maintain Aspect Ratio"
-
-**Step 3: Run** (30 seconds)
-1. Go to "▶️ Run" tab
-2. Set output directory (or use default)
-3. Click "▶️ Start Processing"
-4. Watch progress bar!
-
-**Step 4: View Results** (1 minute)
-1. Go to "📊 Logs" tab
-2. Check statistics
-3. View HTML report
-4. Done! 🎉
-
-## 💡 Quick Tips
-
-### Keyboard Shortcuts
-- `Ctrl+N`: New workflow
-- `Ctrl+O`: Open workflow
-- `Ctrl+S`: Save workflow
-- `Ctrl+Shift+D`: Developer console (Easter egg!)
-
-### Best Practices
-- **Start small**: Test with 10-20 files first
-- **Use dry run**: Preview changes before running
-- **Save workflows**: Reuse your favorite setups
-- **Check logs**: Always review results
-
-## 📚 Common Workflows
-
-### 1. Photo Optimizer for Web
-```
-Operations:
-1. Resize → 1200x800
-2. Sharpen filter
-3. Convert to WEBP
-Result: Smaller, faster-loading images
+```powershell
+batchstudio-gui
 ```
 
-### 2. PDF Watermark
-```
-Operations:
-1. PDF Watermark → "CONFIDENTIAL"
-Result: Protected documents
-```
+From an uninstalled source checkout, `python main.py` is equivalent.
 
-### 3. Batch Rename
-```
-Operations:
-1. File Rename → "IMG_{counter}"
-Result: photo_001.jpg, photo_002.jpg, ...
-```
+## 3. Process one image
 
-### 4. Image Format Convert
-```
-Operations:
-1. Convert → PNG
-Result: All images as PNG
-```
+1. Open **Input Files**, select **Add Files**, and choose a PNG or JPEG image.
+2. Open **Workflow**, select **Resize Image**, and add it to the workflow.
+3. Set `width` and `height`; leave `maintain_aspect` enabled if the image must retain its proportions.
+4. Open **Run** and select an output directory.
+5. Enable **Dry Run**, start processing, and confirm the planned result in **Logs**.
+6. Disable **Dry Run** and start processing again.
+7. Confirm the successful result and open the output directory from **Logs**.
 
-## 🔧 Troubleshooting
+The created image uses the run-panel naming pattern and a safe, collision-resistant destination. Existing files are not overwritten by the output allocator.
 
-### "Module not found"
-```bash
-pip install -r requirements.txt
-```
+## If the run does not start
 
-### Slow processing
-- Increase workers in Run tab (try 8)
-- Use SSD instead of HDD
-- Close other applications
+- Confirm that the selected file still exists and has a supported extension.
+- Confirm that the workflow contains at least one enabled step compatible with the input.
+- Confirm that the output directory is writable.
+- For OCR workflows, follow [OCR setup](docs/OCR.md).
 
-### Out of memory
-- Reduce parallel workers
-- Process fewer files at once
-- Close preview images
-
-## 📖 Next Steps
-
-1. **Explore templates**: Try all pre-built workflows
-2. **Create custom workflows**: Chain multiple operations
-3. **Save your workflows**: Export as JSON for reuse
-4. **Check README.md**: For detailed documentation
-5. **Experiment**: BatchStudio is designed to be explored!
-
-## 🎨 Fun Features
-
-- 🎉 **Confetti animation** on completion
-- 💬 **Motivational quotes** during processing
-- 🌙 **Dark mode** in View menu
-- 🎮 **Developer console** (Ctrl+Shift+D)
-
-## 📞 Need Help?
-
-- **Documentation**: README.md
-- **Architecture**: ARCHITECTURE.txt
-- **Test**: `python test_installation.py`
-
----
-
-**Happy batch processing! ✨**
-
-Made with ❤️ by BatchStudio Team
+Continue with the [User guide](docs/USER_GUIDE.md) or the complete [Operations reference](docs/OPERATIONS.md).
