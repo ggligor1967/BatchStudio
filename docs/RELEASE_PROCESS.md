@@ -2,6 +2,12 @@
 
 This process preserves source, tag, and artifact identity from verification through publication.
 
+## Governance prerequisites
+
+Release source changes reach `main` only through the protected pull-request path and the exact required checks in [Testing](TESTING.md#required-github-checks). The active `release-tag-protection` ruleset allows creation of new tags matching `v*` but blocks subsequent updates and deletion. Never move or recreate an existing release tag.
+
+Repository release immutability is enabled for releases published after the setting was activated on 2026-09-04; it is not retroactive. The existing v1.0.0 and v1.0.1 releases and assets remain unchanged historical evidence. For every future release, finish the draft, upload every asset, and verify stored bytes before publication because the tag, release metadata, and assets cannot be replaced afterward.
+
 ## 1. Establish the release commit
 
 Run release-critical tests, commit the verified tree, and record both `git rev-parse HEAD` and `git rev-parse HEAD^{tree}`. Require an empty `git status --short`. Version and changelog must already agree with the intended release.

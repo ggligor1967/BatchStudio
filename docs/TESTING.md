@@ -1,5 +1,19 @@
 # Testing
 
+## Required GitHub checks
+
+The active `main-protection` ruleset requires a pull request branch to be up to date and requires these exact GitHub Actions check names:
+
+- `ci-windows-py310`
+- `ci-windows-py312`
+- `ci-ubuntu-py312`
+- `release-regressions`
+- `repository-truth`
+- `package-build-install`
+- `dependency-review`
+
+The first six run for pull requests and pushes to `main`; `dependency-review` is intentionally pull-request-only. The Windows and Ubuntu jobs validate non-interactive compatibility and do not prove interactive Linux GUI behavior. `repository-truth` enforces version/document/link hygiene, artifact exclusions, stable job names, changed-line whitespace, and full-SHA action pins. `package-build-install` audits one wheel and one source distribution, then installs and imports the wheel from outside the repository in a fresh virtual environment.
+
 ## Test topology
 
 `pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs the four modules under `tests/`. At the documentation baseline, they contain 24 tests:
