@@ -2,11 +2,11 @@
 
 ## Canonical configuration
 
-`pyproject.toml` is the canonical build and package definition. It uses `setuptools.build_meta`, declares distribution name `batchstudio`, version `1.0.0`, Python 3.10+, runtime dependencies, the `core*` and `ui*` packages, the `main` module, and two entrypoints to `main:main`.
+`pyproject.toml` is the canonical build and package definition. It uses `setuptools.build_meta`, declares distribution name `batchstudio`, version `1.0.1`, Python 3.10+, runtime dependencies, the `core*` and `ui*` packages, the `main` module, and two entrypoints to `main:main`.
 
 `MANIFEST.in` excludes Git, virtual environments, Python caches, pytest cache, and compiled Python files from the source distribution. `.gitignore` excludes local build, distribution, cache, coverage, report, and virtual-environment output.
 
-The package metadata currently contains legacy repository URLs; see [Limitations](LIMITATIONS.md). Documentation does not modify published package metadata.
+The package metadata identifies the canonical `ggligor1967/BatchStudio` repository.
 
 ## Build
 

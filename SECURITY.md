@@ -2,7 +2,7 @@
 
 ## Supported release
 
-BatchStudio 1.0.0 is the current published release. Security fixes are evaluated against the current `main` branch and identified for a future release; published tags and release assets remain immutable.
+BatchStudio 1.0.1 is the current release. Security fixes are evaluated against the current `main` branch and identified for a future release; published tags and release assets remain immutable.
 
 ## Reporting a vulnerability
 

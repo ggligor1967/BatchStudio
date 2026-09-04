@@ -1,6 +1,6 @@
 # Limitations
 
-This document records observed boundaries of the current 1.0.0 implementation. It is not a future-feature promise.
+This document records observed boundaries of the current 1.0.1 implementation. It is not a future-feature promise.
 
 ## OCR
 
@@ -22,13 +22,11 @@ This document records observed boundaries of the current 1.0.0 implementation. I
 
 - The desktop UI is Tkinter-based and requires an interactive graphical session.
 - Workflow ordering uses buttons; workflow-step drag-and-drop is not implemented.
-- The optional input drag-and-drop hook was not verified as part of v1.0.0.
-- The current `main.py` startup banner and `ui/workflow_panel.py` module description still use the inaccurate phrase "drag-and-drop workflow builder"; the actual workflow controls are the add/remove/move buttons described here.
+- The optional input drag-and-drop hook is not a verified release capability.
 - Dark styling is basic and can vary with the operating system/Tk theme.
 - There is no command-line batch-processing interface; installed console and GUI entrypoints both launch the desktop application.
 - The Preferences command displays an informational placeholder rather than an editable settings dialog.
 - The hidden developer-console command is an informational dialog, not an interactive console.
-- The About dialog and startup banner retain promotional wording that is not a scale guarantee; this documentation makes no corresponding performance claim.
 
 ## Formats and operations
 
@@ -50,7 +48,3 @@ This document records observed boundaries of the current 1.0.0 implementation. I
 - No maximum batch size, throughput, memory ceiling, or performance percentage is guaranteed.
 - Individual inputs above 500 MiB are rejected, but total memory and decompressed document/image size are not bounded.
 - On 2026-09-04 at the documentation baseline, `python -m coverage run --source=core,ui,main -m pytest -q` followed by `python -m coverage report --skip-covered` reported 31% production-code coverage across 2,470 statements. All 24 discovered tests passed, while UI modules were at 0% and `main` was not imported. This is a measurement of that exact command and environment, not a quality guarantee.
-
-## Distribution metadata
-
-The 1.0.0 package metadata retains legacy `github.com/batchstudio/batchstudio` project URLs. The canonical repository is `https://github.com/ggligor1967/BatchStudio`; correcting package metadata requires a later non-documentation release change.

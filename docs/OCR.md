@@ -19,7 +19,7 @@ Because capability flags are computed when the module imports, installing or rec
 
 ### Image OCR (`ocr_image`)
 
-Requires Pillow, `pytesseract`, a discoverable Tesseract executable, and the requested language data. Workflow compilation fails closed when the executable check failed. Current extraction applies `language`; exposed page-segmentation and preprocessing options are not applied in 1.0.0.
+Requires Pillow, `pytesseract`, a discoverable Tesseract executable, and the requested language data. Workflow compilation fails closed when the executable check failed. Current extraction applies `language`; exposed page-segmentation and preprocessing options are not applied in 1.0.1.
 
 ### PDF text (`ocr_pdf`)
 

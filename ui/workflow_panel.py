@@ -1,6 +1,6 @@
 """
 BatchStudio - Workflow Panel
-Workflow builder interface with drag-and-drop functionality.
+Workflow builder interface with button-based step ordering.
 """
 
 import tkinter as tk

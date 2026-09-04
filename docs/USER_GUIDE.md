@@ -6,7 +6,7 @@ BatchStudio presents one window with four tabs. The ordinary path is to select i
 
 Use **Add Files** for individual files or **Add Folder** for a recursive scan. The panel accepts image extensions (`jpg`, `jpeg`, `png`, `gif`, `bmp`, `webp`, `tiff`, `tif`), PDF, CSV, Excel extensions, and text/data extensions (`txt`, `json`, `xml`). Acceptance by the picker does not imply that a transformation exists for every type; consult [Operations](OPERATIONS.md).
 
-The panel can preview images, PDF metadata, CSV rows, and text. It caches at most 50 image previews. File and folder dialogs are the verified input path. The source contains an optional `tkinterdnd2` hook, but input drag-and-drop was not part of the v1.0.0 release verification.
+The panel can preview images, PDF metadata, CSV rows, and text. It caches at most 50 image previews. File and folder dialogs are the verified input path. The source contains an optional `tkinterdnd2` hook, but input drag-and-drop is not a verified release capability.
 
 ## Workflow
 

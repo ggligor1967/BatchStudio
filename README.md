@@ -1,6 +1,6 @@
 # BatchStudio
 
-BatchStudio 1.0.0 is a Python/Tkinter desktop application for applying configured operations to groups of local files. It provides file selection and preview, ordered workflows, bounded thread-pool execution, progress controls, and HTML or CSV result reports.
+BatchStudio 1.0.1 is a Python/Tkinter desktop application for applying configured operations to groups of local files. It provides file selection and preview, ordered workflows, bounded thread-pool execution, progress controls, and HTML or CSV result reports.
 
 ## Supported operations
 
@@ -14,7 +14,7 @@ The registry-backed operation details, accepted inputs, configuration, dependenc
 
 ## User interface
 
-The application has four tabs: **Input Files**, **Workflow**, **Run**, and **Logs**. Files are selected with file/folder dialogs. The source includes an optional `tkinterdnd2` input hook, but drag-and-drop was not a verified v1.0.0 capability. Workflow steps are added, removed, and reordered with buttons; workflow-step drag-and-drop is not implemented.
+The application has four tabs: **Input Files**, **Workflow**, **Run**, and **Logs**. Files are selected with file/folder dialogs. The source includes an optional `tkinterdnd2` input hook, but drag-and-drop is not a verified capability. Workflow steps are added, removed, and reordered with buttons; workflow-step drag-and-drop is not implemented.
 
 ## Installation
 
@@ -28,7 +28,7 @@ python -m pip install .
 batchstudio-gui
 ```
 
-Alternatively, download the verified wheel from the [BatchStudio 1.0.0 release](https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.0) and install it with `python -m pip install .\batchstudio-1.0.0-py3-none-any.whl`.
+Alternatively, download the wheel from the [BatchStudio 1.0.1 release](https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.1) and install it with `python -m pip install .\batchstudio-1.0.1-py3-none-any.whl`.
 
 OCR is optional. Image OCR and OCR-backed PDF modes require the Python integration and a discoverable Tesseract executable. PDF rasterization also requires `pdf2image` and a working Poppler installation. See [OCR](docs/OCR.md) before enabling OCR steps.
 
@@ -44,10 +44,10 @@ See the [Quick start](QUICKSTART.md) for a reproducible example and the [User gu
 
 ## Limitations
 
-- OCR availability depends on external executables and language data; the v1.0.0 release machine verified the missing-capability path, not a real OCR success path.
+- OCR availability depends on external executables and language data; release validation verifies the missing-capability path, not a real OCR success path.
 - Pause and stop prevent further scheduling but cannot forcibly terminate an operation already running.
 - Thread-based execution does not bypass Python's GIL for CPU-bound Python code.
-- `.xlsx` and `.xls` files can be selected, but no spreadsheet transformation is registered in 1.0.0.
+- `.xlsx` and `.xls` files can be selected, but no spreadsheet transformation is registered in 1.0.1.
 - Text and structured-text inputs have no dedicated transformation; the generic file-copy rename operation is the applicable registered operation.
 - Dry run suppresses operation outputs and reports, but output-directory validation can create a missing directory and a transient write-test file.
 - No throughput or maximum-batch guarantee is made. See [Limitations](docs/LIMITATIONS.md).

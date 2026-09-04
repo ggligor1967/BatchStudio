@@ -2,13 +2,25 @@
 
 All notable project changes are recorded here. Dates and release facts are included only when supported by repository and release evidence.
 
-## [Unreleased]
+## [1.0.1] - 2026-09-04
 
 ### Documentation
 
-- Replaced duplicated, generated, and obsolete documentation with one canonical suite.
-- Documented current operations, workflows, architecture, security controls, limitations, testing, packaging, and release procedure from source and test evidence.
-- Added contributor, support, security, agent-governance, ADR, and v1.0.0 verification documents.
+- Replaced obsolete and contradictory documentation with the canonical verified documentation suite.
+- Added architecture, security, testing, packaging, release, OCR, workflow, operations, development, and governance documentation.
+- Added ADRs and v1.0.0 release-verification evidence.
+
+### Changed
+
+- Corrected stale package/repository metadata and user-facing version text where applicable.
+
+### Removed
+
+- Removed obsolete duplicate documentation, generated transcripts/status dumps, and stale project-tracking artifacts.
+
+### Runtime
+
+- No functional processing behavior changes.
 
 ## [1.0.0] - 2026-09-04
 
@@ -17,5 +29,5 @@ All notable project changes are recorded here. Dates and release facts are inclu
 - Verified the full automated suite, critical end-to-end cases, PDF merge regressions, package build, isolated installation, entrypoint loading, artifact contents, and Git provenance.
 - Verified the OCR missing-capability path; a real OCR success path was not verified on the release machine.
 
-[Unreleased]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.0...main
+[1.0.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.0

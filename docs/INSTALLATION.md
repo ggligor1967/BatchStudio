@@ -8,19 +8,19 @@
 
 The canonical package metadata is in `pyproject.toml`. Its required Python dependencies are Pillow, pandas, reportlab, openpyxl, and pypdf.
 
-## Install the verified 1.0.0 wheel
+## Install the 1.0.1 wheel
 
-Download `batchstudio-1.0.0-py3-none-any.whl` from the [v1.0.0 release](https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.0), then install it in an isolated environment:
+Download `batchstudio-1.0.1-py3-none-any.whl` from the [v1.0.1 release](https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.1), then install it in an isolated environment:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install .\batchstudio-1.0.0-py3-none-any.whl
+python -m pip install .\batchstudio-1.0.1-py3-none-any.whl
 batchstudio-gui
 ```
 
-The verified filename, byte size, and digest are recorded in [v1.0.0 release verification](releases/v1.0.0-verification.md). Verify those values before installing a downloaded artifact.
+The release notes record the canonical 1.0.1 filename, byte size, and digest. Historical v1.0.0 identities remain in [v1.0.0 release verification](releases/v1.0.0-verification.md).
 
 ## Install from a source checkout
 
@@ -56,7 +56,3 @@ pytest -q test_installation.py
 ```
 
 The standalone script checks required imports, operation registration, workflow construction, settings, and main-module loading. It does not prove that a Tk window can be displayed on a headless system or that external OCR programs are installed.
-
-## Known metadata issue
-
-The 1.0.0 `pyproject.toml` contains legacy project URLs under `github.com/batchstudio/batchstudio`. The canonical public repository and release are under `github.com/ggligor1967/BatchStudio`. Packaging metadata was intentionally left unchanged by the documentation-only remediation.

@@ -60,7 +60,7 @@ On 2026-09-04 at the documentation baseline, this command passed 24 tests and re
 
 ## OCR tests
 
-The release suite verifies fail-closed workflow compilation when the Tesseract binary is unavailable. A real success test needs controlled Tesseract, Poppler for PDF OCR, installed language data, and fixtures with expected text. The v1.0.0 release machine did not provide that success-path evidence.
+The release suite verifies fail-closed workflow compilation when the Tesseract binary is unavailable. A real success test needs controlled Tesseract, Poppler for PDF OCR, installed language data, and fixtures with expected text. The v1.0.1 release preparation does not provide that success-path evidence.
 
 ## Release-critical sequence
 

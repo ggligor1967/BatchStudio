@@ -175,7 +175,7 @@ class MainWindow:
         self.status_label = ttk.Label(self.statusbar, text="Ready", foreground=self.colors['success'])
         self.status_label.pack(side=tk.LEFT)
         
-        self.version_label = ttk.Label(self.statusbar, text="v1.0.0", foreground='gray')
+        self.version_label = ttk.Label(self.statusbar, text="v1.0.1", foreground='gray')
         self.version_label.pack(side=tk.RIGHT)
     
     def _setup_shortcuts(self):
@@ -214,7 +214,11 @@ class MainWindow:
     
     def _show_preferences(self):
         """Show preferences dialog."""
-        messagebox.showinfo("Preferences", "Preferences dialog coming soon!")
+        messagebox.showinfo(
+            "Preferences",
+            "A preferences editor is not available in this release.\n\n"
+            "Settings are stored in ~/.batchstudio/settings.json.",
+        )
     
     def _toggle_theme(self):
         """Toggle between light and dark mode."""
@@ -255,9 +259,9 @@ class MainWindow:
     def _show_about(self):
         """Show about dialog."""
         messagebox.showinfo("About BatchStudio",
-                          "🎨 BatchStudio v1.0.0\n\n"
-                          "A powerful batch processing studio\n"
-                          "for handling large-scale file transformations.\n\n"
+                          "🎨 BatchStudio v1.0.1\n\n"
+                          "A Tkinter desktop application for\n"
+                          "registry-backed file workflows.\n\n"
                           "Built with Python & Tkinter\n"
                           "© 2024 BatchStudio")
     
@@ -266,7 +270,7 @@ class MainWindow:
         messagebox.showinfo("🎮 Developer Console",
                           "Easter egg found! 🎉\n\n"
                           "You've unlocked the developer console!\n"
-                          "More features coming soon...")
+                          "An interactive console is not implemented in this release.")
     
     def set_status(self, message: str, color: str = 'success'):
         """Update status bar message."""

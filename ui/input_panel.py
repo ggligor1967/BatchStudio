@@ -1,6 +1,6 @@
 """
 BatchStudio - Input Panel
-File selection and preview interface with drag & drop support.
+File selection and preview interface with an optional tkinterdnd2 drop hook.
 """
 
 import tkinter as tk

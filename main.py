@@ -2,11 +2,10 @@
 """
 BatchStudio - Batch Processing Studio
 
-A powerful cross-platform desktop application for batch file processing.
-Process images, PDFs, CSVs, and more through customizable workflows!
+A Tkinter desktop application for registry-backed batch file workflows.
 
 Author: BatchStudio Team
-Version: 1.0.0
+Version: 1.0.1
 """
 
 import tkinter as tk
@@ -43,21 +42,15 @@ def main():
 
 if __name__ == "__main__":
     print("""
-    ╔══════════════════════════════════════════════════════════════╗
-    ║                      BATCHSTUDIO v1.0.0                       ║
-    ║          Your Friendly Batch Processing Companion            ║
-    ╚══════════════════════════════════════════════════════════════╝
-    
-    🚀 Starting BatchStudio...
-    
-    Features:
-    • Batch process images, PDFs, CSVs, and more
-    • Drag-and-drop workflow builder
-    • Multi-threaded processing
-    • Beautiful progress tracking
-    • Comprehensive reports
-    
-    Ready to transform your files! ✨
+    ================================================================
+                         BATCHSTUDIO v1.0.1
+    ================================================================
+
+    Starting BatchStudio...
+
+    Registry-backed file workflows
+    Thread-pool batch execution
+    HTML and CSV processing reports
     """)
     
     main()
