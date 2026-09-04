@@ -1,0 +1,248 @@
+from pathlib import Path
+import threading
+import time
+
+from PIL import Image
+from pypdf import PdfReader, PdfWriter
+
+from core.operations.image_ops import ImageResizeOperation
+from core.operations import HAS_PDF2IMAGE, HAS_TESSERACT, HAS_TESSERACT_BINARY
+from core.processor import BatchProcessor
+from core.workflow import Workflow
+
+
+def _img(path: Path, color: str = "blue"):
+    Image.new("RGB", (80, 80), color=color).save(path)
+
+
+def _pdf(path: Path):
+    writer = PdfWriter()
+    writer.add_blank_page(width=400, height=400)
+    with path.open("wb") as fh:
+        writer.write(fh)
+
+
+def test_e2e_resize_then_rename(tmp_path: Path):
+    src = tmp_path / "in.png"
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    _img(src)
+
+    wf = Workflow("resize-rename")
+    wf.add_step("image_resize", {"width": 20, "height": 20, "maintain_aspect": False})
+    wf.add_step("file_rename", {"pattern": "{original}_r_{counter}"})
+
+    stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out_dir), "{original}")
+    assert stats.failed_files == 0
+    assert stats.processed_files == 1
+
+
+def test_e2e_convert_then_rename(tmp_path: Path):
+    src = tmp_path / "in.png"
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    _img(src)
+
+    wf = Workflow("convert-rename")
+    wf.add_step("image_convert", {"format": "JPEG"})
+    wf.add_step("file_rename", {"pattern": "{original}_j_{counter}"})
+
+    stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out_dir), "{original}")
+    assert stats.failed_files == 0
+    assert stats.processed_files == 1
+    assert any(Path(r["output"]).suffix.lower() in {".jpg", ".jpeg"} for r in stats.results)
+
+
+def test_e2e_pdf_merge(tmp_path: Path):
+    a = tmp_path / "a.pdf"
+    b = tmp_path / "b.pdf"
+    out = tmp_path / "out"
+    out.mkdir()
+    _pdf(a)
+    _pdf(b)
+
+    wf = Workflow("pdf-merge")
+    wf.add_step("pdf_merge", {"output_filename": "merged.pdf"})
+
+    stats = BatchProcessor(max_workers=2).process_batch([str(a), str(b)], wf, str(out), "{original}")
+    merged = out / "merged.pdf"
+
+    assert stats.failed_files == 0
+    assert merged.exists()
+    assert len(PdfReader(str(merged)).pages) == 2
+
+
+def test_e2e_pdf_merge_output_filename_traversal_is_sanitized(tmp_path: Path):
+    a = tmp_path / "a.pdf"
+    b = tmp_path / "b.pdf"
+    out = tmp_path / "out"
+    out.mkdir()
+    _pdf(a)
+    _pdf(b)
+
+    wf = Workflow("pdf-merge-safe-name")
+    wf.add_step("pdf_merge", {"output_filename": "..\\..\\merged.pdf"})
+
+    stats = BatchProcessor(max_workers=1).process_batch([str(a), str(b)], wf, str(out), "{original}")
+    outputs = {Path(item["output"]) for item in stats.results}
+
+    assert stats.failed_files == 0
+    assert len(outputs) == 1
+    assert next(iter(outputs)).exists()
+    assert next(iter(outputs)).parent == out.resolve()
+
+
+def test_e2e_dry_run_no_write(tmp_path: Path):
+    src = tmp_path / "a.png"
+    out = tmp_path / "out"
+    out.mkdir()
+    _img(src)
+
+    wf = Workflow("dry")
+    wf.add_step("image_resize", {"width": 12, "height": 12, "maintain_aspect": False})
+
+    before = list(out.iterdir())
+    stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out), "{original}", dry_run=True)
+    after = list(out.iterdir())
+
+    assert stats.failed_files == 0
+    assert before == after
+
+
+def test_e2e_output_traversal_attempt(tmp_path: Path):
+    src = tmp_path / "a.png"
+    out = tmp_path / "out"
+    out.mkdir()
+    _img(src)
+
+    wf = Workflow("traversal")
+    wf.add_step("file_rename", {"pattern": "..\\..\\escape"})
+
+    stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out), "{original}")
+    assert stats.failed_files == 0
+    assert all(str(tmp_path.resolve()) in r["output"] for r in stats.results)
+
+
+def test_e2e_malformed_workflow_configs(tmp_path: Path):
+    src = tmp_path / "a.png"
+    out = tmp_path / "out"
+    out.mkdir()
+    _img(src)
+
+    wf = Workflow("bad")
+    wf.add_step("image_resize", {"width": "x", "height": 12})
+
+    stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out), "{original}")
+    assert stats.failed_files >= 1
+
+
+def test_e2e_ocr_dependency_absence(tmp_path: Path):
+    src = tmp_path / "a.png"
+    out = tmp_path / "out"
+    out.mkdir()
+    _img(src)
+
+    wf = Workflow("ocr")
+    wf.add_step("ocr_image", {"language": "eng"})
+
+    stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out), "{original}")
+
+    if HAS_TESSERACT and HAS_TESSERACT_BINARY:
+        assert stats.failed_files == 0
+    else:
+        assert stats.failed_files >= 1
+
+
+def test_e2e_pause_blocks_new_submissions(tmp_path: Path, monkeypatch):
+    files = []
+    out = tmp_path / "out"
+    out.mkdir()
+
+    for i in range(12):
+        path = tmp_path / f"{i}.png"
+        _img(path)
+        files.append(str(path))
+
+    wf = Workflow("pause")
+    wf.add_step("image_resize", {"width": 12, "height": 12, "maintain_aspect": False})
+
+    original_execute = ImageResizeOperation.execute
+    first_started = threading.Event()
+    release_first = threading.Event()
+    started_count = {"value": 0}
+
+    def controlled_execute(self, file_path, output_path, dry_run=False):
+        started_count["value"] += 1
+        if started_count["value"] == 1:
+            first_started.set()
+            release_first.wait(timeout=5)
+        return original_execute(self, file_path, output_path, dry_run)
+
+    monkeypatch.setattr(ImageResizeOperation, "execute", controlled_execute)
+
+    processor = BatchProcessor(max_workers=1)
+    result = {}
+
+    def run_batch():
+        result["stats"] = processor.process_batch(files, wf, str(out), "{original}")
+
+    worker = threading.Thread(target=run_batch)
+    worker.start()
+
+    assert first_started.wait(timeout=5)
+    processor.pause()
+    assert processor.is_paused is True
+    release_first.set()
+    time.sleep(0.3)
+    assert started_count["value"] == 1
+
+    processor.resume()
+    worker.join(timeout=10)
+    assert processor.is_paused is False
+    assert result["stats"].failed_files == 0
+
+
+def test_e2e_cancel_stops_future_submissions(tmp_path: Path, monkeypatch):
+    files = []
+    out = tmp_path / "out"
+    out.mkdir()
+
+    for i in range(12):
+        path = tmp_path / f"{i}.png"
+        _img(path)
+        files.append(str(path))
+
+    wf = Workflow("cancel")
+    wf.add_step("image_resize", {"width": 12, "height": 12, "maintain_aspect": False})
+
+    original_execute = ImageResizeOperation.execute
+    first_started = threading.Event()
+    release_first = threading.Event()
+    started_count = {"value": 0}
+
+    def controlled_execute(self, file_path, output_path, dry_run=False):
+        started_count["value"] += 1
+        if started_count["value"] == 1:
+            first_started.set()
+            release_first.wait(timeout=5)
+        return original_execute(self, file_path, output_path, dry_run)
+
+    monkeypatch.setattr(ImageResizeOperation, "execute", controlled_execute)
+
+    processor = BatchProcessor(max_workers=1)
+    result = {}
+
+    def run_batch():
+        result["stats"] = processor.process_batch(files, wf, str(out), "{original}")
+
+    worker = threading.Thread(target=run_batch)
+    worker.start()
+
+    assert first_started.wait(timeout=5)
+    processor.stop()
+    release_first.set()
+    worker.join(timeout=10)
+
+    assert processor.is_running is False
+    assert started_count["value"] == 1
+    assert result["stats"].processed_files < len(files)

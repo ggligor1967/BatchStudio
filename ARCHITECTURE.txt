@@ -1,0 +1,73 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            BATCHSTUDIO ARCHITECTURE                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                              USER INTERFACE LAYER                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Input Tab  │  │ Workflow Tab │  │    Run Tab   │  │   Logs Tab   │  │
+│  │ (File Select)│  │(Flow Builder)│  │ (Processor)  │  │  (Reports)   │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+└─────────┼──────────────────┼──────────────────┼──────────────────┼─────────┘
+          │                  │                  │                  │
+          ▼                  ▼                  ▼                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            CORE LOGIC LAYER                                 │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                       Workflow Manager                                │  │
+│  │  • Load/Save Workflows (JSON)  • Template System  • Validation       │  │
+│  └────────────────────────┬──────────────────────────────────────────────┘  │
+│                           │                                                 │
+│  ┌────────────────────────▼──────────────────────────────────────────────┐  │
+│  │                    Batch Processor Engine                             │  │
+│  │  • MultiProcessing Pool  • Progress Tracking  • Error Recovery       │  │
+│  └────────────────────────┬──────────────────────────────────────────────┘  │
+│                           │                                                 │
+│  ┌────────────────────────▼──────────────────────────────────────────────┐  │
+│  │                    Operation Registry                                 │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐            │  │
+│  │  │  Image   │  │   PDF    │  │   CSV    │  │  Custom  │            │  │
+│  │  │Operations│  │Operations│  │Operations│  │ Scripts  │            │  │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘            │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                           OUTPUT & REPORTING LAYER                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ Processed    │  │  HTML/CSV    │  │   Error      │  │   Stats      │  │
+│  │   Files      │  │   Reports    │  │   Logs       │  │   Metrics    │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                              DATA FLOW                                      │
+│                                                                             │
+│  Input Files ──► Workflow Selection ──► Validation ──► Batch Processing   │
+│                                                              │               │
+│                                                              ▼               │
+│  Output Reports ◄── Progress Updates ◄── Error Handling ◄── Operations     │
+└────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            KEY COMPONENTS                                     ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  main.py              → Application entry point & main window                 ║
+║  core/processor.py    → Batch processing engine with multiprocessing         ║
+║  core/workflow.py     → Workflow management & operation chaining             ║
+║  core/operations.py   → Operation registry & base classes                    ║
+║  ui/main_window.py    → Main GUI window with tabs                            ║
+║  ui/input_panel.py    → File selection & preview                             ║
+║  ui/workflow_panel.py → Drag-and-drop workflow builder                       ║
+║  ui/run_panel.py      → Execution controls & progress                        ║
+║  ui/logs_panel.py     → Reports & logs viewer                                ║
+║  workflows/templates/ → Pre-built workflow templates                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🎨 Easter Eggs:
+   • Progress bar shows motivational quotes
+   • Confetti animation on successful batch completion
+   • Dark mode with cyberpunk theme
+   • Hidden developer console (Ctrl+Shift+D)
