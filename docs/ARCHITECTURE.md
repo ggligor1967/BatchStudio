@@ -37,17 +37,19 @@ The UI owns user interaction; the core has no dependency on Tkinter. The workflo
 
 `OperationResult` is a slotted dataclass with `success`, `message`, optional `output_path`, optional `error`, and `metadata`. Operations catch expected library/runtime errors and return failures through this contract. The processor converts unexpected future exceptions into failed result records. A successful per-file step must supply an output path.
 
-`Operation` handles one current input and one planned output. `AggregateOperation` has an explicit `begin` / `consume` / `finalize` lifecycle. Both expose accepted types, output type, configuration schema, validation, dry-run support, and optional capability checks.
+`Operation` handles one current input and one planned output. Its public `execute` resolves the final destination through `resolve_output_path`, applies containment and the optional batch allocator, then calls the writer's `_execute` with the protected final name. Writers use the shared `exclusive_output` stream helper and do not transform that destination again. OCR batch delegates its already resolved TXT destination to the image/PDF operation. `AggregateOperation` has an explicit `begin` / `consume` / `finalize` lifecycle. Both expose accepted types, output type, configuration schema and validation; per-file operations also expose dry-run support and optional capability checks.
 
 ## Per-file execution
 
-The compiler validates the enabled chain, then `BatchProcessor` uses `ThreadPoolExecutor`. The default core worker count is `min(8, os.cpu_count() or 4)`; the UI defaults to four and restricts selection to 1-16. Each input proceeds through every enabled non-aggregate step. A later successful step replaces the current input, and earlier generated intermediates are removed when no longer needed.
+The compiler validates the enabled chain, then `BatchProcessor` uses `ThreadPoolExecutor`. The default core worker count is `min(8, os.cpu_count() or 4)`; the UI defaults to four and restricts selection to 1-16. Each input proceeds through every enabled non-aggregate step. Operation instances copy the flat configuration mapping, so worker rename counters never mutate the caller's workflow dictionary. Serialization remains unchanged; nested values are not modified.
+
+A later successful step replaces the current input. After a successful chain, earlier exclusively created outputs are removed only if their recorded filesystem identities still match. Unrelated occupied destinations are never recorded as owned intermediates. A failed chain can retain prior owned intermediates; the exclusive-write helper attempts to remove its own partial output on a write failure.
 
 Threads keep the Tk event loop responsive and suit file and library calls that release the GIL or wait on I/O. They do not guarantee parallel speedup for CPU-bound Python code. See [ADR-0001](adr/0001-threadpool-execution.md).
 
 ## Aggregate PDF merge
 
-When the compiled aggregate ID is `pdf_merge`, the processor takes the aggregate path rather than submitting per-file chains. It resolves one contained output, calls `begin`, consumes selected inputs sequentially in their supplied order, and calls `finalize` once. The operation holds a `PdfWriter` only for that instance and run. There is no global or cross-run merge session. See [ADR-0002](adr/0002-aggregate-operations.md).
+When the compiled aggregate ID is `pdf_merge`, the processor takes the aggregate path rather than submitting per-file chains. It resolves and reserves one contained final PDF destination, calls `begin`, consumes selected inputs sequentially in their supplied order, and calls `finalize` once. Finalization creates the output exclusively. Consumption records receive the produced path only after successful finalization, so failure cannot advertise an occupied unrelated output. The operation holds a `PdfWriter` only for that instance and run. There is no global or cross-run merge session. Compilation, empty-input handling, and stop/finalize lifecycle behavior are unchanged. See [ADR-0002](adr/0002-aggregate-operations.md).
 
 ## Pause and cancellation
 
@@ -59,7 +61,7 @@ The run starts on a daemon background thread. Progress and completion callbacks 
 
 ## Output allocation and containment
 
-The processor resolves the output root. `_render_name` and operation-specific naming pass through `sanitize_filename`; `resolve_safe_output` rejects a resolved candidate outside that root. `OutputPathAllocator` uses a lock and per-name counters to avoid duplicate initially allocated paths across worker threads. See [Security model](SECURITY_MODEL.md) and [ADR-0003](adr/0003-safe-output-boundary.md) for boundaries and limitations.
+The processor resolves the output root. `_render_name` and operation-specific naming pass through `sanitize_filename`; `resolve_safe_output` validates final suffix/name containment. `OutputPathAllocator` uses a lock, canonical path reservations, and naming counters to select unique destinations across worker threads and aliases. `exclusive_output` closes the reservation-to-creation race by failing if the final entry is occupied. Direct `process_single_file` calls create a local allocator when none is supplied, keeping same-suffix intermediates distinct, and use the same exclusive writers. Directory validation uses an exclusively owned temporary probe, including during dry-run validation. See [Security model](SECURITY_MODEL.md) and [ADR-0003](adr/0003-safe-output-boundary.md) for boundaries and limitations.
 
 ## Reporting
 

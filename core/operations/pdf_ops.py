@@ -10,7 +10,7 @@ from reportlab.pdfgen import canvas
 
 from core.contracts import OperationResult
 from core.operations.base import AggregateOperation, Operation
-from core.security import sanitize_filename
+from core.security import exclusive_output, resolve_safe_output
 
 
 class PDFWatermarkOperation(Operation):
@@ -20,7 +20,7 @@ class PDFWatermarkOperation(Operation):
     accepted_types = {"pdf"}
     output_type = "pdf"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         if dry_run:
             return OperationResult(success=True, output_path=output_path, message="Dry run watermark")
 
@@ -47,7 +47,7 @@ class PDFWatermarkOperation(Operation):
                 page.merge_page(watermark.pages[0])
                 writer.add_page(page)
 
-            with output_path.open("wb") as output_file:
+            with exclusive_output(output_path) as output_file:
                 writer.write(output_file)
 
             return OperationResult(success=True, output_path=output_path, message=f"Watermarked {len(reader.pages)} pages")
@@ -85,7 +85,7 @@ class PDFAggregateMergeOperation(AggregateOperation):
         }
 
     def begin(self, output_path: Path, dry_run: bool = False) -> None:
-        self._output_path = output_path.with_name(sanitize_filename(output_path.name))
+        self._output_path = resolve_safe_output(output_path.parent, output_path.name, required_suffix=".pdf")
         self._dry_run = dry_run
         self._consumed = 0
         self._writer = None if dry_run else PdfWriter()
@@ -119,7 +119,7 @@ class PDFAggregateMergeOperation(AggregateOperation):
         try:
             assert self._writer is not None
             self._output_path.parent.mkdir(parents=True, exist_ok=True)
-            with self._output_path.open("wb") as output_file:
+            with exclusive_output(self._output_path) as output_file:
                 self._writer.write(output_file)
             return OperationResult(success=True, message=f"Merged {self._consumed} files", output_path=self._output_path)
         except Exception as exc:

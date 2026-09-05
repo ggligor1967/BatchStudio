@@ -6,6 +6,7 @@ from PIL import Image, ImageEnhance, ImageFilter
 
 from core.contracts import OperationResult
 from core.operations.base import Operation
+from core.security import exclusive_output
 
 
 class ImageResizeOperation(Operation):
@@ -15,7 +16,7 @@ class ImageResizeOperation(Operation):
     accepted_types = {"image"}
     output_type = "image"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         width = int(self.config.get("width", 800))
         height = int(self.config.get("height", 600))
         maintain_aspect = bool(self.config.get("maintain_aspect", True))
@@ -30,7 +31,12 @@ class ImageResizeOperation(Operation):
                 img.thumbnail((width, height), Image.Resampling.LANCZOS)
             else:
                 img = img.resize((width, height), Image.Resampling.LANCZOS)
-            img.save(output_path, quality=int(self.config.get("quality", 95)))
+            with exclusive_output(output_path) as stream:
+                img.save(
+                    stream,
+                    format=Image.registered_extensions()[output_path.suffix.lower()],
+                    quality=int(self.config.get("quality", 95)),
+                )
             return OperationResult(
                 success=True,
                 output_path=output_path,
@@ -63,9 +69,12 @@ class ImageConvertOperation(Operation):
     accepted_types = {"image"}
     output_type = "image"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
+        return output_path.with_suffix("." + str(self.config.get("format", "PNG")).lower())
+
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         format_to = str(self.config.get("format", "PNG")).upper()
-        converted_path = output_path.with_suffix("." + format_to.lower())
+        converted_path = output_path
 
         if dry_run:
             return OperationResult(success=True, message=f"Dry run convert to {format_to}", output_path=converted_path)
@@ -78,7 +87,8 @@ class ImageConvertOperation(Operation):
                     img = img.convert("RGBA")
                 background.paste(img, mask=img.split()[-1] if img.mode == "RGBA" else None)
                 img = background
-            img.save(converted_path, format=format_to)
+            with exclusive_output(converted_path) as stream:
+                img.save(stream, format=format_to)
             return OperationResult(
                 success=True,
                 output_path=converted_path,
@@ -106,7 +116,7 @@ class ImageFilterOperation(Operation):
     accepted_types = {"image"}
     output_type = "image"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         filter_type = str(self.config.get("filter", "SHARPEN"))
         if dry_run:
             return OperationResult(success=True, message=f"Dry run filter {filter_type}", output_path=output_path)
@@ -132,7 +142,8 @@ class ImageFilterOperation(Operation):
             if "contrast" in self.config:
                 img = ImageEnhance.Contrast(img).enhance(float(self.config["contrast"]))
 
-            img.save(output_path)
+            with exclusive_output(output_path) as stream:
+                img.save(stream, format=Image.registered_extensions()[output_path.suffix.lower()])
             return OperationResult(success=True, output_path=output_path, message=f"Applied {filter_type} filter")
         except Exception as exc:
             return OperationResult(success=False, error=str(exc))

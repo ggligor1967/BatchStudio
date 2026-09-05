@@ -6,6 +6,7 @@ import pandas as pd
 
 from core.contracts import OperationResult
 from core.operations.base import Operation
+from core.security import exclusive_output
 
 
 class CSVFilterOperation(Operation):
@@ -15,7 +16,7 @@ class CSVFilterOperation(Operation):
     accepted_types = {"csv"}
     output_type = "csv"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         try:
             df = pd.read_csv(file_path)
             original_rows = len(df)
@@ -36,7 +37,8 @@ class CSVFilterOperation(Operation):
                     df = df[df[column].astype(str).str.contains(str(value), na=False)]
 
             if not dry_run:
-                df.to_csv(output_path, index=False)
+                with exclusive_output(output_path, text=True, newline="") as stream:
+                    df.to_csv(stream, index=False)
 
             return OperationResult(
                 success=True,

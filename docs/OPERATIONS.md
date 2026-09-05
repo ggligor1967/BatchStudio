@@ -32,3 +32,11 @@ The current image OCR implementation uses only `language`; its other exposed pre
 ## Result contract
 
 Every operation lifecycle method returns `OperationResult`: `success`, `message`, optional `output_path`, optional `error`, and a metadata mapping. The processor treats a successful per-file operation without an output path as a failed contract.
+
+## Final destinations and collisions
+
+Conversion resolves the target-format suffix, rename resolves its pattern, and image/PDF/batch OCR resolves `.txt` before allocation. Rename's batch counter is local to the operation instance and leaves caller workflow/config dictionaries unchanged. Other per-file writers retain the planned suffix. PDF merge resolves `.pdf` before reservation.
+
+Batch allocation selects distinct canonical final paths, including when separate input directories contain the same basename. Every registered writer uses exclusive creation through `core/security.py`; if another actor occupies the destination before creation, the operation fails without modifying that file. Direct operation calls fail explicitly on occupied targets. Direct `process_single_file` calls without a batch allocator are also protected. Successful paths identify actual outputs; failed aggregate finalization does not advertise a produced path.
+
+After a successful multi-step chain, cleanup removes only recorded intermediate outputs whose filesystem identities still match. Normal directory validation creates and removes an exclusively owned temporary probe. This does not make dry-run validation write-free or change OCR extraction semantics. See [Security model](SECURITY_MODEL.md) and [output-ownership regressions](../tests/test_output_ownership.py).

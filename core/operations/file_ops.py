@@ -7,7 +7,7 @@ import shutil
 
 from core.contracts import OperationResult
 from core.operations.base import Operation
-from core.security import sanitize_filename
+from core.security import exclusive_output, sanitize_filename
 
 
 class FileRenameOperation(Operation):
@@ -17,7 +17,7 @@ class FileRenameOperation(Operation):
     accepted_types = {"any"}
     output_type = "same"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
         pattern = self.config.get("pattern", "{original}_{counter}")
         counter = self.config.get("counter", 1)
         original_stem = file_path.stem
@@ -28,13 +28,20 @@ class FileRenameOperation(Operation):
             .replace("{counter}", f"{int(counter):03d}")
             .replace("{timestamp}", timestamp)
         )
-        target = output_path.with_name(sanitize_filename(new_stem) + output_path.suffix)
+        return output_path.with_name(sanitize_filename(new_stem) + output_path.suffix)
 
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+        target = output_path
         if dry_run:
             return OperationResult(success=True, output_path=target, message=f"Dry run rename to {target.name}")
 
         try:
-            shutil.copy2(file_path, target)
+            with exclusive_output(target) as destination:
+                with file_path.open("rb") as source:
+                    shutil.copyfileobj(source, destination)
+                # Closing the write handle can update mtime, so copy metadata afterward.
+                destination.close()
+                shutil.copystat(file_path, target)
             return OperationResult(success=True, output_path=target, message=f"Renamed to {target.name}")
         except Exception as exc:
             return OperationResult(success=False, error=str(exc))

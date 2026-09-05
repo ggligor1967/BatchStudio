@@ -7,6 +7,7 @@ from pypdf import PdfReader
 
 from core.contracts import OperationResult
 from core.operations.base import Operation
+from core.security import exclusive_output
 
 try:
     import pytesseract
@@ -44,17 +45,21 @@ class OCRImageOperation(Operation):
     output_type = "text"
     requires_ocr = True
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
+        return output_path.with_suffix(".txt")
+
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         if not HAS_TESSERACT_BINARY:
             return OperationResult(success=False, error="pytesseract not installed")
-        txt_path = output_path.with_suffix(".txt")
+        txt_path = output_path
         if dry_run:
             return OperationResult(success=True, output_path=txt_path, message="Dry run OCR image")
 
         try:
             img = Image.open(file_path)
             text = pytesseract.image_to_string(img, lang=self.config.get("language", "eng"))
-            txt_path.write_text(text, encoding="utf-8")
+            with exclusive_output(txt_path, text=True) as stream:
+                stream.write(text)
             return OperationResult(success=True, output_path=txt_path, message="OCR extraction complete", metadata={"word_count": len(text.split())})
         except Exception as exc:
             return OperationResult(success=False, error=str(exc))
@@ -89,8 +94,11 @@ class OCRPDFOperation(Operation):
     accepted_types = {"pdf"}
     output_type = "text"
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
-        txt_path = output_path.with_suffix(".txt")
+    def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
+        return output_path.with_suffix(".txt")
+
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+        txt_path = output_path
         if dry_run:
             return OperationResult(success=True, output_path=txt_path, message="Dry run OCR PDF")
 
@@ -108,7 +116,8 @@ class OCRPDFOperation(Operation):
                 text = "\n\n".join(pytesseract.image_to_string(img, lang=self.config.get("language", "eng")) for img in images)
                 extraction = "ocr"
 
-            txt_path.write_text(text, encoding="utf-8")
+            with exclusive_output(txt_path, text=True) as stream:
+                stream.write(text)
             return OperationResult(success=True, output_path=txt_path, message=f"Extracted text using {extraction}")
         except Exception as exc:
             return OperationResult(success=False, error=str(exc))
@@ -144,7 +153,10 @@ class OCRBatchOperation(Operation):
     output_type = "text"
     requires_ocr = True
 
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
+        return output_path.with_suffix(".txt")
+
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         base_op = OCRImageOperation(config=self.config)
         ext = file_path.suffix.lower()
         if ext == ".pdf":

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from core.contracts import OperationResult
+from core.security import OutputPathAllocator, resolve_safe_output
 
 
 class Operation(ABC):
@@ -17,10 +18,24 @@ class Operation(ABC):
     requires_ocr = False
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        self.config = config or {}
+        self.config = dict(config) if config is not None else {}
+        self.output_allocator: Optional[OutputPathAllocator] = None
+
+    def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
+        return output_path
+
+    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+        try:
+            intended = self.resolve_output_path(file_path, output_path)
+            destination = resolve_safe_output(output_path.parent, intended.name)
+            if self.output_allocator is not None:
+                destination = self.output_allocator.allocate(destination.stem, destination.suffix)
+            return self._execute(file_path, destination, dry_run)
+        except Exception as exc:
+            return OperationResult(success=False, error=str(exc))
 
     @abstractmethod
-    def execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
+    def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         raise NotImplementedError
 
     @abstractmethod
@@ -63,7 +78,7 @@ class AggregateOperation(ABC):
     output_type = "pdf"
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        self.config = config or {}
+        self.config = dict(config) if config is not None else {}
 
     def get_config_schema(self) -> Dict[str, Dict[str, Any]]:
         return {}

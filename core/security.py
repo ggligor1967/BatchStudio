@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import re
 import threading
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -26,23 +28,57 @@ def sanitize_for_spreadsheet(value: str) -> str:
 def resolve_safe_output(base_dir: Path, candidate_name: str, required_suffix: str | None = None) -> Path:
     base = base_dir.resolve(strict=False)
     safe_name = sanitize_filename(candidate_name)
-    candidate = (base / safe_name).resolve(strict=False)
+    requested = base / safe_name
+    if required_suffix and requested.suffix.lower() != required_suffix.lower():
+        requested = requested.with_suffix(required_suffix)
+    candidate = requested.resolve(strict=False)
 
     if not candidate.is_relative_to(base):
         raise ValueError("Output path escapes output directory")
 
-    if required_suffix and candidate.suffix.lower() != required_suffix.lower():
-        candidate = candidate.with_suffix(required_suffix)
+    if requested.is_symlink():
+        raise ValueError("Output path is a symbolic link")
     return candidate
 
 
+def output_identity(path: Path) -> tuple[int, int]:
+    stat = path.lstat()
+    return stat.st_dev, stat.st_ino
+
+
+def remove_owned_output(path: Path, identity: tuple[int, int]) -> None:
+    """Remove a recorded artifact only while its filesystem identity still matches."""
+    try:
+        if output_identity(path) == identity:
+            path.unlink()
+    except FileNotFoundError:
+        pass
+
+
+@contextmanager
+def exclusive_output(path: Path, *, text: bool = False, newline: str | None = None):
+    """Create once and write through that handle; never reopen a destination for writing."""
+    options = {"encoding": "utf-8", "newline": newline} if text else {}
+    identity = None
+    try:
+        with path.open("x" if text else "xb", **options) as stream:
+            stat = os.fstat(stream.fileno())
+            identity = stat.st_dev, stat.st_ino
+            yield stream
+    except BaseException:
+        if identity is not None:
+            remove_owned_output(path, identity)
+        raise
+
+
 class OutputPathAllocator:
-    """Thread-safe allocator that avoids collisions for duplicate basenames."""
+    """Reserve canonical final destinations across threads and preferred-name aliases."""
 
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir.resolve(strict=False)
         self._lock = threading.Lock()
         self._counters: dict[str, int] = {}
+        self._reserved: set[Path] = set()
 
     def allocate(self, preferred_name: str, suffix: str) -> Path:
         safe_base = sanitize_filename(preferred_name)
@@ -55,7 +91,8 @@ class OutputPathAllocator:
             while True:
                 stem = safe_base if index == 0 else f"{safe_base}_{index:03d}"
                 candidate = resolve_safe_output(self.output_dir, stem + suffix)
-                if not candidate.exists():
+                if candidate not in self._reserved and not candidate.exists():
                     self._counters[key] = index + 1
+                    self._reserved.add(candidate)
                     return candidate
                 index += 1

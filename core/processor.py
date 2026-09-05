@@ -9,6 +9,7 @@ import csv
 import html
 import os
 import shutil
+import tempfile
 import threading
 import time
 import traceback
@@ -20,7 +21,14 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from core.operations import AggregateOperation, OperationRegistry
-from core.security import OutputPathAllocator, resolve_safe_output, sanitize_filename, sanitize_for_spreadsheet
+from core.security import (
+    OutputPathAllocator,
+    output_identity,
+    remove_owned_output,
+    resolve_safe_output,
+    sanitize_filename,
+    sanitize_for_spreadsheet,
+)
 from core.workflow import Workflow
 
 MAX_FILE_SIZE = 500 * 1024 * 1024
@@ -82,9 +90,9 @@ def validate_output_directory(output_dir: str) -> tuple[bool, str]:
         out = Path(output_dir).resolve(strict=False)
         out.mkdir(parents=True, exist_ok=True)
 
-        probe = out / ".write_test"
-        probe.write_text("ok", encoding="utf-8")
-        probe.unlink(missing_ok=True)
+        with tempfile.NamedTemporaryFile(dir=out, prefix=".batchstudio-probe-", mode="wb") as probe:
+            probe.write(b"ok")
+            probe.flush()
         return True, ""
     except PermissionError:
         return False, "No write permission for output directory"
@@ -168,10 +176,12 @@ def process_single_file(
 
         workflow = Workflow.from_dict(workflow_dict)
         output_root = Path(output_dir).resolve(strict=False)
+        if allocator is None:
+            allocator = OutputPathAllocator(output_root)
         source = Path(file_path).resolve(strict=False)
 
         current_input = source
-        generated_files: List[Path] = []
+        generated_files: List[tuple[Path, tuple[int, int]]] = []
 
         for step in workflow.get_enabled_steps():
             if registry.get_aggregate_operation(step.operation_id, step.config) is not None:
@@ -189,11 +199,8 @@ def process_single_file(
                 }
 
             name_base = _render_name(naming_pattern, source, index)
-            planned_output = (
-                allocator.allocate(name_base, current_input.suffix)
-                if allocator
-                else resolve_safe_output(output_root, name_base + current_input.suffix)
-            )
+            planned_output = output_root / (name_base + current_input.suffix)
+            operation.output_allocator = allocator
 
             if step.operation_id == "file_rename":
                 operation.config["counter"] = index
@@ -214,7 +221,8 @@ def process_single_file(
                 }
 
             current_input = result.output_path
-            generated_files.append(current_input)
+            if not dry_run:
+                generated_files.append((current_input, output_identity(current_input)))
 
         final_output = current_input
 
@@ -226,9 +234,8 @@ def process_single_file(
                 "message": "Dry run validated",
             }
 
-        for candidate in generated_files[:-1]:
-            if candidate.exists():
-                candidate.unlink(missing_ok=True)
+        for candidate, identity in generated_files[:-1]:
+            remove_owned_output(candidate, identity)
 
         return {
             "success": True,
@@ -336,6 +343,7 @@ class BatchProcessor:
             aggregate_operation.config.get("output_filename", _render_name(naming_pattern, Path(file_list[0]), 1) + "_merged")
         )
         merge_path = resolve_safe_output(output_root, merge_name, required_suffix=".pdf")
+        merge_path = OutputPathAllocator(output_root).allocate(merge_path.stem, merge_path.suffix)
         aggregate_operation.begin(merge_path, dry_run=dry_run)
 
         for index, file_path in enumerate(file_list, start=1):
@@ -344,7 +352,7 @@ class BatchProcessor:
             self._wait_if_paused()
             result = aggregate_operation.consume(Path(file_path))
             if result.success:
-                self.stats.add_result(file_path, {"output": str(merge_path), "message": result.message})
+                self.stats.add_result(file_path, {"message": result.message})
             else:
                 self.stats.add_error(file_path, result.error or "Failed to consume PDF")
             self._update_progress(index, len(file_list), result.message or result.error or "")
@@ -353,6 +361,9 @@ class BatchProcessor:
         if not finalize.success:
             self.stats.add_error("pdf_merge_finalize", finalize.error or "Finalize failed")
         else:
+            for record in self.stats.results:
+                record["output"] = str(finalize.output_path)
+                record["result"]["output"] = str(finalize.output_path)
             self._update_progress(len(file_list), len(file_list), finalize.message)
 
     def process_batch(
