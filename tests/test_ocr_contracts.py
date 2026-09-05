@@ -152,10 +152,12 @@ def test_image_branch_needs_no_pdf_tools(tmp_path, monkeypatch, tools_ready, ope
     operation = OperationRegistry().get_operation(operation_id, {"language": "ron"})
     assert operation.get_capability_error(source) is None
     assert compile_operation(operation_id, {"language": "ron"}).valid
+    tools_ready.get_tesseract_version.reset_mock()
     result = operation.execute(source, tmp_path / "out.txt")
     assert result.success, result.error
     assert result.output_path.read_text() == "mock recognition"
     assert tools_ready.image_to_string.call_args.kwargs == {"lang": "ron"}
+    tools_ready.get_tesseract_version.assert_called_once_with(cached=False)
     poppler.assert_not_called()
 
 
@@ -298,7 +300,26 @@ def test_registry_exposes_independent_capability_reasons(monkeypatch, tools_read
     assert "Native PDF: ready" in status and "pdf2image package is not installed" in status
 
 
-def test_ui_lists_capability_reason_without_hiding_native_pdf(monkeypatch, tools_ready):
+@pytest.fixture
+def ui_status_jobs(monkeypatch):
+    from ui.workflow_panel import WorkflowPanel
+
+    jobs = []
+
+    def enqueue(panel, operation_id, config, display_status):
+        jobs.append((panel, operation_id, dict(config), display_status))
+
+    def complete():
+        pending = list(jobs)
+        jobs.clear()
+        for panel, operation_id, config, display_status in pending:
+            display_status(panel.operation_registry.get_capability_status(operation_id, config))
+
+    monkeypatch.setattr(WorkflowPanel, "_load_capability_status", enqueue)
+    return SimpleNamespace(jobs=jobs, complete=complete)
+
+
+def test_ui_lists_capability_reason_without_hiding_native_pdf(monkeypatch, tools_ready, ui_status_jobs):
     from ui.workflow_panel import WorkflowPanel
 
     absent_ocr(monkeypatch, tools_ready)
@@ -306,7 +327,9 @@ def test_ui_lists_capability_reason_without_hiding_native_pdf(monkeypatch, tools
     panel.operation_registry = OperationRegistry()
     panel.templates_listbox = Mock()
     panel.operations_listbox = Mock()
+    panel.operations_listbox.curselection.return_value = ()
     panel._load_operations()
+    ui_status_jobs.complete()
     rows = [call.args[1] for call in panel.operations_listbox.insert.call_args_list]
     assert any("OCR Image" in row and "pytesseract package is not installed" in row for row in rows)
     assert any("PDF to Text" in row and "Native PDF: ready" in row for row in rows)
@@ -353,7 +376,7 @@ def test_language_probe_error_is_controlled(tools_ready):
     ("ocr_pdf", {"mode": "native", "language": "ron", "dpi": 300}, {"mode", "language", "dpi"}),
 ])
 def test_ui_config_controls_and_refresh_use_current_config(
-    monkeypatch, tools_ready, operation_id, config, expected_keys
+    monkeypatch, tools_ready, ui_status_jobs, operation_id, config, expected_keys
 ):
     from ui import workflow_panel
 
@@ -382,6 +405,7 @@ def test_ui_config_controls_and_refresh_use_current_config(
     workflow = Workflow("UI config")
     step = workflow.add_step(operation_id, config)
     panel._show_step_config(step)
+    ui_status_jobs.complete()
     assert set(panel.config_widgets) == expected_keys
     status = labels[1]
     initial = status.config.call_args.kwargs["text"]
@@ -394,6 +418,7 @@ def test_ui_config_controls_and_refresh_use_current_config(
     tools_ready.get_languages.return_value = ["eng"]
     refresh = next(button["command"] for button in buttons if button["text"] == "Refresh OCR availability")
     refresh()
+    ui_status_jobs.complete()
     assert "language 'ron' is not available" in status.config.call_args.kwargs["text"]
 
 
@@ -405,3 +430,152 @@ def test_batch_image_language_missing_fails_before_recognition(tmp_path, tools_r
     result = operation.execute(source, tmp_path / "out.txt")
     assert not result.success and "language 'ron'" in result.error
     tools_ready.image_to_string.assert_not_called()
+
+
+@pytest.mark.parametrize("config", [
+    {"mode": "bogus"}, {"mode": []}, {"dpi": "300"}, {"dpi": True},
+])
+def test_batch_pdf_options_reject_invalid_config_at_compile_and_execution(tmp_path, tools_ready, config):
+    operation = ocr_ops.OCRBatchOperation(config)
+    valid, error = operation.validate_config()
+    assert not valid
+    compilation = compile_operation("ocr_batch", config)
+    assert not compilation.valid and any(error in item for item in compilation.errors)
+    result = operation.execute(tmp_path / "input.pdf", tmp_path / "out.txt")
+    assert not result.success and result.error == error
+
+
+def test_ui_operation_list_never_probes_on_tk_thread(monkeypatch):
+    import threading
+    from ui import workflow_panel
+
+    tk_thread = threading.get_ident()
+    callbacks = []
+    threads = []
+    original_thread = threading.Thread
+
+    def recorded_thread(*args, **kwargs):
+        thread = original_thread(*args, **kwargs)
+        threads.append(thread)
+        return thread
+
+    def schedule(delay, callback):
+        assert threading.get_ident() == tk_thread
+        callbacks.append(callback)
+
+    def probe(operation_id, config=None):
+        assert threading.get_ident() != tk_thread, "readiness probe blocks Tk"
+        return "mock readiness"
+
+    monkeypatch.setattr(threading, "Thread", recorded_thread)
+    panel = workflow_panel.WorkflowPanel.__new__(workflow_panel.WorkflowPanel)
+    panel.operation_registry = OperationRegistry()
+    monkeypatch.setattr(panel.operation_registry, "get_capability_status", probe)
+    panel.frame = SimpleNamespace(after=schedule, winfo_exists=lambda: True)
+    panel.templates_listbox = Mock()
+    panel.operations_listbox = Mock()
+    panel.operations_listbox.curselection.return_value = ()
+    panel._load_operations()
+    assert threads
+    for thread in threads:
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+    while callbacks:
+        callbacks.pop(0)()
+    assert any("mock readiness" in call.args[1]
+               for call in panel.operations_listbox.insert.call_args_list)
+
+
+@pytest.mark.parametrize("outcome", ["ready", "failure", "destroyed"])
+def test_ui_slow_probe_is_nonblocking_and_marshaled_to_tk(monkeypatch, outcome):
+    import threading
+    from ui import workflow_panel
+
+    tk_thread = threading.get_ident()
+    started = threading.Event()
+    release = threading.Event()
+    callbacks = []
+    threads = []
+    original_thread = threading.Thread
+
+    def recorded_thread(*args, **kwargs):
+        thread = original_thread(*args, **kwargs)
+        threads.append(thread)
+        return thread
+
+    def probe(operation_id, config):
+        assert threading.get_ident() != tk_thread
+        started.set()
+        assert release.wait(timeout=5)
+        assert config == {"language": "ron"}
+        if outcome == "failure":
+            raise OSError("probe failed")
+        return "Image OCR (ron): ready"
+
+    def schedule(delay, callback):
+        assert threading.get_ident() == tk_thread
+        callbacks.append(callback)
+
+    def publish(status):
+        assert threading.get_ident() == tk_thread
+
+    monkeypatch.setattr(threading, "Thread", recorded_thread)
+    panel = workflow_panel.WorkflowPanel.__new__(workflow_panel.WorkflowPanel)
+    panel.operation_registry = SimpleNamespace(get_capability_status=probe)
+    panel.frame = SimpleNamespace(after=schedule, winfo_exists=lambda: True)
+    display = Mock(side_effect=publish)
+    config = {"language": "ron"}
+    try:
+        panel._load_capability_status("ocr_image", config, display)
+        assert started.wait(timeout=5)
+        callbacks.pop(0)()
+        display.assert_not_called()
+        assert callbacks, "Tk must poll again while the worker is blocked"
+        config["language"] = "eng"
+    finally:
+        release.set()
+        for thread in threads:
+            thread.join(timeout=5)
+            assert not thread.is_alive()
+    panel.frame.winfo_exists = lambda: outcome != "destroyed"
+    while callbacks:
+        callbacks.pop(0)()
+    if outcome == "destroyed":
+        display.assert_not_called()
+    else:
+        expected = "OCR availability check failed" if outcome == "failure" else "Image OCR (ron): ready"
+        display.assert_called_once_with(expected)
+
+
+def test_ui_old_list_refresh_cannot_overwrite_newer_status(ui_status_jobs):
+    from ui.workflow_panel import WorkflowPanel
+
+    panel = WorkflowPanel.__new__(WorkflowPanel)
+    panel.operation_registry = OperationRegistry()
+    panel.templates_listbox = Mock()
+    panel.operations_listbox = Mock()
+    panel.operations_listbox.curselection.return_value = (6,)
+    panel._load_operations()
+    old_jobs = list(ui_status_jobs.jobs)
+    ui_status_jobs.jobs.clear()
+    panel._load_operations()
+    for _, _, _, display in ui_status_jobs.jobs:
+        display("new status")
+    panel.operations_listbox.insert.reset_mock()
+    for _, _, _, display in old_jobs:
+        display("stale status")
+    panel.operations_listbox.insert.assert_not_called()
+    panel.operations_listbox.selection_set.assert_called_with(6)
+
+
+@pytest.mark.parametrize("language", ["", "   "])
+def test_native_pdf_retains_ignored_language_semantics(tmp_path, monkeypatch, tools_ready, language):
+    absent_ocr(monkeypatch, tools_ready)
+    native_reader(monkeypatch, "native text")
+    config = {"mode": "native", "language": language}
+    operation = ocr_ops.OCRPDFOperation(config)
+    assert operation.validate_config()[0]
+    assert compile_operation("ocr_pdf", config).valid
+    result = operation.execute(tmp_path / "input.pdf", tmp_path / "out.txt")
+    assert result.success, result.error
+    tools_ready.get_languages.assert_not_called()

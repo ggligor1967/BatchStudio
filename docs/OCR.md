@@ -33,7 +33,7 @@ The functional fields remain `mode` (default `auto`), `language` (default `eng`)
 
 This per-file operation delegates PDFs to `ocr_pdf` and other inputs to `ocr_image`. Inputs must be valid PDFs or images even though the registry declares `any`. It creates one text output per input and exposes only `language`.
 
-Compilation has no concrete input type and does not impose a global OCR gate. Concrete preflight and execution use the delegate's capability checks: image inputs require no PDF tools; PDFs default to `auto`. Existing configurations that pass PDF `mode`/`dpi` through to the PDF delegate retain that behavior; these are not additional exposed batch controls. A native PDF branch needs no OCR stack.
+Compilation has no concrete input type and does not impose a global OCR gate. Concrete preflight and execution use the delegate's capability checks: image inputs require no PDF tools; PDFs default to `auto`. Existing configurations that pass PDF `mode`/`dpi` through to the PDF delegate retain that behavior; these optional keys are validated against the PDF schema at compilation and direct execution, but are not additional exposed batch controls. A native PDF branch needs no OCR stack. The batch wrapper validates, checks readiness, and resolves the destination once before calling the concrete writer; PDF OCR checks readiness again at the actual rasterization boundary.
 
 ## Configuration migration
 
@@ -43,7 +43,7 @@ These checks run during compilation and direct execution, including dry run. The
 
 ## Display and dry run
 
-The workflow operation list shows readiness for default English configuration, with separate native PDF and PDF OCR fallback status. The step configuration panel shows current applied language/mode readiness or a legacy configuration error. **Refresh OCR availability** refreshes the displayed snapshot; applying configuration also refreshes the step status. Unavailable operations remain configurable, and native PDF extraction is not hidden by absent OCR tools.
+The workflow operation list shows readiness for default English configuration, with separate native PDF and PDF OCR fallback status. The step configuration panel shows current applied language/mode readiness or a legacy configuration error. **Refresh OCR availability** refreshes the displayed snapshot; applying configuration also refreshes the step status. Probes run in daemon workers using configuration snapshots; Tk polls their result queues and updates widgets. The UI shows `checking` while pending and discards stale refresh results. Unavailable operations remain configurable, and native PDF extraction is not hidden by absent OCR tools.
 
 Dry run retains capability preflight for unconditional requirements: image OCR checks the image stack; explicit PDF `ocr` checks the PDF OCR stack; batch checks its concrete branch. Native and `auto` PDF dry runs require only native extraction capability. They do not extract text, rasterize, recognize, predict whether fallback will be needed, or create output. Thus a successful `auto` dry run does not qualify its fallback. Processor input parsing and read-only output feasibility checks still apply. See [the write-free boundary](SECURITY_MODEL.md#dry-run-output-suppression).
 

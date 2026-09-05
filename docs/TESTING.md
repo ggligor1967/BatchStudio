@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs nine test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, and V11-05 to 278:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs nine test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, and V11-05 to 289:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -27,7 +27,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 - `tests/test_csv_contracts.py`: 43 V11-03 cases for generic required/non-empty and float parity, numeric boolean rejection, compiler/direct CSV rejection, missing concrete columns, normal matching/zero-row output, dry-run counts, and both numeric operators.
 - `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
-- `tests/test_ocr_contracts.py`: 75 deterministic V11-05 cases covering schema/legacy-key parity, all four OCR templates, separate dependency failures, live readiness refresh, PDF modes and forwarding, batch delegates, and schema/status UI routes.
+- `tests/test_ocr_contracts.py`: 86 deterministic V11-05 cases covering schema/legacy-key parity, all four OCR templates, separate dependency failures, live readiness refresh, PDF modes and forwarding, batch delegates, and schema/status UI routes.
 
 Run the discovered suite:
 
@@ -119,7 +119,7 @@ On 2026-09-05, V11-03/V11-04 validation on Windows/Python 3.13 passed 203 tests 
 
 ## OCR tests
 
-On 2026-09-05, V11-05 validation on Windows/Python 3.13 passed 278 tests and reported 55.83% production coverage (1,490 of 2,669 statements). OCR operations reached 166/174 statements (95.40%), the registry 56/59 (94.92%), workflow definitions 208/259 (80.31%), and WorkflowPanel 71/257 (27.63%). Changed executable lines were covered 86/86 in OCR operations, 26/27 in the registry, and 12/15 in WorkflowPanel; the uncovered lines are the registry's invalid-config display return, the refresh-button creation in the full widget builder, and the apply-triggered refresh route. Template literal edits have no separately attributed changed executable lines. `main` was not imported. UI evidence uses widget doubles, and OCR output is mocked. Local runs disabled unrelated global pytest plugin autoload with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`. Coverage is diagnostic, with no threshold.
+On 2026-09-05, V11-05 validation on Windows/Python 3.13 passed 289 tests and reported 56.63% production coverage (1,541 of 2,721 statements). OCR operations reached 175/184 statements (95.11%), the registry 55/59 (93.22%), workflow definitions 208/259 (80.31%), and WorkflowPanel 113/299 (37.79%). Changed executable lines were covered 96/97 in OCR operations, 25/27 in the registry, and 55/58 in WorkflowPanel; the uncovered lines are the OCR abstract-method guard, the registry's non-OCR/invalid-config display returns, the refresh-button creation in the full widget builder, and the apply-triggered refresh route. Template literal edits have no separately attributed changed executable lines. `main` was not imported. UI evidence uses widget doubles and event-controlled real threads, and OCR output is mocked. Local runs disabled unrelated global pytest plugin autoload with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`. Coverage is diagnostic, with no threshold.
 
 Run V11-05 independently:
 
@@ -127,7 +127,7 @@ Run V11-05 independently:
 pytest -q tests/test_ocr_contracts.py
 ```
 
-The initial 64-case regression matrix on the admitted source produced 49 failures and 15 passes before implementation. The final 75-case suite adds rasterizer launch/timeout and argument-vector checks, real UI configuration-route tests with widget doubles, and concrete batch language/preflight coverage. All external tools, language lists, rasterization, and recognition outputs are mocked. Native PDF threshold tests assert the existing 49/50-character boundary, including mode/language/DPI forwarding. Both directions of executable, language, and rasterizer state changes are tested without module reload.
+The initial 64-case regression matrix on the admitted source produced 49 failures and 15 passes before implementation. The final 86-case suite adds rasterizer launch/timeout and argument-vector checks, real UI configuration-route tests with widget doubles, and concrete batch language/preflight coverage. Review regressions first reproduced four batch PDF pass-through validation failures, synchronous Tk probing, and redundant batch image probes. Event-controlled tests verify nonblocking worker probes, Tk-only scheduling/publication, configuration snapshots, pending/error/destroyed-widget handling, and stale-response suppression. Native mode retains its ignored language semantics, including blank values; it never requires OCR language data. All external tools, language lists, rasterization, and recognition outputs are mocked. Native PDF threshold tests assert the existing 49/50-character boundary, including mode/language/DPI forwarding. Both directions of executable, language, and rasterizer state changes are tested without module reload.
 
 The inherited ownership and complete 53-case dry-run write-interception suites use fresh version/language/rasterizer mocks; their original assertions remain intact. Dry runs check only unconditional capabilities and never recognize or rasterize. Auto dry run does not predict fallback. The critical end-to-end absence test now deterministically mocks a missing executable rather than potentially invoking real OCR when local tools happen to be installed.
 

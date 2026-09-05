@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 import shutil
@@ -9,7 +10,7 @@ from PIL import Image
 from pypdf import PdfReader
 
 from core.contracts import OperationResult
-from core.operations.base import Operation
+from core.operations.base import Operation, validate_schema_config
 from core.security import exclusive_output
 
 try:
@@ -101,10 +102,14 @@ class OCROperation(Operation):
         valid, error = self.validate_config()
         if not valid:
             return OperationResult(success=False, error=error)
-        error = self.get_capability_error(file_path)
-        if error:
-            return OperationResult(success=False, error=error)
+        capability_error = self.get_capability_error(file_path)
+        if capability_error:
+            return OperationResult(success=False, error=capability_error)
         return super().execute(file_path, output_path, dry_run)
+
+    @abstractmethod
+    def get_capability_error(self, file_path: Path | None = None) -> str | None:
+        raise NotImplementedError
 
 
 class OCRImageOperation(OCROperation):
@@ -216,11 +221,19 @@ class OCRBatchOperation(OCROperation):
     accepted_types = {"any"}
     output_type = "text"
 
+    def validate_config(self) -> tuple[bool, str]:
+        valid, error = super().validate_config()
+        if not valid:
+            return valid, error
+        pdf_schema = OCRPDFOperation().get_config_schema()
+        return validate_schema_config(self.config, {key: pdf_schema[key] for key in ("mode", "dpi")})
+
     def resolve_output_path(self, file_path: Path, output_path: Path) -> Path:
         return output_path.with_suffix(".txt")
 
     def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
-        return self._operation_for_input(file_path).execute(file_path, output_path, dry_run=dry_run)
+        # The outer execute already checked config/readiness and protected this destination.
+        return self._operation_for_input(file_path)._execute(file_path, output_path, dry_run=dry_run)
 
     def _operation_for_input(self, file_path: Path) -> OCROperation:
         operation_class = OCRPDFOperation if file_path.suffix.lower() == ".pdf" else OCRImageOperation
