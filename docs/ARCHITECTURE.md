@@ -49,7 +49,7 @@ Threads keep the Tk event loop responsive and suit file and library calls that r
 
 ## Aggregate PDF merge
 
-Compilation requires an aggregate to be the only enabled step (Contract A); disabled predecessors do not participate. When the compiled aggregate ID is `pdf_merge`, the processor uses a dedicated batch lifecycle. Empty aggregate input returns one batch-level error with settled timing/running state before output-directory preparation or `begin`.
+Compilation requires an aggregate to be the only enabled step (Contract A); disabled predecessors do not participate. When the compiled aggregate ID is `pdf_merge`, the processor uses a dedicated batch lifecycle. For a valid compiled workflow, empty aggregate input returns one batch-level error with settled timing/running state before output-directory preparation or `begin`.
 
 For nonempty input, the processor resolves and reserves one contained final PDF destination, calls `begin`, consumes selected inputs sequentially in their supplied order, and calls `finalize` once unless stopped. Finalization is the physical write boundary and creates the output exclusively. Consumption records increment `processed_files` and receive the common `output` only after successful finalization. Empty input, stop, and finalization failure advertise no completed output. Dry run records only `result.planned_output` after successful simulated finalization, with no writer or final PDF.
 

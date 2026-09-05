@@ -267,3 +267,37 @@ def test_aggregate_invalid_input_policy_is_preserved(merge_case, all_invalid):
         assert list(case.out.iterdir()) == [merged]
         assert [float(page.mediabox.width) for page in PdfReader(merged).pages] == [402, 400]
     assert_settled(case.processor, stats)
+
+
+@pytest.mark.parametrize(
+    "invalid_part, expected_error",
+    [
+        ("name", "Workflow must have a name"),
+        ("config", "config 'output_filename' must be str"),
+        ("predecessor", "only enabled step"),
+        ("multiple", "only enabled step"),
+    ],
+)
+def test_empty_aggregate_still_validates_workflow(merge_case, invalid_part, expected_error):
+    case = merge_case
+    if invalid_part == "name":
+        case.workflow.name = ""
+    elif invalid_part == "config":
+        case.workflow.steps[0].config["output_filename"] = 123
+    elif invalid_part == "predecessor":
+        case.workflow.add_step("file_rename")
+        case.workflow.move_step(1, 0)
+    else:
+        case.workflow.add_step("pdf_merge")
+
+    stats = case.processor.process_batch([], case.workflow, str(case.out))
+
+    assert stats.failed_files >= 1
+    assert all(error["file"] == "workflow" for error in stats.errors)
+    assert any(expected_error in error["error"] for error in stats.errors)
+    assert not any("No input files" in error["error"] for error in stats.errors)
+    assert stats.results == []
+    assert stats.processed_files == 0
+    assert case.begun == case.consumed == case.finalized == []
+    assert not case.out.exists()
+    assert_settled(case.processor, stats)

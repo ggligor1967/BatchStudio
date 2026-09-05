@@ -26,7 +26,7 @@ Only one aggregate operation is registered: `pdf_merge`. Contract A requires it 
 
 ## PDF merge lifecycle
 
-An empty aggregate batch records one batch-level `No input files` error before output-directory preparation, path allocation, or `begin`; timing and running state settle normally. This also applies to aggregate dry run.
+After workflow validation and compilation, an empty aggregate batch records one batch-level `No input files` error before output-directory preparation, path allocation, or `begin`; timing and running state settle normally. This also applies to aggregate dry run.
 
 For nonempty input, the processor creates a fresh `PDFAggregateMergeOperation`, resolves and reserves one contained `.pdf` destination, calls `begin`, then calls `consume` in selection order. Each readable PDF contributes all pages in their original order to one writer. Invalid inputs are recorded as failures; readable inputs can still be merged.
 

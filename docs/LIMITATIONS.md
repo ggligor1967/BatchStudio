@@ -37,7 +37,7 @@ This document records observed boundaries of the current 1.0.1 implementation pl
 - CSV filtering silently leaves rows unchanged when the configured column is empty or absent.
 - PDF watermark rendering uses a fixed letter-sized watermark canvas and fixed placement; page-specific layout is not calculated.
 - PDF merge must be the only enabled step. Disabled predecessors do not participate; enabled transformations before a merge are rejected rather than composed into the aggregate.
-- Empty aggregate input produces one controlled batch-level error before output preparation or `begin`. Successfully consumed inputs remain counted as processed on stop or finalization failure, but no completed common output is advertised.
+- For a valid compiled workflow, empty aggregate input produces one controlled batch-level error before output preparation or `begin`. Successfully consumed inputs remain counted as processed on stop or finalization failure, but no completed common output is advertised.
 
 ## Dry run and output safety
 

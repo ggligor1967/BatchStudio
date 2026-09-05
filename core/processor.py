@@ -394,22 +394,18 @@ class BatchProcessor:
         self.stats.total_files = len(file_list)
         self.stats.start_time = datetime.now()
 
-        if not file_list and any(
+        empty_aggregate_batch = not file_list and any(
             isinstance(step.operation_id, str)
             and step.operation_id in self.operation_registry.aggregate_operations
             for step in workflow.get_enabled_steps()
-        ):
-            self.stats.add_error("pdf_merge", "No input files were provided for PDF merge")
-            self.stats.end_time = datetime.now()
-            self.is_running = False
-            return self.stats
-
-        is_valid, error = validate_output_directory(output_dir)
-        if not is_valid:
-            self.stats.add_error("output_dir", f"Invalid output directory: {error}")
-            self.stats.end_time = datetime.now()
-            self.is_running = False
-            return self.stats
+        )
+        if not empty_aggregate_batch:
+            is_valid, error = validate_output_directory(output_dir)
+            if not is_valid:
+                self.stats.add_error("output_dir", f"Invalid output directory: {error}")
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
 
         workflow_valid, workflow_error = workflow.validate()
         if not workflow_valid:
@@ -422,6 +418,14 @@ class BatchProcessor:
         if not compilation.valid:
             for comp_error in compilation.errors:
                 self.stats.add_error("workflow", comp_error)
+            self.stats.end_time = datetime.now()
+            self.is_running = False
+            return self.stats
+
+        if empty_aggregate_batch and compilation.aggregate_operation_id:
+            self.stats.add_error(
+                compilation.aggregate_operation_id, "No input files were provided for aggregate processing"
+            )
             self.stats.end_time = datetime.now()
             self.is_running = False
             return self.stats

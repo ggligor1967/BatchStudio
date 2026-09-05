@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs six test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests; V11-02 increases it to 103:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs six test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests; V11-02 increases it to 107:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -47,13 +47,13 @@ The initial 37-case pre-fix matrix produced 36 failures and one pass on the admi
 
 ## V11-02 aggregate regressions
 
-Run the focused 27-case selection independently:
+Run the focused 31-case selection independently:
 
 ```powershell
 pytest -q tests/test_aggregate_lifecycle.py tests/test_workflow.py tests/test_e2e_release_blockers.py -k 'aggregate or pdf_merge'
 ```
 
-Before production changes, this selection produced 12 failures and 15 passes on the admitted V11-01 source. Stop tests use events, including after the last consumption has completed; pause tests exercise the existing pause loop with its timed wait replaced by events. They do not use sleeps or claim cancellation after finalization begins. Final-write failure is injected through the real PDF writer, checking owned-partial cleanup, preservation of an earlier output, and fresh state on subsequent runs.
+Before production changes, the original 27-case selection produced 12 failures and 15 passes on the admitted V11-01 source. Four additional review regressions failed before the empty-input validation-order correction, then passed: blank workflow name, invalid aggregate configuration, enabled predecessor, and multiple aggregates. Stop tests use events, including after the last consumption has completed; pause tests exercise the existing pause loop with its timed wait replaced by events. They do not use sleeps or claim cancellation after finalization begins. Final-write failure is injected through the real PDF writer, checking owned-partial cleanup, preservation of an earlier output, and fresh state on subsequent runs.
 
 The canonical `test_e2e_pdf_merge` cases cover two, three, and five inputs through `tests/pdf_merge_cases.py`, with asserted page counts, non-lexical input order, one actual final output, and zero failures. The root diagnostics reuse this helper.
 
@@ -96,7 +96,7 @@ On 2026-09-04 at the documentation baseline, this command passed 24 tests and re
 
 On 2026-09-05, V11-01 validation on Windows/Python 3.13 passed 77 tests and reported 37% across 2,543 production statements. `core/security.py` reached 99%; the writer modules ranged from 73% to 97%, and `core/processor.py` reached 81%. UI modules remained unexecuted and `main` was not imported. Local pytest runs disabled unrelated globally installed plugin autoload via `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`; no repository dependencies or pytest configuration changed. CI separately verifies the required Python 3.10/3.12 environments.
 
-On 2026-09-05, V11-02 validation on Windows/Python 3.13 passed 103 tests and reported 38% across 2,557 production statements (975 executed). `core/processor.py` reached 85%, with all changed executable lines covered; the PDF operations module reached 94% and output security remained at 99%. UI modules remained unexecuted and `main` was not imported. The same local plugin-autoload isolation was used. Coverage remains diagnostic, with no global threshold.
+On 2026-09-05, V11-02 validation on Windows/Python 3.13 passed 107 tests and reported 38% across 2,559 production statements (985 executed). `core/processor.py` reached 85%, with 21 of 25 changed executable lines covered (four reindented output-directory error-handling lines were unexecuted); the PDF operations module reached 94% and output security remained at 99%. UI modules remained unexecuted and `main` was not imported. The same local plugin-autoload isolation was used. Coverage remains diagnostic, with no global threshold.
 
 ## OCR tests
 

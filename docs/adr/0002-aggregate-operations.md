@@ -12,7 +12,7 @@ Most operations transform one input independently. PDF merge instead consumes an
 
 Model PDF merge as `AggregateOperation` with explicit `begin`, `consume`, and `finalize` calls. Adopt Contract A: an aggregate must be the **only enabled workflow step** and executes through a dedicated batch path. Disabled predecessors do not participate; enabled per-file predecessors, multiple aggregates, and non-final aggregate structures are rejected with actionable compile errors.
 
-Return one batch-level error for empty aggregate input before output preparation or `begin`. Check cooperative stop after pause handling and immediately before `finalize`, which is the physical write boundary. Publish the common output only after successful finalization; dry run reports a planned destination without producing a file.
+Validate and compile the workflow even with no inputs. Return one batch-level error for valid empty aggregate input before output preparation or `begin`. Check cooperative stop after pause handling and immediately before `finalize`, which is the physical write boundary. Publish the common output only after successful finalization; dry run reports a planned destination without producing a file.
 
 ## Consequences
 

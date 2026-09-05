@@ -31,7 +31,7 @@ The current image OCR implementation uses only `language`; its other exposed pre
 
 ## Aggregate workflow and termination
 
-`pdf_merge` must be the only enabled workflow step. Disabled predecessors do not participate; enabled transformations and multiple aggregates are rejected. An empty input list returns one controlled batch-level error before output preparation or `begin`, including during dry run.
+`pdf_merge` must be the only enabled workflow step. Disabled predecessors do not participate; enabled transformations and multiple aggregates are rejected. After workflow validation and compilation, an empty input list returns one controlled batch-level error before output preparation or `begin`, including during dry run.
 
 Consumption preserves input and page order. `processed_files` counts successfully consumed inputs, not merged files. The common output path is reported only after `finalize` succeeds; a failed finalization or a stop before it leaves no completed output advertisement. The existing partial-invalid-input policy remains: readable inputs may still produce a merge while invalid inputs are reported separately.
 
