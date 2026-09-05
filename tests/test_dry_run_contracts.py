@@ -169,8 +169,17 @@ def test_registered_dry_run_paths_attempt_no_writes(
         (out / "prior.txt").write_bytes(b"preserve")
     monkeypatch.setattr(ocr_ops, "HAS_TESSERACT_BINARY", True)
     monkeypatch.setattr(ocr_ops, "HAS_PDF2IMAGE", True)
-    monkeypatch.setattr(ocr_ops, "pytesseract", SimpleNamespace(image_to_string=Mock(side_effect=AssertionError("real OCR"))))
-    monkeypatch.setattr(ocr_ops, "convert_from_path", Mock(side_effect=AssertionError("rasterization")))
+    # Optional imports may be absent in minimal installations.
+    monkeypatch.delattr(ocr_ops, "pytesseract", raising=False)
+    monkeypatch.delattr(ocr_ops, "convert_from_path", raising=False)
+    monkeypatch.setattr(
+        ocr_ops, "pytesseract",
+        SimpleNamespace(image_to_string=Mock(side_effect=AssertionError("real OCR"))),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        ocr_ops, "convert_from_path", Mock(side_effect=AssertionError("rasterization")), raising=False,
+    )
     workflow = Workflow("registered dry run")
     workflow.add_step(operation_id, config)
     before = filesystem_snapshot(tmp_path)
