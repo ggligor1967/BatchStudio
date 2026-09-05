@@ -7,9 +7,9 @@ from core.operations.data_ops import CSVFilterOperation
 from core.operations.file_ops import FileRenameOperation
 from core.operations.image_ops import ImageConvertOperation, ImageFilterOperation, ImageResizeOperation
 from core.operations.ocr_ops import (
-    HAS_PDF2IMAGE,
-    HAS_TESSERACT,
-    HAS_TESSERACT_BINARY,
+    get_image_ocr_readiness,
+    get_pdf_native_readiness,
+    get_pdf_ocr_readiness,
     OCRBatchOperation,
     OCRImageOperation,
     OCRPDFOperation,
@@ -77,5 +77,35 @@ class OperationRegistry:
     def classify_extension(self, extension: str) -> str:
         return FILE_TYPE_BY_EXTENSION.get(extension.lower(), "unknown")
 
-    def has_ocr_capability(self) -> bool:
-        return HAS_TESSERACT and HAS_TESSERACT_BINARY and HAS_PDF2IMAGE
+    def get_ocr_readiness(self, language: str = "eng") -> dict:
+        return {
+            "image": get_image_ocr_readiness(language),
+            "native_pdf": get_pdf_native_readiness(),
+            "pdf_ocr": get_pdf_ocr_readiness(language),
+        }
+
+    def get_capability_status(self, operation_id: str, config: Optional[dict] = None) -> str:
+        if operation_id not in {"ocr_image", "ocr_pdf", "ocr_batch"}:
+            return ""
+        config = config or {}
+        operation = self.get_operation(operation_id, config)
+        valid, error = operation.validate_config()
+        if not valid:
+            return error
+        language = config.get("language", "eng")
+        if operation_id == "ocr_image":
+            readiness = get_image_ocr_readiness(language)
+            return f"Image OCR ({language}): {readiness.error or 'ready'}"
+        mode = config.get("mode", "auto")
+        native = get_pdf_native_readiness()
+        parts = []
+        if operation_id == "ocr_batch":
+            image = get_image_ocr_readiness(language)
+            parts.append(f"Image OCR ({language}): {image.error or 'ready'}")
+        if mode != "ocr":
+            parts.append(f"Native PDF: {native.error or 'ready'}")
+        if mode != "native":
+            pdf_ocr = get_pdf_ocr_readiness(language)
+            label = "PDF OCR fallback" if mode == "auto" else "PDF OCR"
+            parts.append(f"{label} ({language}): {pdf_ocr.error or 'ready'}")
+        return "; ".join(parts)

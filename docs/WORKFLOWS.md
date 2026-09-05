@@ -15,6 +15,7 @@ It rejects:
 - no enabled steps;
 - unknown operation IDs;
 - configuration values whose types or choices do not match an operation schema, booleans supplied for numeric fields, missing required keys, or strings violating a declared non-empty constraint;
+- explicitly unsupported OCR legacy preprocessing or combined-output keys, including false/default values;
 - a missing capability reported by a per-file operation;
 - incompatible type transitions between per-file operations;
 - an aggregate operation alongside any other enabled step, including another aggregate;
@@ -25,6 +26,8 @@ CSV filters require a non-empty string `column`, including for direct execution.
 The compiler starts with type `any`. A per-file operation that returns a concrete `output_type` advances the current type; `same` preserves it. Aggregate configuration and position are checked, but aggregate input acceptance is enforced while inputs are consumed rather than by the compiler.
 
 Only one aggregate operation is registered: `pdf_merge`. Contract A requires it to be the **only enabled step**. Disabled predecessors or successors do not participate in compilation or execution. Enabled per-file predecessors are rejected with an instruction to disable or remove the other steps; transformed intermediates are not composed into aggregate execution.
+
+OCR compilation checks unconditional capabilities: image recognition requires the live image stack and requested language; PDF `ocr` requires the full PDF OCR stack; PDF `native` and `auto` permit native extraction independently of OCR tools. An actual auto fallback performs its own readiness check and fails explicitly when a prerequisite is missing. Batch OCR defers capability checks until its concrete PDF/image input is known. The same rule applies in dry run, which never extracts text to predict auto fallback. See [OCR](OCR.md).
 
 ## PDF merge lifecycle
 
@@ -75,3 +78,5 @@ The run naming pattern supports `{original}`, `{timestamp}`, and `{counter}`. Th
 ## Templates
 
 The UI exposes built-in JSON-equivalent presets for image, PDF watermark, CSV, rename, and OCR workflows. Templates are starting configurations. Their descriptive names do not establish file-size, quality, visual, compatibility, or OCR-accuracy guarantees.
+
+All four OCR presets contain supported configuration only: Document Scanner OCR, Invoice Text Extractor, Book Page Digitizer, and Multilingual OCR. Image presets retain language; the book preset retains `auto`, English, and 300 DPI. They apply no preprocessing. Legacy workflow files containing the [rejected OCR keys](OCR.md#configuration-migration) fail compilation and direct execution until those keys are removed; the UI does not silently migrate them.

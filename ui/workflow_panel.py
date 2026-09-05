@@ -6,6 +6,8 @@ Workflow builder interface with button-based step ordering.
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 import json
+from queue import Empty, SimpleQueue
+import threading
 
 from core import Workflow, WorkflowTemplates, OperationRegistry
 
@@ -61,6 +63,9 @@ class WorkflowPanel:
         
         # Operations
         ttk.Label(ops_frame, text="Operations:", font=('Segoe UI', 10, 'bold')).pack(anchor=tk.W)
+
+        ttk.Button(ops_frame, text="Refresh OCR availability",
+                   command=self._load_operations).pack(fill=tk.X, pady=5)
         
         ops_scroll = ttk.Scrollbar(ops_frame)
         ops_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -142,6 +147,8 @@ class WorkflowPanel:
     
     def _load_operations(self):
         """Load available operations and templates."""
+        self.templates_listbox.delete(0, tk.END)
+        self.operations_listbox.delete(0, tk.END)
         # Load templates
         templates = WorkflowTemplates.list_templates()
         for template in templates:
@@ -149,8 +156,49 @@ class WorkflowPanel:
         
         # Load operations
         operations = self.operation_registry.list_operations()
-        for op in operations:
-            self.operations_listbox.insert(tk.END, f"🔧 {op['name']}")
+        refresh_token = object()
+        self._operations_refresh_token = refresh_token
+        for index, op in enumerate(operations):
+            title = f"🔧 {op['name']}"
+            is_ocr = op['id'] in {'ocr_image', 'ocr_pdf', 'ocr_batch'}
+            suffix = " — OCR availability: checking" if is_ocr else ""
+            self.operations_listbox.insert(tk.END, title + suffix)
+            if is_ocr:
+                def display_status(status, row=index, name=title):
+                    if self._operations_refresh_token is not refresh_token:
+                        return
+                    selected = row in self.operations_listbox.curselection()
+                    self.operations_listbox.delete(row)
+                    self.operations_listbox.insert(row, f"{name} — {status}")
+                    if selected:
+                        self.operations_listbox.selection_set(row)
+
+                self._load_capability_status(op['id'], {}, display_status)
+
+    def _load_capability_status(self, operation_id, config, display_status):
+        """Probe plain configuration in a worker; poll and update widgets only on Tk."""
+        config_snapshot = dict(config)
+        results = SimpleQueue()
+
+        def probe():
+            try:
+                status = self.operation_registry.get_capability_status(operation_id, config_snapshot)
+            except Exception:
+                status = "OCR availability check failed"
+            results.put(status)
+
+        def poll():
+            if not self.frame.winfo_exists():
+                return
+            try:
+                status = results.get_nowait()
+            except Empty:
+                self.frame.after(50, poll)
+                return
+            display_status(status)
+
+        threading.Thread(target=probe, daemon=True).start()
+        self.frame.after(0, poll)
     
     def _add_operation(self):
         """Add selected operation to workflow."""
@@ -243,6 +291,27 @@ class WorkflowPanel:
         ttk.Label(self.config_container,
                  text=f"Configure: {operation.name}",
                  font=('Segoe UI', 11, 'bold')).pack(pady=10, anchor=tk.W)
+
+        if step.operation_id in {'ocr_image', 'ocr_pdf', 'ocr_batch'}:
+            status = ttk.Label(self.config_container, wraplength=300, justify=tk.LEFT)
+            status.pack(fill=tk.X, pady=5)
+            refresh_token = None
+
+            def refresh_capability():
+                nonlocal refresh_token
+                refresh_token = object()
+                requested_token = refresh_token
+                status.config(text="OCR availability: checking")
+
+                def display_status(text):
+                    if requested_token is refresh_token and status.winfo_exists():
+                        status.config(text=text)
+
+                self._load_capability_status(step.operation_id, step.config, display_status)
+
+            refresh_capability()
+            ttk.Button(self.config_container, text="Refresh OCR availability",
+                       command=refresh_capability).pack(fill=tk.X, pady=5)
         
         if not schema:
             ttk.Label(self.config_container,
@@ -305,6 +374,9 @@ class WorkflowPanel:
         """Apply configuration changes."""
         for key, (widget_type, var) in self.config_widgets.items():
             step.config[key] = var.get()
+
+        if step.operation_id in {'ocr_image', 'ocr_pdf', 'ocr_batch'}:
+            self._show_step_config(step)
         
         self.main_window.set_status("Configuration applied")
         messagebox.showinfo("Success", "Configuration updated successfully!")

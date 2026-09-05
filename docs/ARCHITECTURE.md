@@ -13,6 +13,7 @@
 - `core/workflow.py` defines workflow/step persistence and built-in templates.
 - `core/processor.py` validates, compiles, schedules, executes, cleans intermediate outputs, records statistics, and renders reports.
 - `core/operations/registry.py` is the operation catalog and extension classifier.
+- `core/operations/ocr_ops.py` owns OCR-specific legacy-key validation and independent image/native-PDF/PDF-OCR readiness. The registry exposes these reasons to the workflow UI; compiler and runtime use the same readiness functions. Executable/language/rasterizer state is refreshed, not cached at import. Batch delegates checks by concrete input; auto PDF checks OCR fallback only when needed. The generic operation validator remains compatible with unrelated unknown keys.
 - `core/operations/base.py` defines per-file and aggregate interfaces.
 - `core/operations/image_ops.py`, `pdf_ops.py`, `data_ops.py`, `file_ops.py`, and `ocr_ops.py` implement registered behavior.
 
@@ -62,6 +63,8 @@ Pause blocks new submissions and delays aggregate consumption. It does not suspe
 ## Tkinter threading rule
 
 The Tk thread snapshots dry-run mode, naming pattern, worker count, report intent, output directory, selected files, and a copy of the workflow before starting the daemon background thread. The worker receives plain Python values and reads no Tk variable to determine execution identity. Completion receives the captured report intent and output directory. Progress and completion callbacks use `frame.after(0, ...)` before touching widgets. New UI code must preserve the rule that widget mutation occurs on the Tk main thread.
+
+Workflow OCR readiness probes use daemon workers with plain configuration snapshots and result queues. Only Tk schedules polling and mutates labels/list rows; slow external probes do not block the event loop. Refresh tokens prevent stale responses from overwriting newer status, and destroyed widgets are ignored.
 
 ## Output allocation and containment
 

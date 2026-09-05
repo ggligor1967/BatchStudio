@@ -59,11 +59,15 @@ def make_source(path, color="blue"):
 
 @pytest.fixture(autouse=True)
 def deterministic_ocr(monkeypatch):
-    monkeypatch.setattr(ocr_ops, "HAS_TESSERACT_BINARY", True)
+    monkeypatch.setattr(ocr_ops, "HAS_TESSERACT", True)
     monkeypatch.setattr(
         ocr_ops,
         "pytesseract",
-        SimpleNamespace(image_to_string=lambda *args, **kwargs: "extracted\ntext"),
+        SimpleNamespace(
+            image_to_string=lambda *args, **kwargs: "extracted\ntext",
+            get_tesseract_version=lambda **kwargs: "5.0",
+            get_languages=lambda **kwargs: ["eng"],
+        ),
         raising=False,
     )
 

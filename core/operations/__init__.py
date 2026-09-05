@@ -5,7 +5,6 @@ from core.operations.image_ops import ImageConvertOperation, ImageFilterOperatio
 from core.operations.ocr_ops import (
     HAS_PDF2IMAGE,
     HAS_TESSERACT,
-    HAS_TESSERACT_BINARY,
     OCRBatchOperation,
     OCRImageOperation,
     OCRPDFOperation,
@@ -29,6 +28,5 @@ __all__ = [
     "OCRPDFOperation",
     "OCRBatchOperation",
     "HAS_TESSERACT",
-    "HAS_TESSERACT_BINARY",
     "HAS_PDF2IMAGE",
 ]
