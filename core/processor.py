@@ -176,6 +176,8 @@ def process_single_file(
 
         workflow = Workflow.from_dict(workflow_dict)
         output_root = Path(output_dir).resolve(strict=False)
+        if allocator is None:
+            allocator = OutputPathAllocator(output_root)
         source = Path(file_path).resolve(strict=False)
 
         current_input = source

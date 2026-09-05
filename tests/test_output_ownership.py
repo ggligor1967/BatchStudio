@@ -199,6 +199,7 @@ def test_direct_writer_collision_at_open_is_exclusive(
     target = out / final_name
     original_open = builtins.open
     original_io_open = io.open
+    original_path_open = Path.open
     collided = []
 
     def intercept(opener):
@@ -218,6 +219,7 @@ def test_direct_writer_collision_at_open_is_exclusive(
 
     monkeypatch.setattr(builtins, "open", intercept(original_open))
     monkeypatch.setattr(io, "open", intercept(original_io_open))
+    monkeypatch.setattr(Path, "open", intercept(original_path_open))
     result = (
         OperationRegistry()
         .get_operation(operation_id, config)
@@ -245,6 +247,26 @@ def test_two_basename_inputs_keep_distinct_final_contents(tmp_path):
     for result in stats.results:
         with Image.open(result["file"]) as source, Image.open(result["output"]) as output:
             assert output.getpixel((0, 0)) == source.getpixel((0, 0))
+
+
+def test_direct_worker_allocates_distinct_same_suffix_intermediates(tmp_path):
+    source = make_source(tmp_path / "input.png")
+    original = source.read_bytes()
+    out = tmp_path / "out"
+    out.mkdir()
+    workflow = Workflow("direct chain")
+    workflow.add_step("image_resize", {"width": 8, "height": 8, "maintain_aspect": False})
+    workflow.add_step("image_filter", {"filter": "GRAYSCALE"})
+
+    result = process_single_file(str(source), workflow.to_dict(), str(out), "planned")
+
+    assert result["success"], result.get("error")
+    output = Path(result["output"])
+    with Image.open(output) as image:
+        assert image.size == (8, 8)
+        assert image.mode == "L"
+    assert set(out.iterdir()) == {output}
+    assert source.read_bytes() == original
 
 
 def test_collision_created_after_reservation_is_not_overwritten(tmp_path, monkeypatch):

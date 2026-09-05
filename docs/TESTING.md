@@ -16,13 +16,13 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs the five modules under `tests/`. V11-01 increases discovery from 24 to 76 tests:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs the five modules under `tests/`. V11-01 increases discovery from 24 to 77 tests:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, and report encoding.
 - `tests/test_workflow.py`: workflow and compiler rejection cases.
 - `tests/test_e2e_release_blockers.py`: resize/convert chains, PDF merge and containment, dry run, malformed configuration, OCR dependency absence, pause, and cancellation.
-- `tests/test_output_ownership.py`: 52 focused V11-01 cases for all registered per-file writers, direct entrypoints, final-path collisions, deterministic counter interleaving, canonical reservation aliases, exclusive creation, aggregate ownership, intermediate cleanup, and normal probe ownership. Symlink cases skip explicitly if the OS does not permit link creation.
+- `tests/test_output_ownership.py`: 53 focused V11-01 cases for all registered per-file writers, direct entrypoints, final-path collisions, deterministic counter interleaving, canonical reservation aliases, exclusive creation, aggregate ownership, intermediate cleanup, and normal probe ownership. Symlink cases skip explicitly if the OS does not permit link creation.
 
 Run the discovered suite:
 
@@ -81,7 +81,7 @@ python -m coverage report --skip-covered
 
 On 2026-09-04 at the documentation baseline, this command passed 24 tests and reported 31% across 2,470 production statements. UI modules were unexecuted and coverage warned that `main` was not imported. Coverage is diagnostic; raising a percentage without meaningful behavioral tests is not an acceptance goal.
 
-On 2026-09-05, V11-01 validation on Windows/Python 3.13 passed 76 tests and reported 37% across 2,541 production statements. `core/security.py` reached 99%; the writer modules ranged from 73% to 97%, and `core/processor.py` reached 81%. UI modules remained unexecuted and `main` was not imported. Local pytest runs disabled unrelated globally installed plugin autoload via `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`; no repository dependencies or pytest configuration changed. CI separately verifies the required Python 3.10/3.12 environments.
+On 2026-09-05, V11-01 validation on Windows/Python 3.13 passed 77 tests and reported 37% across 2,543 production statements. `core/security.py` reached 99%; the writer modules ranged from 73% to 97%, and `core/processor.py` reached 81%. UI modules remained unexecuted and `main` was not imported. Local pytest runs disabled unrelated globally installed plugin autoload via `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`; no repository dependencies or pytest configuration changed. CI separately verifies the required Python 3.10/3.12 environments.
 
 ## OCR tests
 

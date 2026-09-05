@@ -61,7 +61,7 @@ The run starts on a daemon background thread. Progress and completion callbacks 
 
 ## Output allocation and containment
 
-The processor resolves the output root. `_render_name` and operation-specific naming pass through `sanitize_filename`; `resolve_safe_output` validates final suffix/name containment. `OutputPathAllocator` uses a lock, canonical path reservations, and naming counters to select unique destinations across worker threads and aliases. `exclusive_output` closes the reservation-to-creation race by failing if the final entry is occupied. Direct `process_single_file` calls without an allocator still use the same exclusive writers. Directory validation uses an exclusively owned temporary probe, including during dry-run validation. See [Security model](SECURITY_MODEL.md) and [ADR-0003](adr/0003-safe-output-boundary.md) for boundaries and limitations.
+The processor resolves the output root. `_render_name` and operation-specific naming pass through `sanitize_filename`; `resolve_safe_output` validates final suffix/name containment. `OutputPathAllocator` uses a lock, canonical path reservations, and naming counters to select unique destinations across worker threads and aliases. `exclusive_output` closes the reservation-to-creation race by failing if the final entry is occupied. Direct `process_single_file` calls create a local allocator when none is supplied, keeping same-suffix intermediates distinct, and use the same exclusive writers. Directory validation uses an exclusively owned temporary probe, including during dry-run validation. See [Security model](SECURITY_MODEL.md) and [ADR-0003](adr/0003-safe-output-boundary.md) for boundaries and limitations.
 
 ## Reporting
 
