@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from core.processor import BatchProcessor, ProcessingStats, process_single_file, validate_file_path
@@ -103,3 +104,22 @@ def test_reports_escape_html_and_csv_formulae(tmp_path: Path):
     assert "<script>" not in html_text
     assert "&lt;script&gt;" in html_text
     assert "'<script>alert(1)</script>" in csv_text or "'@bad.csv" in csv_text
+
+
+@pytest.mark.parametrize("operation_id, expected_failures", [("file_rename", 0), (["pdf_merge"], 1)])
+def test_empty_batch_preserves_non_merge_validation(tmp_path, operation_id, expected_failures):
+    workflow = Workflow("empty-non-merge")
+    workflow.add_step(operation_id)
+    processor = BatchProcessor()
+    output_dir = tmp_path / "out"
+
+    stats = processor.process_batch([], workflow, str(output_dir))
+
+    assert output_dir.is_dir()
+    assert stats.total_files == stats.processed_files == 0
+    assert stats.failed_files == expected_failures
+    assert stats.results == []
+    assert stats.start_time is not None and stats.end_time is not None
+    assert not processor.is_running
+    if expected_failures:
+        assert "invalid operation_id" in stats.errors[0]["error"]

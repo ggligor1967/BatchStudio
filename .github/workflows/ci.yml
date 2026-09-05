@@ -113,8 +113,6 @@ jobs:
           pytest -q test_installation.py
           pytest -q tests/test_e2e_release_blockers.py
           python test_installation.py
-          python test_pdf_merge_fix.py
-          python test_pdf_merge_simple.py
 
   repository-truth:
     name: repository-truth

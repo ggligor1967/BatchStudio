@@ -2,13 +2,15 @@ from pathlib import Path
 import threading
 import time
 
+import pytest
 from PIL import Image
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfWriter
 
 from core.operations.image_ops import ImageResizeOperation
 from core.operations import HAS_PDF2IMAGE, HAS_TESSERACT, HAS_TESSERACT_BINARY
 from core.processor import BatchProcessor
 from core.workflow import Workflow
+from tests.pdf_merge_cases import assert_merge_case
 
 
 def _img(path: Path, color: str = "blue"):
@@ -53,23 +55,9 @@ def test_e2e_convert_then_rename(tmp_path: Path):
     assert any(Path(r["output"]).suffix.lower() in {".jpg", ".jpeg"} for r in stats.results)
 
 
-def test_e2e_pdf_merge(tmp_path: Path):
-    a = tmp_path / "a.pdf"
-    b = tmp_path / "b.pdf"
-    out = tmp_path / "out"
-    out.mkdir()
-    _pdf(a)
-    _pdf(b)
-
-    wf = Workflow("pdf-merge")
-    wf.add_step("pdf_merge", {"output_filename": "merged.pdf"})
-
-    stats = BatchProcessor(max_workers=2).process_batch([str(a), str(b)], wf, str(out), "{original}")
-    merged = out / "merged.pdf"
-
-    assert stats.failed_files == 0
-    assert merged.exists()
-    assert len(PdfReader(str(merged)).pages) == 2
+@pytest.mark.parametrize("input_count", [2, 3, 5])
+def test_e2e_pdf_merge(tmp_path: Path, input_count):
+    assert_merge_case(tmp_path, input_count)
 
 
 def test_e2e_pdf_merge_output_filename_traversal_is_sanitized(tmp_path: Path):
