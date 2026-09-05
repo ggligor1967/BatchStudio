@@ -49,11 +49,15 @@ Threads keep the Tk event loop responsive and suit file and library calls that r
 
 ## Aggregate PDF merge
 
-When the compiled aggregate ID is `pdf_merge`, the processor takes the aggregate path rather than submitting per-file chains. It resolves and reserves one contained final PDF destination, calls `begin`, consumes selected inputs sequentially in their supplied order, and calls `finalize` once. Finalization creates the output exclusively. Consumption records receive the produced path only after successful finalization, so failure cannot advertise an occupied unrelated output. The operation holds a `PdfWriter` only for that instance and run. There is no global or cross-run merge session. Compilation, empty-input handling, and stop/finalize lifecycle behavior are unchanged. See [ADR-0002](adr/0002-aggregate-operations.md).
+Compilation requires an aggregate to be the only enabled step (Contract A); disabled predecessors do not participate. When the compiled aggregate ID is `pdf_merge`, the processor uses a dedicated batch lifecycle. For a valid compiled workflow, empty aggregate input returns one batch-level error with settled timing/running state before output-directory preparation or `begin`.
+
+For nonempty input, the processor resolves and reserves one contained final PDF destination, calls `begin`, consumes selected inputs sequentially in their supplied order, and calls `finalize` once unless stopped. Finalization is the physical write boundary and creates the output exclusively. Consumption records increment `processed_files` and receive the common `output` only after successful finalization. Empty input, stop, and finalization failure advertise no completed output. Dry run records only `result.planned_output` after successful simulated finalization, with no writer or final PDF.
+
+Each independent batch creates a fresh aggregate instance, isolating its writer, input/page count, and destination across success, failure, and stop. See [ADR-0002](adr/0002-aggregate-operations.md).
 
 ## Pause and cancellation
 
-Pause blocks new submissions and delays aggregate consumption. It does not suspend already-running work. Stop clears the running flag, cancels futures that have not started, and requests executor shutdown without waiting; Python cannot safely terminate an already-running operation or third-party library call. Results already recorded remain in `ProcessingStats`.
+Pause blocks new submissions and delays aggregate consumption. It does not suspend already-running work. Stop clears the running flag, cancels futures that have not started, and requests executor shutdown without waiting; Python cannot safely terminate an already-running operation or third-party library call. Results already recorded remain in `ProcessingStats`. Aggregate execution checks stop after pause handling and immediately before finalization; a stop observed before that call prevents output. Once finalization begins, cooperative cancellation does not promise hard interruption or atomic rollback.
 
 ## Tkinter threading rule
 

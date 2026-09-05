@@ -17,15 +17,22 @@ It rejects:
 - configuration values whose types or choices do not match an operation schema;
 - a missing capability reported by a per-file operation;
 - incompatible type transitions between per-file operations;
+- an aggregate operation alongside any other enabled step, including another aggregate;
 - an aggregate operation that is not the final enabled step.
 
 The compiler starts with type `any`. A per-file operation that returns a concrete `output_type` advances the current type; `same` preserves it. Aggregate configuration and position are checked, but aggregate input acceptance is enforced while inputs are consumed rather than by the compiler.
 
-Only one aggregate operation is registered: `pdf_merge`. If it is present as the last enabled step, batch execution uses the aggregate path. Earlier per-file steps are not applied before the aggregate merge in that path; a workflow intended to merge PDFs should therefore use PDF merge as its effective operation.
+Only one aggregate operation is registered: `pdf_merge`. Contract A requires it to be the **only enabled step**. Disabled predecessors or successors do not participate in compilation or execution. Enabled per-file predecessors are rejected with an instruction to disable or remove the other steps; transformed intermediates are not composed into aggregate execution.
 
 ## PDF merge lifecycle
 
-The processor creates a `PDFAggregateMergeOperation`, resolves one contained `.pdf` destination, calls `begin`, then calls `consume` once for each input in selection order. Each readable PDF contributes all pages to one writer. `finalize` writes the output once. This explicit lifecycle has no hidden cross-run session state.
+After workflow validation and compilation, an empty aggregate batch records one batch-level `No input files` error before output-directory preparation, path allocation, or `begin`; timing and running state settle normally. This also applies to aggregate dry run.
+
+For nonempty input, the processor creates a fresh `PDFAggregateMergeOperation`, resolves and reserves one contained `.pdf` destination, calls `begin`, then calls `consume` in selection order. Each readable PDF contributes all pages in their original order to one writer. Invalid inputs are recorded as failures; readable inputs can still be merged.
+
+`finalize` is the physical write boundary and creates the output exclusively. Successfully consumed inputs count as processed, but their common output path is published only after successful finalization. Stop or finalize failure leaves those consumption records without a completed output. Dry run creates no writer or final PDF and records the destination under `result.planned_output`, leaving `output` empty.
+
+Pause delays consumption and finalization. Stop is checked after pause handling and immediately before `finalize`; a stop observed there prevents the final write. Cancellation is cooperative: once finalization begins, hard cancellation and atomic rollback are not promised. Each independent run uses a fresh aggregate instance.
 
 ## JSON persistence
 

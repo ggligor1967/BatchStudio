@@ -122,8 +122,13 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry) -> Workflo
             config_ok, config_error = agg.validate_config()
             if not config_ok:
                 errors.append(f"Invalid config at step {index + 1} ({step.operation_id}): {config_error}")
+            if len(enabled_steps) != 1:
+                errors.append(
+                    "Aggregate operations must be the only enabled step. "
+                    "Disable or remove the other enabled steps."
+                )
             if index != len(enabled_steps) - 1:
-                errors.append("Aggregate operations must be the last workflow step")
+                errors.append("Aggregate operations must be the last enabled workflow step")
             aggregate_id = step.operation_id
             continue
 
@@ -350,6 +355,8 @@ class BatchProcessor:
             if not self.is_running:
                 return
             self._wait_if_paused()
+            if not self.is_running:
+                return
             result = aggregate_operation.consume(Path(file_path))
             if result.success:
                 self.stats.add_result(file_path, {"message": result.message})
@@ -357,13 +364,19 @@ class BatchProcessor:
                 self.stats.add_error(file_path, result.error or "Failed to consume PDF")
             self._update_progress(index, len(file_list), result.message or result.error or "")
 
+        self._wait_if_paused()
+        if not self.is_running:
+            return
         finalize = aggregate_operation.finalize()
         if not finalize.success:
             self.stats.add_error("pdf_merge_finalize", finalize.error or "Finalize failed")
         else:
             for record in self.stats.results:
-                record["output"] = str(finalize.output_path)
-                record["result"]["output"] = str(finalize.output_path)
+                if dry_run:
+                    record["result"]["planned_output"] = str(finalize.output_path)
+                else:
+                    record["output"] = str(finalize.output_path)
+                    record["result"]["output"] = str(finalize.output_path)
             self._update_progress(len(file_list), len(file_list), finalize.message)
 
     def process_batch(
@@ -381,12 +394,18 @@ class BatchProcessor:
         self.stats.total_files = len(file_list)
         self.stats.start_time = datetime.now()
 
-        is_valid, error = validate_output_directory(output_dir)
-        if not is_valid:
-            self.stats.add_error("output_dir", f"Invalid output directory: {error}")
-            self.stats.end_time = datetime.now()
-            self.is_running = False
-            return self.stats
+        empty_aggregate_batch = not file_list and any(
+            isinstance(step.operation_id, str)
+            and step.operation_id in self.operation_registry.aggregate_operations
+            for step in workflow.get_enabled_steps()
+        )
+        if not empty_aggregate_batch:
+            is_valid, error = validate_output_directory(output_dir)
+            if not is_valid:
+                self.stats.add_error("output_dir", f"Invalid output directory: {error}")
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
 
         workflow_valid, workflow_error = workflow.validate()
         if not workflow_valid:
@@ -399,6 +418,14 @@ class BatchProcessor:
         if not compilation.valid:
             for comp_error in compilation.errors:
                 self.stats.add_error("workflow", comp_error)
+            self.stats.end_time = datetime.now()
+            self.is_running = False
+            return self.stats
+
+        if empty_aggregate_batch and compilation.aggregate_operation_id:
+            self.stats.add_error(
+                compilation.aggregate_operation_id, "No input files were provided for aggregate processing"
+            )
             self.stats.end_time = datetime.now()
             self.is_running = False
             return self.stats

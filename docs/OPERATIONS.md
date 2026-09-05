@@ -13,7 +13,7 @@
 | `ocr_image` | `OCRImageOperation` | `image` | UTF-8 TXT | `language:str=eng`; accepted but currently unapplied: `page_segmentation_mode:int=3`, `grayscale:bool=false`, `threshold:bool=false` | File | Requires detected Tesseract, then returns TXT path without extraction/write | Pillow, pytesseract, Tesseract executable, requested language data | Missing executable/package/language, unreadable image, OCR or write error |
 | `ocr_pdf` | `OCRPDFOperation` | `pdf` | UTF-8 TXT | `mode` in `auto`, `native`, `ocr`; `language:str=eng`, `dpi:int=200` | File | Returns TXT path without opening or writing | pypdf; OCR modes also pytesseract, Tesseract, pdf2image, Poppler | Invalid/encrypted PDF, missing OCR tool, rasterization/OCR/language/write error |
 | `ocr_batch` | `OCRBatchOperation` | Declared `any`; runtime delegates PDF or image | One UTF-8 TXT per input | `language:str=eng`; accepted but currently unapplied: `combine_output`, `combined_filename` | File | Delegates to image/PDF dry run; no text output | OCR image dependencies; PDF path may also require pdf2image and Poppler | Non-image/non-PDF input, missing OCR tool, delegated extraction failure |
-| `pdf_merge` | `PDFAggregateMergeOperation` | `pdf` | One PDF | `output_filename:str=merged_output.pdf` | Aggregate | Initializes no writer, validates/queues inputs, and returns planned final path without writing | pypdf | Invalid/encrypted PDF, no valid PDFs, not initialized, final write error |
+| `pdf_merge` | `PDFAggregateMergeOperation` | `pdf` | One PDF | `output_filename:str=merged_output.pdf` | Aggregate | Initializes no writer, validates/queues inputs, and reports `result.planned_output` without a completed output | pypdf | Invalid/encrypted PDF, no valid PDFs, not initialized, final write error |
 
 ## Image filter choices
 
@@ -28,6 +28,14 @@ If `column` is empty or is not present in the parsed CSV, the operation succeeds
 `native` PDF mode uses pypdf text extraction and does not require Tesseract. `auto` switches to OCR when stripped native text is shorter than 50 characters. Workflow compilation therefore requires OCR capabilities for both `auto` and `ocr` modes even if a particular auto-mode PDF might contain native text.
 
 The current image OCR implementation uses only `language`; its other exposed preprocessing fields are not applied. The current batch OCR implementation creates per-file outputs; `combine_output` and `combined_filename` are not applied. These are documented limitations, not promised features.
+
+## Aggregate workflow and termination
+
+`pdf_merge` must be the only enabled workflow step. Disabled predecessors do not participate; enabled transformations and multiple aggregates are rejected. After workflow validation and compilation, an empty input list returns one controlled batch-level error before output preparation or `begin`, including during dry run.
+
+Consumption preserves input and page order. `processed_files` counts successfully consumed inputs, not merged files. The common output path is reported only after `finalize` succeeds; a failed finalization or a stop before it leaves no completed output advertisement. The existing partial-invalid-input policy remains: readable inputs may still produce a merge while invalid inputs are reported separately.
+
+`finalize` is the exclusive physical write boundary. Stop is checked after pause handling and immediately before finalization. Cancellation is cooperative; once finalization has begun, hard cancellation or atomic rollback is not promised. Each processor run creates fresh aggregate state.
 
 ## Result contract
 
