@@ -8,19 +8,19 @@
 
 The canonical package metadata is in `pyproject.toml`. Its required Python dependencies are Pillow, pandas, reportlab, openpyxl, and pypdf.
 
-## Install the 1.0.1 wheel
+## Install a published wheel
 
-Download `batchstudio-1.0.1-py3-none-any.whl` from the [v1.0.1 release](https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.1), then install it in an isolated environment:
+Download `batchstudio-<version>-py3-none-any.whl` for the latest published version from the [releases page](https://github.com/ggligor1967/BatchStudio/releases), then install it in an isolated environment:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install .\batchstudio-1.0.1-py3-none-any.whl
+python -m pip install .\batchstudio-<version>-py3-none-any.whl
 batchstudio-gui
 ```
 
-The release notes record the canonical 1.0.1 filename, byte size, and digest. Historical v1.0.0 identities remain in [v1.0.0 release verification](releases/v1.0.0-verification.md).
+Each release's notes record the canonical wheel and source-distribution filenames, byte sizes, and digests. Historical v1.0.0 identities remain in [v1.0.0 release verification](releases/v1.0.0-verification.md).
 
 ## Install from a source checkout
 

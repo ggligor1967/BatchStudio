@@ -6,7 +6,7 @@ Run `python test_installation.py` from a source checkout to verify imports and e
 
 ## An input is rejected
 
-The processor requires an existing regular file, an allow-listed extension, and a size no greater than 500 MiB. Selection support is broader than operation support: Excel and text/data files have no dedicated transformation in 1.0.1. Match the input to [Operations](OPERATIONS.md).
+The processor requires an existing regular file, an allow-listed extension, and a size no greater than 500 MiB. Selection support is broader than operation support: Excel and text/data files have no dedicated transformation. Match the input to [Operations](OPERATIONS.md).
 
 ## Workflow compilation fails
 

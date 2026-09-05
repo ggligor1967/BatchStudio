@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs ten test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, and V11-05 to 289:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs twelve test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, and V11-R to 379:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -30,6 +30,8 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 - `tests/test_ocr_contracts.py`: 86 deterministic V11-05 cases covering schema/legacy-key parity, all four OCR templates, separate dependency failures, live readiness refresh, PDF modes and forwarding, batch delegates, and schema/status UI routes.
 
 - `tests/test_input_capabilities.py`: V11-07 backend-to-picker mapping, independent image/native PDF/PDF OCR states, unsupported and unavailable selection boundaries, picker/folder/drop routes, stale/failed worker probes, and run preflight. Runtime readiness is mocked; OCR qualification is not repeated. Run independently with `python -m pytest -q tests/test_input_capabilities.py`.
+
+- `tests/test_version_identity.py`: 14 V11-R cases for the canonical `core._version.__version__` source, the `pyproject.toml` dynamic-version contract, the runtime banner and UI version surfaces, installed distribution metadata, the repository and package version verifiers (including divergence detection), and release-documentation invariants (CHANGELOG candidate section, protected release-process integration path, OCR-qualification reconciliation, ROADMAP stretch/deferred markers). Run independently with `python -m pytest -q tests/test_version_identity.py`.
 
 Run the discovered suite:
 
@@ -133,7 +135,7 @@ The initial 64-case regression matrix on the admitted source produced 49 failure
 
 The inherited ownership and complete 53-case dry-run write-interception suites use fresh version/language/rasterizer mocks; their original assertions remain intact. Dry runs check only unconditional capabilities and never recognize or rasterize. Auto dry run does not predict fallback. The critical end-to-end absence test now deterministically mocks a missing executable rather than potentially invoking real OCR when local tools happen to be installed.
 
-UI tests exercise the actual operation-list/configuration methods with widget doubles, including refreshed status for applied language/mode and absence of inert controls; they are not interactive GUI qualification. V11-06 real OCR qualification remains outstanding. **REAL OCR SUCCESS NOT VERIFIED IN THIS PR.** No external tools or language packs are installed by these tests.
+UI tests exercise the actual operation-list/configuration methods with widget doubles, including refreshed status for applied language/mode and absence of inert controls; they are not interactive GUI qualification. Controlled real-OCR qualification (V11-06, issue #10) was not admitted to the 1.1.0 release scope and is deferred; see [Roadmap](ROADMAP.md). **Real OCR success is not verified in this repository.** No external tools or language packs are installed by these tests.
 
 ## Release-critical sequence
 

@@ -3,6 +3,7 @@ BatchStudio - Core Module
 Contains the core processing logic, workflow management, and operations.
 """
 
+from core._version import __version__
 from core.processor import (
     BatchProcessor,
     ProcessingStats,

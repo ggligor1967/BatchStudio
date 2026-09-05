@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 import subprocess
 import sys
@@ -81,22 +82,60 @@ def read_repository_text(path: PurePosixPath) -> str:
     return REPOSITORY_ROOT.joinpath(*path.parts).read_text(encoding="utf-8-sig")
 
 
+def _canonical_version() -> str:
+    """Read the single source-of-truth version from ``core/_version.py`` statically."""
+    version_module = REPOSITORY_ROOT / "core" / "_version.py"
+    tree = ast.parse(version_module.read_text(encoding="utf-8"), filename=str(version_module))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "__version__" for target in node.targets
+        ):
+            value = ast.literal_eval(node.value)
+            if not isinstance(value, str):
+                raise RepositoryVerificationError("core/_version.py __version__ must be a string")
+            return value
+    raise RepositoryVerificationError("core/_version.py does not define __version__")
+
+
 def verify_version_truth(paths: set[str]) -> list[str]:
+    """Validate the single canonical version source and its declared consumers.
+
+    The application version is defined exactly once in ``core/_version.py``. Every
+    other surface (packaging metadata, the runtime banner, the UI label/About box)
+    must derive from it rather than repeat a literal string.
+    """
     errors: list[str] = []
     pyproject_path = REPOSITORY_ROOT / "pyproject.toml"
     with pyproject_path.open("rb") as pyproject_file:
-        project = tomllib.load(pyproject_file)["project"]
+        pyproject = tomllib.load(pyproject_file)
+    project = pyproject["project"]
 
-    version = project["version"]
+    try:
+        version = _canonical_version()
+    except RepositoryVerificationError as error:
+        return [str(error)]
+
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        errors.append(f"core/_version.py __version__ is not a plain semantic version: {version}")
+
+    if "version" in project:
+        errors.append("pyproject.toml [project] must not pin a literal version; declare it dynamic")
+    if "version" not in project.get("dynamic", []):
+        errors.append('pyproject.toml [project].dynamic must include "version"')
+    dynamic_version = (
+        pyproject.get("tool", {}).get("setuptools", {}).get("dynamic", {}).get("version")
+    )
+    if dynamic_version != {"attr": "core._version.__version__"}:
+        errors.append(
+            "pyproject.toml [tool.setuptools.dynamic].version must be "
+            '{attr = "core._version.__version__"}'
+        )
+
     required_markers = {
-        "main.py": (f"Version: {version}", f"BATCHSTUDIO v{version}"),
-        "ui/main_window.py": (f"v{version}",),
-        "README.md": (f"BatchStudio {version}", f"/releases/tag/v{version}"),
-        "SECURITY.md": (f"BatchStudio {version} is the current release",),
+        "core/__init__.py": ("from core._version import __version__",),
+        "main.py": ("from core import __version__", "BATCHSTUDIO v{__version__}"),
+        "ui/main_window.py": ("from core import __version__", 'f"v{__version__}"'),
         "CHANGELOG.md": (f"## [{version}]",),
-        "docs/INSTALLATION.md": (f"batchstudio-{version}-py3-none-any.whl",),
-        "docs/LIMITATIONS.md": (f"current {version} implementation",),
-        "docs/PACKAGING.md": (f"version `{version}`",),
     }
     for relative_path, markers in required_markers.items():
         if relative_path not in paths:
@@ -105,7 +144,29 @@ def verify_version_truth(paths: set[str]) -> list[str]:
         content = read_repository_text(PurePosixPath(relative_path))
         for marker in markers:
             if marker not in content:
-                errors.append(f"{relative_path} is missing current-version marker: {marker}")
+                errors.append(f"{relative_path} is missing canonical-version marker: {marker}")
+
+    literal_pattern = re.compile(r"v\d+\.\d+\.\d+")
+    for relative_path in ("main.py", "ui/main_window.py"):
+        if relative_path not in paths:
+            continue
+        stray = sorted(
+            set(literal_pattern.findall(read_repository_text(PurePosixPath(relative_path))))
+        )
+        if stray:
+            errors.append(
+                f"{relative_path} hard-codes a literal application version: {', '.join(stray)}"
+            )
+
+    package_workflow = PurePosixPath(".github/workflows/package.yml")
+    if package_workflow.as_posix() in paths:
+        workflow_text = read_repository_text(package_workflow)
+        for expected in re.findall(r"--expected-version\s+(\S+)", workflow_text):
+            if expected != version:
+                errors.append(
+                    f"package.yml --expected-version {expected} diverges from "
+                    f"canonical version {version}"
+                )
 
     if project.get("license") != "MIT":
         errors.append("pyproject.toml must use the SPDX license expression MIT")
