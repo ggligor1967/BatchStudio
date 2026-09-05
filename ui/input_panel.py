@@ -8,6 +8,12 @@ from tkinter import ttk, filedialog, messagebox
 import os
 from PIL import Image, ImageTk
 import csv
+from copy import deepcopy
+from queue import Empty, SimpleQueue
+import threading
+
+from core.operations.registry import OperationRegistry
+from ui.input_support import InputCapabilityRegistry, get_input_error, get_picker_filetypes
 
 # Try to import tkinterdnd2 for drag & drop support
 try:
@@ -29,12 +35,6 @@ class InputPanel:
     
     # Maximum number of previews to cache (prevent memory leak)
     MAX_PREVIEW_CACHE = 50
-    
-    # Supported file extensions
-    SUPPORTED_EXTENSIONS = {
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif',
-        '.pdf', '.csv', '.xlsx', '.xls', '.txt', '.json', '.xml'
-    }
     
     def __init__(self, parent, main_window):
         self.parent = parent
@@ -176,22 +176,18 @@ class InputPanel:
         """Handle file drop event."""
         # Parse dropped files (format varies by OS)
         files = self._parse_drop_data(event.data)
-        added = 0
-        
-        for filepath in files:
-            if os.path.isfile(filepath):
-                if self._add_single_file(filepath):
-                    added += 1
-            elif os.path.isdir(filepath):
-                added += self._add_folder_recursive(filepath)
-        
-        if added > 0:
-            self._update_stats()
-            self.main_window.set_files(self.selected_files)
-            self.main_window.set_status(f"Dropped {added} file(s)")
-        
+
+        def candidates():
+            for filepath in files:
+                if os.path.isdir(filepath):
+                    yield from self._folder_files(filepath)
+                else:
+                    yield filepath
+
+        self._accept_files(candidates())
+
         # Reset listbox appearance
-        self.file_listbox.config(bg='white')
+        self.file_listbox.config(bg="white")
         return event.action
     
     def _parse_drop_data(self, data):
@@ -234,30 +230,81 @@ class InputPanel:
         return 'break'
     
     def _add_single_file(self, filepath):
-        """Add a single file if valid."""
-        ext = os.path.splitext(filepath)[1].lower()
-        
+        """Insert a worker-validated file once; this method only updates UI state."""
         if filepath in self.selected_files:
             return False
-        
-        if ext not in self.SUPPORTED_EXTENSIONS:
-            return False
-        
+
         self.selected_files.append(filepath)
         self.file_listbox.insert(tk.END, os.path.basename(filepath))
         self._update_drop_zone_visibility()
         return True
     
-    def _add_folder_recursive(self, folder):
-        """Add all supported files from a folder recursively."""
-        count = 0
+    def _folder_files(self, folder):
         for root, dirs, files in os.walk(folder):
-            for file in files:
-                filepath = os.path.join(root, file)
-                if self._add_single_file(filepath):
-                    count += 1
-        return count
-    
+            for filename in files:
+                yield os.path.join(root, filename)
+
+    def _load_input_support(self, check, complete):
+        """Keep runtime probes off Tk; only publish the latest selection request."""
+        token = object()
+        self._selection_token = token
+        results = SimpleQueue()
+        self.main_window.set_status("Checking input availability...")
+
+        def probe():
+            try:
+                results.put((check(), None))
+            except Exception:
+                results.put((None, "Input availability check failed; please try again."))
+
+        def poll():
+            if not self.frame.winfo_exists() or self._selection_token is not token:
+                return
+            try:
+                result, error = results.get_nowait()
+            except Empty:
+                self.frame.after(50, poll)
+                return
+            if error:
+                self.main_window.set_status(error, 'warning')
+                messagebox.showwarning("Input unavailable", error)
+            else:
+                complete(result)
+
+        threading.Thread(target=probe, daemon=True).start()
+        self.frame.after(0, poll)
+
+    def _accept_files(self, files):
+        workflow = deepcopy(self.main_window.get_workflow())
+
+        def check():
+            registry = InputCapabilityRegistry()
+            return [(path, get_input_error(path, workflow, registry)) for path in files]
+
+        def complete(results):
+            current = self.main_window.get_workflow()
+            if (current.to_dict() if current else None) != (workflow.to_dict() if workflow else None):
+                messagebox.showwarning("Selection changed", "Workflow changed; select inputs again.")
+                self.main_window.set_status("Workflow changed; select inputs again.", "warning")
+                return
+            added = 0
+            rejected = []
+            for path, error in results:
+                if error:
+                    rejected.append(f"{os.path.basename(path)}: {error}")
+                elif self._add_single_file(path):
+                    added += 1
+            self._update_stats()
+            self.main_window.set_files(self.selected_files)
+            self.main_window.set_status(f"Added {added} file(s); rejected {len(rejected)}")
+            if rejected:
+                message = "\n".join(rejected[:10])
+                if len(rejected) > 10:
+                    message += f"\n... and {len(rejected) - 10} more rejected inputs."
+                messagebox.showwarning("Inputs rejected", message)
+
+        self._load_input_support(check, complete)
+
     def _update_drop_zone_visibility(self):
         """Show/hide drop zone based on file count."""
         if len(self.selected_files) == 0:
@@ -310,41 +357,35 @@ class InputPanel:
         self.main_window.set_status(f"Removed {len(files_to_remove)} file(s)")
     
     def _add_files(self):
-        """Add files via file dialog."""
-        files = filedialog.askopenfilenames(
-            title="Select Files to Process",
-            filetypes=[
-                ("All Supported", "*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.webp;*.tiff;*.pdf;*.csv;*.txt;*.xlsx;*.xls;*.json;*.xml"),
-                ("Images", "*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.webp;*.tiff"),
-                ("PDFs", "*.pdf"),
-                ("Spreadsheets", "*.csv;*.xlsx;*.xls"),
-                ("Text/Data", "*.txt;*.json;*.xml"),
-                ("All Files", "*.*")
-            ]
-        )
-        
-        if files:
-            added = 0
-            for file in files:
-                if self._add_single_file(file):
-                    added += 1
-            
-            self._update_stats()
-            self.main_window.set_files(self.selected_files)
-            self.main_window.set_status(f"Added {added} file(s)")
-    
+        """Refresh workflow eligibility before opening the native picker."""
+        workflow = deepcopy(self.main_window.get_workflow())
+
+        def check():
+            return get_picker_filetypes(workflow)
+
+        def open_picker(result):
+            filetypes, errors = result
+            if not filetypes:
+                message = "No eligible inputs for this workflow.\n" + "\n".join(errors)
+                self.main_window.set_status("No eligible inputs for this workflow.", 'warning')
+                messagebox.showwarning("Input unavailable", message)
+                return
+            self.main_window.set_status("Select inputs; availability is checked after selection.")
+            files = filedialog.askopenfilenames(
+                title="Select Files to Process", filetypes=filetypes)
+            self._accept_files(files)
+
+        self._load_input_support(check, open_picker)
+
     def _add_folder(self):
-        """Add all files from a folder."""
+        """Apply the same selection boundary to folder inputs."""
         folder = filedialog.askdirectory(title="Select Folder")
-        
         if folder:
-            count = self._add_folder_recursive(folder)
-            self._update_stats()
-            self.main_window.set_files(self.selected_files)
-            self.main_window.set_status(f"Added {count} file(s) from folder")
-    
+            self._accept_files(self._folder_files(folder))
+
     def _clear_all(self):
         """Clear all selected files."""
+        self._selection_token = object()
         if self.selected_files and messagebox.askyesno("Clear All",
                                                        "Remove all files from the list?"):
             self.selected_files = []
@@ -417,7 +458,7 @@ class InputPanel:
         self.info_text.insert(tk.END, f"{ext}\n\n", 'value')
         
         # Show preview based on file type
-        if ext in ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.tiff', '.tif'):
+        if OperationRegistry().classify_extension(ext) == 'image':
             self._show_image_preview(filepath)
         elif ext == '.pdf':
             self._show_pdf_preview(filepath)

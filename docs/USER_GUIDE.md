@@ -6,6 +6,10 @@ BatchStudio presents one window with four tabs. The ordinary path is to select i
 
 Use **Add Files** for individual files or **Add Folder** for a recursive scan. The panel accepts image extensions (`jpg`, `jpeg`, `png`, `gif`, `bmp`, `webp`, `tiff`, `tif`), PDF, CSV, Excel extensions, and text/data extensions (`txt`, `json`, `xml`). Acceptance by the picker does not imply that a transformation exists for every type; consult [Operations](OPERATIONS.md).
 
+Picker filters come from the backend input types and the current workflow's operation requirements. Without a workflow, all ingestible formats remain selectable: image editing and file rename do not require OCR. With a workflow, unavailable input types are omitted. Files selected through the dialog, folder scan, or drop hook are checked again before acceptance; unsupported inputs and missing prerequisites receive a specific refusal. Readiness checks run in a worker, and a changed workflow requires a fresh selection.
+
+Native and auto PDF modes remain eligible when PDF OCR is unavailable. Auto mode does not predict whether a document will need fallback; the Workflow tab separately reports native PDF and PDF OCR fallback readiness. The backend checks fallback at execution. See [OCR](OCR.md#operation-requirements).
+
 The panel can preview images, PDF metadata, CSV rows, and text. It caches at most 50 image previews. File and folder dialogs are the verified input path. The source contains an optional `tkinterdnd2` hook, but input drag-and-drop is not a verified release capability.
 
 ## Workflow
@@ -21,6 +25,8 @@ Workflow steps are not reordered by drag-and-drop. Compilation checks registered
 Choose an output directory, a naming pattern, a worker count from 1 to 16, dry-run mode, and report generation. Naming patterns recognize `{original}`, `{timestamp}`, and `{counter}`. Unsafe path characters and traversal fragments are sanitized, and duplicate initial allocations receive a numeric suffix. Operation-specific suffix or name changes have the collision limitation described in [Limitations](LIMITATIONS.md).
 
 Use **Dry Run** first. It creates no output directory, probe, temporary file, operation output, or report. It checks path feasibility without physically verifying future write permission. Options are captured when the run starts; changing the checkbox afterward cannot change that run's identity. Dry run may read/parse inputs, and unsupported dry-run operations are rejected before execution. See the precise [application-write boundary](SECURITY_MODEL.md#dry-run-output-suppression) and [multi-step limitation](LIMITATIONS.md#dry-run-and-output-safety).
+
+**Start Processing** first checks input eligibility and compiles the workflow in a worker. Start, Pause, and Stop remain disabled during this check. A refusal shows the backend reason before batch processing or output preparation; successful checks enable the processing controls. This recheck also covers inputs selected before a workflow or a runtime prerequisite changed.
 
 **Pause** stops new work from being scheduled; it does not suspend a task already executing. **Stop** cancels work that has not started and prevents new submissions; a running library call cannot be forcibly terminated.
 
