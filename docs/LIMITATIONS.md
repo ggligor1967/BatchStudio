@@ -1,6 +1,6 @@
 # Limitations
 
-This document records observed boundaries of the current 1.0.1 implementation. It is not a future-feature promise.
+This document records observed boundaries of the current 1.0.1 implementation plus unreleased output-ownership fixes in source. It is not a future-feature promise or a restatement of the immutable release tag.
 
 ## OCR
 
@@ -39,9 +39,10 @@ This document records observed boundaries of the current 1.0.1 implementation. I
 
 ## Dry run and output safety
 
-- Dry run creates no operation output or automatic report, but output validation can create a missing output directory and a transient `.write_test` file.
-- Unique allocation applies to the initially planned name/suffix. A later operation-specific suffix or name change can still target an existing path.
-- Intermediate outputs may be removed after a later workflow step succeeds; inputs are not deleted.
+- Dry run creates no operation output or automatic report, but output validation can create a missing output directory and an exclusively owned temporary probe. Strict write-free validation is not implemented.
+- Final names/suffixes are reserved before writing; occupied destinations cause alternate batch allocation or explicit exclusive-creation failure. Direct calls are protected too. This applies to registered processing operations, not report export or settings/workflow persistence.
+- Intermediate outputs are removed after a successful chain only while their recorded filesystem identities match; inputs and unrelated occupied outputs are not deleted. A failed chain can leave prior owned intermediates.
+- Output ownership is not a filesystem sandbox or a promise of atomic recovery from every OS error. Arbitrary hostile directory/link replacement and replacement during cleanup's identity-check/unlink interval are outside the guarantee.
 
 ## Scale and coverage
 
