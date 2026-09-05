@@ -14,7 +14,7 @@ It rejects:
 
 - no enabled steps;
 - unknown operation IDs;
-- configuration values whose types or choices do not match an operation schema, missing required keys, or strings violating a declared non-empty constraint;
+- configuration values whose types or choices do not match an operation schema, booleans supplied for numeric fields, missing required keys, or strings violating a declared non-empty constraint;
 - a missing capability reported by a per-file operation;
 - incompatible type transitions between per-file operations;
 - an aggregate operation alongside any other enabled step, including another aggregate;

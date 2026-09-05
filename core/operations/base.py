@@ -16,9 +16,9 @@ def validate_schema_config(config: Dict[str, Any], schema: Dict[str, Dict[str, A
             continue
         value = config[key]
         expected = rules.get("type")
-        if expected == "int" and not isinstance(value, int):
+        if expected == "int" and (isinstance(value, bool) or not isinstance(value, int)):
             return False, f"config '{key}' must be int"
-        if expected == "float" and not isinstance(value, (int, float)):
+        if expected == "float" and (isinstance(value, bool) or not isinstance(value, (int, float))):
             return False, f"config '{key}' must be float"
         if expected == "bool" and not isinstance(value, bool):
             return False, f"config '{key}' must be bool"

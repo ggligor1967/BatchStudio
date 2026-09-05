@@ -38,7 +38,7 @@ Dynamic HTML report values pass through `html.escape`. CSV fields that begin wit
 
 ### Input and operation validation
 
-Input paths must exist, be files, use the processor extension allow-list, and be no larger than 500 MiB. Workflow compilation rejects unknown operations, invalid schema types/choices, missing required keys, declared non-empty string violations, incompatible per-file type transitions, missing declared capabilities, and non-final aggregates. Per-file and aggregate configuration validation share one helper, including float validation. CSV requires a non-empty string column; a missing concrete CSV column fails at execution without output, while valid zero-match filters succeed. This is a data-processing correctness contract, not a confidentiality claim. Individual operations validate parseability before processing.
+Input paths must exist, be files, use the processor extension allow-list, and be no larger than 500 MiB. Workflow compilation rejects unknown operations, invalid schema types/choices, missing required keys, declared non-empty string violations, incompatible per-file type transitions, missing declared capabilities, and non-final aggregates. Per-file and aggregate configuration validation share one helper, including float validation; numeric `int`/`float` rules reject booleans. CSV requires a non-empty string column; a missing concrete CSV column fails at execution without output, while valid zero-match filters succeed. This is a data-processing correctness contract, not a confidentiality claim. Individual operations validate parseability before processing.
 
 ### Typed operation output
 

@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eight test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, and V11-03/V11-04 to 199:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eight test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, and V11-03/V11-04 to 203:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -25,7 +25,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 - `tests/test_e2e_release_blockers.py`: resize/convert chains, PDF merge and containment, dry run, malformed configuration, OCR dependency absence, pause, and cancellation.
 - `tests/test_output_ownership.py`: 53 focused V11-01 cases for all registered per-file writers, direct entrypoints, final-path collisions, deterministic counter interleaving, canonical reservation aliases, exclusive creation, aggregate ownership, intermediate cleanup, and normal probe ownership. Symlink cases skip explicitly if the OS does not permit link creation.
 
-- `tests/test_csv_contracts.py`: 39 V11-03 cases for generic required/non-empty and float parity, compiler/direct CSV rejection, missing concrete columns, normal matching/zero-row output, dry-run counts, and both numeric operators.
+- `tests/test_csv_contracts.py`: 43 V11-03 cases for generic required/non-empty and float parity, numeric boolean rejection, compiler/direct CSV rejection, missing concrete columns, normal matching/zero-row output, dry-run counts, and both numeric operators.
 - `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
 
 Run the discovered suite:
@@ -114,7 +114,7 @@ On 2026-09-05, V11-01 validation on Windows/Python 3.13 passed 77 tests and repo
 
 On 2026-09-05, V11-02 validation on Windows/Python 3.13 passed 107 tests and reported 38% across 2,559 production statements (985 executed). `core/processor.py` reached 85%, with 21 of 25 changed executable lines covered (four reindented output-directory error-handling lines were unexecuted); the PDF operations module reached 94% and output security remained at 99%. UI modules remained unexecuted and `main` was not imported. The same local plugin-autoload isolation was used. Coverage remains diagnostic, with no global threshold.
 
-On 2026-09-05, V11-03/V11-04 validation on Windows/Python 3.13 passed 199 tests and reported 48.65% production coverage (1,259 of 2,588 statements; the console rounds to 49%). The shared operation base reached 89.41%, CSV operations 89.58%, processor 86.74%, RunPanel 34.74%, and LogsPanel 18.47%. Output security remained 98.63% and PDF operations reached 95.24%. Changed executable-line coverage was 24/26 in the shared base, 12/15 in CSV, 25/27 in the processor, and 21/21 across both UI panels. Uncovered changed lines include existing boolean/choice rejection branches, reindented CSV `!=`/`contains` handling, invalid empty/NUL destination rejection, and the no-existing-parent fallback. UI coverage exercises routes with doubles rather than rendering widgets; `main` was not imported. Local runs used the same plugin-autoload isolation. These measurements are diagnostic, with no threshold.
+On 2026-09-05, V11-03/V11-04 validation on Windows/Python 3.13 passed 203 tests and reported 48.65% production coverage (1,259 of 2,588 statements; the console rounds to 49%). The shared operation base reached 89.41%, CSV operations 89.58%, processor 86.74%, RunPanel 34.74%, and LogsPanel 18.47%. Output security remained 98.63% and PDF operations reached 95.24%. Changed executable-line coverage was 24/26 in the shared base, 12/15 in CSV, 25/27 in the processor, and 21/21 across both UI panels. Uncovered changed lines include existing boolean/choice rejection branches, reindented CSV `!=`/`contains` handling, invalid empty/NUL destination rejection, and the no-existing-parent fallback. UI coverage exercises routes with doubles rather than rendering widgets; `main` was not imported. Local runs used the same plugin-autoload isolation. These measurements are diagnostic, with no threshold.
 
 ## OCR tests
 

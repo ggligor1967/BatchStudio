@@ -150,3 +150,19 @@ def test_csv_dry_run_evaluates_counts_without_output(csv_source, tmp_path, opera
     )
     assert result.success and result.metadata == {"original_rows": 3, "filtered_rows": rows}
     assert not output.exists()
+
+
+@pytest.mark.parametrize("numeric_type", ["int", "float"])
+@pytest.mark.parametrize("value", [False, True])
+def test_generic_numeric_schemas_reject_booleans_with_validator_parity(numeric_type, value):
+    class NumericOperation(SyntheticOperation):
+        def get_config_schema(self):
+            return {"amount": {"type": numeric_type}}
+
+    class NumericAggregate(SyntheticAggregate):
+        get_config_schema = NumericOperation.get_config_schema
+
+    config = {"amount": value}
+    result = NumericOperation(config).validate_config()
+    assert result == NumericAggregate(config).validate_config()
+    assert result == (False, f"config 'amount' must be {numeric_type}")
