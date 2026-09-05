@@ -590,30 +590,23 @@ class WorkflowTemplates:
         """OCR for scanned documents (images)."""
         workflow = Workflow(
             name="Document Scanner OCR",
-            description="Extract text from scanned documents - grayscale preprocessing for better accuracy"
+            description="Extract English text from scanned document images"
         )
         workflow.add_step('ocr_image', {
-            'language': 'eng',
-            'page_segmentation_mode': 3,
-            'grayscale': True,
-            'threshold': False
+            'language': 'eng'
         })
         workflow.add_step('file_rename', {'pattern': '{original}_text'})
         return workflow
     
     @staticmethod
     def _ocr_invoice_extractor_template() -> Workflow:
-        """OCR optimized for invoices and receipts."""
+        """Extract text from invoice and receipt images."""
         workflow = Workflow(
             name="Invoice Text Extractor",
-            description="Extract text from invoices - optimized for structured documents"
+            description="Extract English text from invoice and receipt images"
         )
         workflow.add_step('ocr_image', {
-            'language': 'eng',
-            'page_segmentation_mode': 6,  # Block of text
-            'grayscale': True,
-            'threshold': True,
-            'threshold_value': 140
+            'language': 'eng'
         })
         workflow.add_step('file_rename', {'pattern': '{original}_invoice_text'})
         return workflow
@@ -623,13 +616,12 @@ class WorkflowTemplates:
         """OCR for digitizing book pages from PDF."""
         workflow = Workflow(
             name="Book Page Digitizer",
-            description="Digitize book pages from scanned PDFs - high quality OCR"
+            description="Extract text from PDF book pages, with OCR fallback at 300 DPI"
         )
         workflow.add_step('ocr_pdf', {
             'mode': 'auto',
             'language': 'eng',
-            'dpi': 300,
-            'grayscale': True
+            'dpi': 300
         })
         workflow.add_step('file_rename', {'pattern': '{original}_digitized'})
         return workflow
@@ -642,9 +634,7 @@ class WorkflowTemplates:
             description="Extract text from Romanian documents"
         )
         workflow.add_step('ocr_image', {
-            'language': 'ron',
-            'page_segmentation_mode': 3,
-            'grayscale': True
+            'language': 'ron'
         })
         workflow.add_step('file_rename', {'pattern': '{original}_ro_text'})
         return workflow

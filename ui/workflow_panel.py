@@ -61,6 +61,9 @@ class WorkflowPanel:
         
         # Operations
         ttk.Label(ops_frame, text="Operations:", font=('Segoe UI', 10, 'bold')).pack(anchor=tk.W)
+
+        ttk.Button(ops_frame, text="Refresh OCR availability",
+                   command=self._load_operations).pack(fill=tk.X, pady=5)
         
         ops_scroll = ttk.Scrollbar(ops_frame)
         ops_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -142,6 +145,8 @@ class WorkflowPanel:
     
     def _load_operations(self):
         """Load available operations and templates."""
+        self.templates_listbox.delete(0, tk.END)
+        self.operations_listbox.delete(0, tk.END)
         # Load templates
         templates = WorkflowTemplates.list_templates()
         for template in templates:
@@ -150,7 +155,9 @@ class WorkflowPanel:
         # Load operations
         operations = self.operation_registry.list_operations()
         for op in operations:
-            self.operations_listbox.insert(tk.END, f"🔧 {op['name']}")
+            status = self.operation_registry.get_capability_status(op['id'])
+            suffix = f" — {status}" if status else ""
+            self.operations_listbox.insert(tk.END, f"🔧 {op['name']}{suffix}")
     
     def _add_operation(self):
         """Add selected operation to workflow."""
@@ -243,6 +250,19 @@ class WorkflowPanel:
         ttk.Label(self.config_container,
                  text=f"Configure: {operation.name}",
                  font=('Segoe UI', 11, 'bold')).pack(pady=10, anchor=tk.W)
+
+        if step.operation_id in {'ocr_image', 'ocr_pdf', 'ocr_batch'}:
+            status = ttk.Label(self.config_container, wraplength=300, justify=tk.LEFT)
+            status.pack(fill=tk.X, pady=5)
+
+            def refresh_capability():
+                status.config(text=self.operation_registry.get_capability_status(
+                    step.operation_id, step.config,
+                ))
+
+            refresh_capability()
+            ttk.Button(self.config_container, text="Refresh OCR availability",
+                       command=refresh_capability).pack(fill=tk.X, pady=5)
         
         if not schema:
             ttk.Label(self.config_container,
@@ -305,6 +325,9 @@ class WorkflowPanel:
         """Apply configuration changes."""
         for key, (widget_type, var) in self.config_widgets.items():
             step.config[key] = var.get()
+
+        if step.operation_id in {'ocr_image', 'ocr_pdf', 'ocr_batch'}:
+            self._show_step_config(step)
         
         self.main_window.set_status("Configuration applied")
         messagebox.showinfo("Success", "Configuration updated successfully!")

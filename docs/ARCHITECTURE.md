@@ -13,6 +13,7 @@
 - `core/workflow.py` defines workflow/step persistence and built-in templates.
 - `core/processor.py` validates, compiles, schedules, executes, cleans intermediate outputs, records statistics, and renders reports.
 - `core/operations/registry.py` is the operation catalog and extension classifier.
+- `core/operations/ocr_ops.py` owns OCR-specific legacy-key validation and independent image/native-PDF/PDF-OCR readiness. The registry exposes these reasons to the workflow UI; compiler and runtime use the same readiness functions. Executable/language/rasterizer state is refreshed, not cached at import. Batch delegates checks by concrete input; auto PDF checks OCR fallback only when needed. The generic operation validator remains compatible with unrelated unknown keys.
 - `core/operations/base.py` defines per-file and aggregate interfaces.
 - `core/operations/image_ops.py`, `pdf_ops.py`, `data_ops.py`, `file_ops.py`, and `ocr_ops.py` implement registered behavior.
 

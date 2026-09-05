@@ -1,56 +1,56 @@
 # OCR
 
-OCR is optional. Availability is a stack of separate capabilities; importing one Python module is not sufficient.
+OCR recognition is optional. Readiness is checked separately for image recognition, native PDF extraction, and rasterized PDF OCR. These checks describe prerequisites, not recognition accuracy or real OCR qualification.
 
 ## Capability layers
 
 | Layer | Purpose | How BatchStudio observes it |
 |---|---|---|
 | `pytesseract` Python package | Python adapter for Tesseract | Import attempted when `core.operations.ocr_ops` loads |
-| Tesseract executable | Performs image recognition | `pytesseract.get_tesseract_version()` must succeed at module load |
-| Tesseract language packs | Supply recognition data such as `eng` | Used when extraction runs; not preflighted separately |
+| Tesseract executable | Performs image recognition | Fresh `get_tesseract_version(cached=False)` at preflight and execution |
+| Tesseract language data | Supplies recognition data such as `eng` or `ron` | Fresh `get_languages(cached=False)`; every requested language must be listed |
 | `pdf2image` Python package | Calls Poppler to rasterize PDF pages | Import attempted when the OCR module loads |
-| Poppler utilities | Perform PDF rasterization for `pdf2image` | Required at conversion time; executable readiness is not preflighted |
-| pypdf | Extracts native PDF text | Required package dependency used in every PDF text path |
+| Poppler utilities | Inspect and rasterize PDFs | `pdfinfo` and `pdftoppm` resolved on PATH and probed with `-v`, each with a five-second timeout |
+| pypdf | Extracts native PDF text | Required application dependency, independent of OCR imports |
 
-Because capability flags are computed when the module imports, installing or reconfiguring an executable while BatchStudio is running requires an application restart before detection is refreshed.
+Executable, language, and rasterizer changes are reflected on subsequent checks without reloading the module. Python package imports remain startup facts. Poppler probes use argument lists without a shell and do not convert documents. A successful probe cannot guarantee that a later document conversion will succeed.
 
 ## Operation requirements
 
 ### Image OCR (`ocr_image`)
 
-Requires Pillow, `pytesseract`, a discoverable Tesseract executable, and the requested language data. Workflow compilation fails closed when the executable check failed. Current extraction applies `language`; exposed page-segmentation and preprocessing options are not applied in 1.0.1.
+Requires Pillow, `pytesseract`, a working Tesseract executable, and the requested language data. It does not require `pdf2image` or Poppler. `language` defaults to `eng`; values such as `eng+ron` require all named languages. Image parsing is validated separately so capability failures retain their specific reasons.
 
 ### PDF text (`ocr_pdf`)
 
-- `mode=native` uses pypdf text extraction and does not require Tesseract or `pdf2image`.
-- `mode=ocr` rasterizes every page and runs Tesseract.
-- `mode=auto` first extracts native text and switches to OCR when fewer than 50 non-whitespace characters are found.
+- `mode=native` uses pypdf text extraction without `pytesseract`, Tesseract, OCR language data, `pdf2image`, or Poppler.
+- `mode=ocr` requires the image OCR stack plus `pdf2image` and both Poppler utilities. It rasterizes and recognizes every page.
+- `mode=auto` first extracts native text and falls back to OCR when `len(native_text.strip()) < 50`. This threshold and extraction sequence are unchanged. Compilation permits native extraction without the fallback stack. An actual fallback checks full PDF OCR readiness and returns an explicit failure if a prerequisite is missing, without publishing a text output.
 
-Compilation requires Tesseract and `pdf2image` for `auto` and `ocr`. Poppler and language data can still fail later because their readiness is not separately probed.
+The functional fields remain `mode` (default `auto`), `language` (default `eng`), and `dpi` (default 200). `language` and `dpi` are forwarded to recognition and rasterization respectively.
 
 ### Batch OCR (`ocr_batch`)
 
-This per-file operation delegates PDFs to `ocr_pdf` and other inputs to `ocr_image`. In practice, inputs must be valid PDFs or images even though the registry declares `any`. It creates one output per input; combined-output configuration is not implemented.
+This per-file operation delegates PDFs to `ocr_pdf` and other inputs to `ocr_image`. Inputs must be valid PDFs or images even though the registry declares `any`. It creates one text output per input and exposes only `language`.
 
-## Installation approach
+Compilation has no concrete input type and does not impose a global OCR gate. Concrete preflight and execution use the delegate's capability checks: image inputs require no PDF tools; PDFs default to `auto`. Existing configurations that pass PDF `mode`/`dpi` through to the PDF delegate retain that behavior; these are not additional exposed batch controls. A native PDF branch needs no OCR stack.
 
-1. Install `pytesseract` for image OCR and `pdf2image` for rasterized PDF OCR. The source `requirements.txt` lists both.
-2. Install Tesseract through the operating system and ensure its executable is discoverable by the process.
-3. Install every language pack referenced by a workflow's `language` value.
-4. For PDF OCR, install Poppler and ensure `pdf2image` can find its utilities.
-5. Restart BatchStudio and test with a non-sensitive sample whose expected text is known.
+## Configuration migration
 
-Platform package names and executable locations vary, so BatchStudio does not prescribe an unverified installer command.
+Image and PDF OCR explicitly reject `page_segmentation_mode`, `grayscale`, `threshold`, and `threshold_value`. Batch OCR rejects these delegated preprocessing keys plus `combine_output` and `combined_filename`. Remove them from legacy workflow JSON; even false/default values fail with an actionable error such as `unsupported OCR configuration 'grayscale'`.
 
-## Failure behavior and verification status
+These checks run during compilation and direct execution, including dry run. They do not globally reject unknown keys in unrelated operations. No preprocessing or combined-output implementation was added. All four shipped OCR templates use supported configuration and make no preprocessing or optimization claim.
 
-Missing declared capabilities are returned as workflow compilation errors rather than silently skipped. Runtime parser, rasterizer, recognizer, language, or write failures become failed `OperationResult` values and appear in batch errors.
+## Display and dry run
 
-For the canonical v1.0.0 release:
+The workflow operation list shows readiness for default English configuration, with separate native PDF and PDF OCR fallback status. The step configuration panel shows current applied language/mode readiness or a legacy configuration error. **Refresh OCR availability** refreshes the displayed snapshot; applying configuration also refreshes the step status. Unavailable operations remain configurable, and native PDF extraction is not hidden by absent OCR tools.
 
-- OCR failure path verified: **YES**
-- OCR success path verified: **NO**
-- OCR optional capability: **YES**
+Dry run retains capability preflight for unconditional requirements: image OCR checks the image stack; explicit PDF `ocr` checks the PDF OCR stack; batch checks its concrete branch. Native and `auto` PDF dry runs require only native extraction capability. They do not extract text, rasterize, recognize, predict whether fallback will be needed, or create output. Thus a successful `auto` dry run does not qualify its fallback. Processor input parsing and read-only output feasibility checks still apply. See [the write-free boundary](SECURITY_MODEL.md#dry-run-output-suppression).
 
-See [the release verification record](releases/v1.0.0-verification.md).
+## External tools and verification status
+
+External executables and requested language data must be provisioned separately by the operator. BatchStudio has no installation action. Only PDF OCR needs Poppler. After external executable or language changes, refresh readiness; restart after Python package changes.
+
+Missing package, executable, requested language, `pdf2image`, and Poppler failures have distinct messages. An unreadable language list is reported as a failed language-data check. Runtime parser, rasterizer, recognizer, and write failures remain controlled `OperationResult` failures.
+
+V11-05 verification uses deterministic mocked executables, languages, rasterization, and recognition. **Real OCR success is not verified; V11-06 qualification remains outstanding.** No binaries or language data were installed for this change. See [Testing](TESTING.md#ocr-tests) and the historical [v1.0.0 verification record](releases/v1.0.0-verification.md).

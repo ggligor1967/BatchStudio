@@ -167,14 +167,20 @@ def test_registered_dry_run_paths_attempt_no_writes(
     if existing_output:
         out.mkdir()
         (out / "prior.txt").write_bytes(b"preserve")
-    monkeypatch.setattr(ocr_ops, "HAS_TESSERACT_BINARY", True)
+    monkeypatch.setattr(ocr_ops, "HAS_TESSERACT", True)
     monkeypatch.setattr(ocr_ops, "HAS_PDF2IMAGE", True)
+    monkeypatch.setattr(ocr_ops.shutil, "which", lambda name: name)
+    monkeypatch.setattr(ocr_ops.subprocess, "run", Mock(return_value=SimpleNamespace(returncode=0)))
     # Optional imports may be absent in minimal installations.
     monkeypatch.delattr(ocr_ops, "pytesseract", raising=False)
     monkeypatch.delattr(ocr_ops, "convert_from_path", raising=False)
     monkeypatch.setattr(
         ocr_ops, "pytesseract",
-        SimpleNamespace(image_to_string=Mock(side_effect=AssertionError("real OCR"))),
+        SimpleNamespace(
+            image_to_string=Mock(side_effect=AssertionError("real OCR")),
+            get_tesseract_version=Mock(return_value="5.0"),
+            get_languages=Mock(return_value=["eng"]),
+        ),
         raising=False,
     )
     monkeypatch.setattr(

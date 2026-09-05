@@ -7,7 +7,7 @@ from PIL import Image
 from pypdf import PdfWriter
 
 from core.operations.image_ops import ImageResizeOperation
-from core.operations import HAS_PDF2IMAGE, HAS_TESSERACT, HAS_TESSERACT_BINARY
+from core.operations import ocr_ops
 from core.processor import BatchProcessor
 from core.workflow import Workflow
 from tests.pdf_merge_cases import assert_merge_case
@@ -124,7 +124,15 @@ def test_e2e_malformed_workflow_configs(tmp_path: Path):
     assert stats.failed_files >= 1
 
 
-def test_e2e_ocr_dependency_absence(tmp_path: Path):
+def test_e2e_ocr_dependency_absence(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(ocr_ops, "HAS_TESSERACT", True)
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+
+    monkeypatch.setattr(ocr_ops, "pytesseract", SimpleNamespace(
+        get_tesseract_version=Mock(side_effect=FileNotFoundError()),
+        image_to_string=Mock(side_effect=AssertionError("real OCR")),
+    ), raising=False)
     src = tmp_path / "a.png"
     out = tmp_path / "out"
     out.mkdir()
@@ -135,10 +143,9 @@ def test_e2e_ocr_dependency_absence(tmp_path: Path):
 
     stats = BatchProcessor(max_workers=1).process_batch([str(src)], wf, str(out), "{original}")
 
-    if HAS_TESSERACT and HAS_TESSERACT_BINARY:
-        assert stats.failed_files == 0
-    else:
-        assert stats.failed_files >= 1
+    assert stats.failed_files >= 1
+    assert "Tesseract executable is not available" in str(stats.errors)
+    ocr_ops.pytesseract.image_to_string.assert_not_called()
 
 
 def test_e2e_pause_blocks_new_submissions(tmp_path: Path, monkeypatch):

@@ -1,15 +1,18 @@
 # Limitations
 
-This document records observed boundaries of the current 1.0.1 implementation plus unreleased output-ownership, aggregate-contract, CSV-validation, and dry-run fixes in source. It is not a future-feature promise or a restatement of the immutable release tag.
+This document records observed boundaries of the current 1.0.1 implementation plus unreleased output-ownership, aggregate-contract, CSV-validation, dry-run, and OCR-truth fixes in source. It is not a future-feature promise or a restatement of the immutable release tag.
 
 ## OCR
 
 - OCR-backed paths require a working external Tesseract executable in addition to Python packages.
 - PDF rasterization requires `pdf2image` and Poppler utilities.
 - Requested Tesseract language packs must be installed separately.
-- The release machine verified dependency-absence behavior, not a real OCR success path.
-- Image OCR exposes page segmentation, grayscale, and threshold configuration but currently applies only `language`.
-- Batch OCR exposes combined-output fields but currently writes one text result per input.
+- V11-05 tests mock recognition and external tools; real OCR success remains unverified and V11-06 qualification remains outstanding.
+- Image OCR exposes only `language` and does not implement preprocessing. Image/PDF reject legacy page segmentation, grayscale, threshold, and threshold-value keys explicitly at compilation and direct execution.
+- Batch OCR exposes only `language` and writes one text result per input. Legacy combined-output fields and delegated preprocessing fields fail explicitly.
+- Image readiness does not require PDF tooling. Native PDF extraction needs no OCR stack. Auto mode can complete natively without it, but fails explicitly when fallback is needed and unavailable.
+- Executable, language, and Poppler checks refresh without reload; Python package availability remains an import-time fact. Readiness probes do not qualify recognition accuracy or guarantee a later conversion. See [OCR](OCR.md).
+- Auto PDF dry run does not extract native text or predict fallback, so its success does not establish that PDF OCR is ready.
 
 ## Execution and cancellation
 
