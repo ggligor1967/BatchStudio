@@ -257,6 +257,9 @@ class LogsPanel:
         """Export logs to CSV."""
         if not self.current_stats:
             return
+        if self.current_stats.dry_run:
+            self.main_window.set_status("Reports are unavailable for dry-run results.")
+            return
         
         filepath = filedialog.asksaveasfilename(
             title="Export Logs to CSV",
@@ -274,6 +277,9 @@ class LogsPanel:
     def _view_html_report(self):
         """Open HTML report in browser."""
         if not self.current_stats:
+            return
+        if self.current_stats.dry_run:
+            self.main_window.set_status("Reports are unavailable for dry-run results.")
             return
         
         output_dir = self.main_window.run_panel.output_dir.get()

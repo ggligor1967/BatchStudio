@@ -85,9 +85,20 @@ def validate_file_path(file_path: str, base_dir: Optional[str] = None) -> tuple[
         return False, str(exc)
 
 
-def validate_output_directory(output_dir: str) -> tuple[bool, str]:
+def validate_output_directory(output_dir: str, dry_run: bool = False) -> tuple[bool, str]:
     try:
+        if dry_run and (not output_dir or not str(output_dir).strip() or "\x00" in str(output_dir)):
+            return False, "Invalid output directory path"
         out = Path(output_dir).resolve(strict=False)
+        if dry_run:
+            existing_parent = out
+            while not existing_parent.exists():
+                if existing_parent.parent == existing_parent:
+                    return False, "No existing parent for output directory"
+                existing_parent = existing_parent.parent
+            if not existing_parent.is_dir():
+                return False, "Output directory or its nearest existing parent is not a directory"
+            return True, "Dry run validates path feasibility but does not physically verify future write permission."
         out.mkdir(parents=True, exist_ok=True)
 
         with tempfile.NamedTemporaryFile(dir=out, prefix=".batchstudio-probe-", mode="wb") as probe:
@@ -196,6 +207,13 @@ def process_single_file(
             if operation is None:
                 return {"success": False, "file": file_path, "error": f"Unknown operation: {step.operation_id}"}
 
+            if dry_run and not operation.supports_dry_run:
+                return {
+                    "success": False,
+                    "file": file_path,
+                    "error": f"Operation {operation.name} does not support dry run",
+                }
+
             if not operation.validate(current_input):
                 return {
                     "success": False,
@@ -258,7 +276,8 @@ def process_single_file(
 
 
 class ProcessingStats:
-    def __init__(self):
+    def __init__(self, dry_run: bool = False):
+        self._dry_run = dry_run
         self.total_files = 0
         self.processed_files = 0
         self.failed_files = 0
@@ -267,6 +286,11 @@ class ProcessingStats:
         self.end_time = None
         self.errors: List[Dict[str, str]] = []
         self.results: List[Dict[str, Any]] = []
+
+    @property
+    def dry_run(self) -> bool:
+        """Execution identity captured at run creation, independent of later UI options."""
+        return self._dry_run
 
     def add_error(self, file_path: str, error: str):
         self.errors.append({"file": file_path, "error": error, "timestamp": datetime.now().isoformat()})
@@ -290,6 +314,7 @@ class ProcessingStats:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "dry_run": self.dry_run,
             "total_files": self.total_files,
             "processed_files": self.processed_files,
             "failed_files": self.failed_files,
@@ -343,6 +368,9 @@ class BatchProcessor:
         naming_pattern: str,
         dry_run: bool,
     ) -> None:
+        if dry_run and not aggregate_operation.supports_dry_run:
+            self.stats.add_error(aggregate_operation.id, f"Operation {aggregate_operation.name} does not support dry run")
+            return
         output_root = Path(output_dir).resolve(strict=False)
         merge_name = sanitize_filename(
             aggregate_operation.config.get("output_filename", _render_name(naming_pattern, Path(file_list[0]), 1) + "_merged")
@@ -390,7 +418,7 @@ class BatchProcessor:
         self.is_running = True
         self.is_paused = False
         self.dry_run = dry_run
-        self.stats = ProcessingStats()
+        self.stats = ProcessingStats(dry_run=dry_run)
         self.stats.total_files = len(file_list)
         self.stats.start_time = datetime.now()
 
@@ -400,7 +428,7 @@ class BatchProcessor:
             for step in workflow.get_enabled_steps()
         )
         if not empty_aggregate_batch:
-            is_valid, error = validate_output_directory(output_dir)
+            is_valid, error = validate_output_directory(output_dir, dry_run=dry_run)
             if not is_valid:
                 self.stats.add_error("output_dir", f"Invalid output directory: {error}")
                 self.stats.end_time = datetime.now()
@@ -431,7 +459,11 @@ class BatchProcessor:
             return self.stats
 
         if dry_run:
-            self._update_progress(0, len(file_list), "DRY RUN MODE - no files will be modified")
+            self._update_progress(
+                0, len(file_list),
+                "DRY RUN MODE - no execution or report writes. Path feasibility checked; "
+                "future write permission is not physically verified.",
+            )
         else:
             self._update_progress(0, len(file_list), "Starting batch processing")
 
@@ -518,6 +550,8 @@ class BatchProcessor:
         self.is_paused = False
 
     def generate_report(self, stats: ProcessingStats, output_path: str, format: str = "html") -> bool:
+        if stats.dry_run:
+            return False
         try:
             if format == "html":
                 return self._generate_html_report(stats, output_path)

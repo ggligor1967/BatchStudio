@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
 import threading
+from copy import deepcopy
 from datetime import datetime
 
 from core import BatchProcessor
@@ -212,6 +213,13 @@ class RunPanel:
             messagebox.showwarning("No Output", "Please select an output directory!")
             return
         
+        dry_run = self.dry_run_var.get()
+        naming_pattern = self.naming_pattern.get()
+        workers = self.workers_var.get()
+        generate_report = self.generate_report_var.get()
+        files = list(files)
+        workflow = deepcopy(workflow)
+
         # Clear log
         self.log_text.delete(1.0, tk.END)
         
@@ -222,7 +230,7 @@ class RunPanel:
         self.stop_button.config(state=tk.NORMAL)
         
         # Configure processor
-        self.processor = BatchProcessor(max_workers=self.workers_var.get())
+        self.processor = BatchProcessor(max_workers=workers)
         self.main_window.processor = self.processor
         self.processor.set_progress_callback(self._update_progress)
         
@@ -232,7 +240,7 @@ class RunPanel:
         self._log(f"Files: {len(files)}", 'info')
         self._log(f"Steps: {len(workflow.steps)}", 'info')
         self._log(f"Output: {output_dir}", 'info')
-        if self.dry_run_var.get():
+        if dry_run:
             self._log("Mode: DRY RUN (no files will be modified)", 'warning')
         self._log("="*60, 'info')
         
@@ -240,31 +248,30 @@ class RunPanel:
         
         # Start processing in separate thread
         thread = threading.Thread(target=self._run_batch,
-                                 args=(files, workflow, output_dir))
+                                 args=(files, workflow, output_dir, naming_pattern, dry_run, generate_report))
         thread.daemon = True
         thread.start()
     
-    def _run_batch(self, files, workflow, output_dir):
+    def _run_batch(self, files, workflow, output_dir, naming_pattern, dry_run, generate_report):
         """Run batch processing (in separate thread)."""
         try:
             stats = self.processor.process_batch(
                 files,
                 workflow,
                 output_dir,
-                naming_pattern=self.naming_pattern.get(),
-                dry_run=self.dry_run_var.get()
+                naming_pattern=naming_pattern,
+                dry_run=dry_run
             )
             
-            self.current_stats = stats
-            
             # Update UI from main thread
-            self.frame.after(0, self._processing_complete, stats)
+            self.frame.after(0, self._processing_complete, stats, output_dir, generate_report)
             
         except Exception as e:
             self.frame.after(0, self._processing_error, str(e))
     
-    def _processing_complete(self, stats):
+    def _processing_complete(self, stats, output_dir, generate_report):
         """Handle processing completion."""
+        self.current_stats = stats
         self.is_running = False
         self.start_button.config(state=tk.NORMAL)
         self.pause_button.config(state=tk.DISABLED)
@@ -283,8 +290,8 @@ class RunPanel:
         self._show_confetti()
         
         # Generate report
-        if self.generate_report_var.get() and not self.dry_run_var.get():
-            report_path = os.path.join(self.output_dir.get(), 'report.html')
+        if generate_report and not stats.dry_run:
+            report_path = os.path.join(output_dir, 'report.html')
             if self.processor.generate_report(stats, report_path, format='html'):
                 self._log(f"📊 Report generated: {report_path}", 'info')
         

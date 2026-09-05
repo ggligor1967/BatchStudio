@@ -1,6 +1,6 @@
 # Limitations
 
-This document records observed boundaries of the current 1.0.1 implementation plus unreleased output-ownership and aggregate-contract fixes in source. It is not a future-feature promise or a restatement of the immutable release tag.
+This document records observed boundaries of the current 1.0.1 implementation plus unreleased output-ownership, aggregate-contract, CSV-validation, and dry-run fixes in source. It is not a future-feature promise or a restatement of the immutable release tag.
 
 ## OCR
 
@@ -34,14 +34,15 @@ This document records observed boundaries of the current 1.0.1 implementation pl
 - Excel files can be selected, but no registered operation transforms `.xlsx` or `.xls` content.
 - TXT, JSON, and XML have no dedicated transformation.
 - `file_rename` copies the file to a new name; it does not move or delete the source.
-- CSV filtering silently leaves rows unchanged when the configured column is empty or absent.
+- CSV filtering requires a non-empty string column configuration. A column missing from the concrete CSV is a runtime failure; a valid zero-row result is success. Numeric comparisons retain pandas behavior.
 - PDF watermark rendering uses a fixed letter-sized watermark canvas and fixed placement; page-specific layout is not calculated.
 - PDF merge must be the only enabled step. Disabled predecessors do not participate; enabled transformations before a merge are rejected rather than composed into the aggregate.
 - For a valid compiled workflow, empty aggregate input produces one controlled batch-level error before output preparation or `begin`. Successfully consumed inputs remain counted as processed on stop or finalization failure, but no completed common output is advertised.
 
 ## Dry run and output safety
 
-- Dry run creates no operation output or automatic report, but output validation can create a missing output directory and an exclusively owned temporary probe. Strict write-free validation (V11-04) remains outstanding. Empty aggregate batches return before preparation; nonempty aggregate dry runs still use directory validation and record only a planned destination.
+- Dry run performs no BatchStudio-controlled execution or report writes: no directory, probe, temporary file, operation output, or automatic/manual report, including with empty input. The run retains its dry-run identity independently of checkbox changes. Read-only feasibility does not prove future normal-run writability and is not a filesystem sandbox; OS-managed metadata and unrelated settings persistence are outside the guarantee. See [Security model](SECURITY_MODEL.md#dry-run-output-suppression).
+- Dry run does not fabricate intermediate files. A multi-step chain can fail when a later validator requires a planned intermediate to exist. Unsupported dry-run operations are not invoked. Aggregate-only dry run validates inputs and records a planned destination without writing a PDF.
 - Final names/suffixes are reserved before writing; occupied destinations cause alternate batch allocation or explicit exclusive-creation failure. Direct calls are protected too. This applies to registered processing operations, not report export or settings/workflow persistence.
 - Intermediate outputs are removed after a successful chain only while their recorded filesystem identities match; inputs and unrelated occupied outputs are not deleted. A failed chain can leave prior owned intermediates.
 - Output ownership is not a filesystem sandbox or a promise of atomic recovery from every OS error. Arbitrary hostile directory/link replacement and replacement during cleanup's identity-check/unlink interval are outside the guarantee.
