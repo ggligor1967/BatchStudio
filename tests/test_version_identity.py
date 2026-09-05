@@ -12,7 +12,7 @@ import importlib
 import importlib.metadata
 import importlib.util
 import re
-import tomllib
+import sys
 from pathlib import Path
 
 import pytest
@@ -48,11 +48,11 @@ def test_core_package_reexports_canonical_version():
 
 
 def test_pyproject_declares_dynamic_version_from_canonical_module():
-    data = tomllib.loads(_read_text("pyproject.toml"))
-    project = data["project"]
-    assert "version" not in project, "pyproject must not pin a literal version"
-    assert "version" in project.get("dynamic", [])
-    assert data["tool"]["setuptools"]["dynamic"]["version"] == {"attr": "core._version.__version__"}
+    # Parser-free: stdlib tomllib is 3.11+, and CI exercises this on Python 3.10 too.
+    text = _read_text("pyproject.toml")
+    assert re.search(r'(?m)^dynamic\s*=\s*\["version"\]\s*$', text)
+    assert not re.search(r'(?m)^version\s*=\s*"', text), "pyproject must not pin a literal version"
+    assert 'version = {attr = "core._version.__version__"}' in text
 
 
 def test_runtime_banner_module_uses_canonical_version():
@@ -79,12 +79,20 @@ def test_installed_distribution_metadata_matches_canonical():
     assert installed == CANONICAL
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="scripts/verify_repository.py requires stdlib tomllib (Python 3.11+)",
+)
 def test_repository_verifier_version_contract_passes():
     verifier = _load_script("v11r_verify_repository", "scripts/verify_repository.py")
     paths = {path.as_posix() for path in verifier.repository_paths()}
     assert verifier.verify_version_truth(paths) == []
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="scripts/verify_repository.py requires stdlib tomllib (Python 3.11+)",
+)
 def test_repository_verifier_flags_a_diverging_package_workflow(monkeypatch):
     verifier = _load_script("v11r_verify_repository_div", "scripts/verify_repository.py")
     original = verifier.read_repository_text
