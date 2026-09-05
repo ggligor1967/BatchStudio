@@ -1,13 +1,13 @@
 # Limitations
 
-This document records observed boundaries of the current 1.0.1 implementation plus unreleased output-ownership, aggregate-contract, CSV-validation, dry-run, and OCR-truth fixes in source. It is not a future-feature promise or a restatement of the immutable release tag.
+This document records observed boundaries of the current implementation, including the output-ownership, aggregate-contract, CSV-validation, dry-run, and OCR-truth fixes prepared for the 1.1.0 release candidate. It is not a future-feature promise or a restatement of the immutable release tag.
 
 ## OCR
 
 - OCR-backed paths require a working external Tesseract executable in addition to Python packages.
 - PDF rasterization requires `pdf2image` and Poppler utilities.
 - Requested Tesseract language packs must be installed separately.
-- V11-05 tests mock recognition and external tools; real OCR success remains unverified and V11-06 qualification remains outstanding.
+- V11-05 tests mock recognition and external tools; real OCR success remains unverified. Controlled real-OCR qualification (V11-06, issue #10) was not admitted to the 1.1.0 release scope and is deferred as future work in [Roadmap](ROADMAP.md).
 - Image OCR exposes only `language` and does not implement preprocessing. Image/PDF reject legacy page segmentation, grayscale, threshold, and threshold-value keys explicitly at compilation and direct execution.
 - Batch OCR exposes only `language` and writes one text result per input. Legacy combined-output fields and delegated preprocessing fields fail explicitly.
 - Image readiness does not require PDF tooling. Native PDF extraction needs no OCR stack. Auto mode can complete natively without it, but fails explicitly when fallback is needed and unavailable.

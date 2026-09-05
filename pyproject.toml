@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "batchstudio"
-version = "1.0.1"
+dynamic = ["version"]
 description = "A Tkinter desktop application for registry-backed batch file workflows"
 readme = "README.md"
 license = "MIT"
@@ -66,6 +66,9 @@ include = ["core*", "ui*"]
 
 [tool.setuptools]
 py-modules = ["main"]
+
+[tool.setuptools.dynamic]
+version = {attr = "core._version.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

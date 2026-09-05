@@ -11,7 +11,7 @@ from ui.input_panel import InputPanel
 from ui.workflow_panel import WorkflowPanel
 from ui.run_panel import RunPanel
 from ui.logs_panel import LogsPanel
-from core import BatchProcessor, WorkflowManager, get_settings
+from core import __version__, BatchProcessor, WorkflowManager, get_settings
 
 
 class MainWindow:
@@ -175,7 +175,7 @@ class MainWindow:
         self.status_label = ttk.Label(self.statusbar, text="Ready", foreground=self.colors['success'])
         self.status_label.pack(side=tk.LEFT)
         
-        self.version_label = ttk.Label(self.statusbar, text="v1.0.1", foreground='gray')
+        self.version_label = ttk.Label(self.statusbar, text=f"v{__version__}", foreground='gray')
         self.version_label.pack(side=tk.RIGHT)
     
     def _setup_shortcuts(self):
@@ -259,7 +259,7 @@ class MainWindow:
     def _show_about(self):
         """Show about dialog."""
         messagebox.showinfo("About BatchStudio",
-                          "🎨 BatchStudio v1.0.1\n\n"
+                          f"🎨 BatchStudio v{__version__}\n\n"
                           "A Tkinter desktop application for\n"
                           "registry-backed file workflows.\n\n"
                           "Built with Python & Tkinter\n"

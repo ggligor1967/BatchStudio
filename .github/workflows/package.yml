@@ -36,4 +36,4 @@ jobs:
       - name: Build wheel and source distribution
         run: python -m build
       - name: Audit artifacts and isolated wheel installation
-        run: python scripts/verify_package.py --dist-dir dist --expected-version 1.0.1
+        run: python scripts/verify_package.py --dist-dir dist --expected-version 1.1.0

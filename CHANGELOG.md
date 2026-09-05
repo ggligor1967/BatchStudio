@@ -2,6 +2,36 @@
 
 All notable project changes are recorded here. Dates and release facts are included only when supported by repository and release evidence.
 
+## [1.1.0] - Unreleased
+
+This section is prepared for a release candidate. No tag, GitHub release, or distribution has been published for 1.1.0; publication is a separately authorized operation governed by [Release process](docs/RELEASE_PROCESS.md).
+
+### Added
+
+- Single canonical application version source in `core/_version.py`, consumed by the runtime banner, the desktop UI status label and About dialog, and packaging metadata through `pyproject.toml` dynamic version resolution.
+- Release-candidate version-identity tests in `tests/test_version_identity.py`.
+
+### Changed
+
+- `scripts/verify_repository.py` validates the canonical version contract (one source, dynamic packaging metadata, derived runtime/UI consumers, non-diverging package workflow) instead of requiring duplicated literal version strings across documentation.
+- `scripts/verify_package.py` and the package workflow verify the candidate version `1.1.0` and fail on divergence from `core/_version.py`.
+- [Release process](docs/RELEASE_PROCESS.md) integration path is stated explicitly as branch to pull request to required checks to protected `main`; the instruction to push `main` directly was removed and immutable new-tag behavior is documented.
+- OCR, limitations, operations, and testing documentation reconciled: 1.1.0 ships the deterministic mocked OCR capability and contract coverage completed in V11-05; controlled real-OCR qualification (V11-06, issue #10) is deferred and is not a 1.1.0 release gate.
+- [Roadmap](docs/ROADMAP.md) marks V11-06 as deferred/conditional and V11-08 (behavioral Tkinter flow coverage) as P2 / stretch, non-blocking for 1.1.0.
+
+### Fixed
+
+- Output-collision prevention and isolated per-worker rename counters (V11-01).
+- Aggregate-only workflow enforcement, empty-input handling, and stop-before-finalize safety for PDF merge (V11-02).
+- Fail-closed CSV filter configuration and rejection of booleans in numeric schemas (V11-03).
+- Write-free dry runs across registered writers and reports (V11-04).
+- OCR configuration validation and capability reporting for image, PDF, and batch OCR, including explicit rejection of legacy preprocessing keys (V11-05).
+- Input picker and Run preflight aligned with actual runtime capabilities so unsupported or unavailable selections are reported accurately (V11-07).
+
+### Runtime
+
+- No functional processing behavior changes in the V11-R preparation work. OCR production behavior is unchanged and OCR qualification was not reopened.
+
 ## [1.0.1] - 2026-09-04
 
 ### Documentation
@@ -29,5 +59,6 @@ All notable project changes are recorded here. Dates and release facts are inclu
 - Verified the full automated suite, critical end-to-end cases, PDF merge regressions, package build, isolated installation, entrypoint loading, artifact contents, and Git provenance.
 - Verified the OCR missing-capability path; a real OCR success path was not verified on the release machine.
 
+[1.1.0]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.1...main
 [1.0.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.0

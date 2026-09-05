@@ -5,7 +5,7 @@ BatchStudio - Batch Processing Studio
 A Tkinter desktop application for registry-backed batch file workflows.
 
 Author: BatchStudio Team
-Version: 1.0.1
+Version: defined by core._version.__version__
 """
 
 import tkinter as tk
@@ -16,6 +16,7 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from core import __version__
 from ui import MainWindow
 
 
@@ -41,9 +42,9 @@ def main():
 
 
 if __name__ == "__main__":
-    print("""
+    print(f"""
     ================================================================
-                         BATCHSTUDIO v1.0.1
+                         BATCHSTUDIO v{__version__}
     ================================================================
 
     Starting BatchStudio...

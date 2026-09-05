@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import email.policy
 import subprocess
 import sys
@@ -27,6 +28,20 @@ FORBIDDEN_ARCHIVE_COMPONENTS = {
 
 class PackageVerificationError(RuntimeError):
     """Raised when a distribution or isolated installation is invalid."""
+
+
+def read_canonical_version() -> str:
+    """Read the single source-of-truth version from ``core/_version.py`` statically."""
+    version_module = Path(__file__).resolve().parents[1] / "core" / "_version.py"
+    tree = ast.parse(version_module.read_text(encoding="utf-8"), filename=str(version_module))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "__version__" for target in node.targets
+        ):
+            value = ast.literal_eval(node.value)
+            if isinstance(value, str):
+                return value
+    raise PackageVerificationError("core/_version.py does not define a string __version__")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -156,6 +171,12 @@ print("Installed package imports and batchstudio-gui entrypoint verified.")
 
 def main() -> int:
     arguments = parse_arguments()
+    canonical_version = read_canonical_version()
+    if arguments.expected_version != canonical_version:
+        raise PackageVerificationError(
+            f"--expected-version {arguments.expected_version} diverges from the canonical "
+            f"version {canonical_version} declared in core/_version.py"
+        )
     dist_directory = arguments.dist_dir.resolve()
     artifacts = sorted(path for path in dist_directory.iterdir() if path.is_file())
     wheels = [path for path in artifacts if path.suffix == ".whl"]

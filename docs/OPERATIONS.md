@@ -27,7 +27,7 @@ The registered values are `BLUR`, `SHARPEN`, `SMOOTH`, `EDGE_ENHANCE`, `EMBOSS`,
 
 `native` PDF mode uses pypdf without any OCR tools. `auto` switches to OCR when stripped native text is shorter than 50 characters. Compilation allows native extraction without OCR tooling; an actual auto fallback checks full PDF OCR readiness and fails explicitly if unavailable. Explicit `ocr` mode checks that stack at compilation and runtime. Image OCR never requires PDF tooling. Batch preflight follows the concrete input branch.
 
-Image and batch expose only `language`. Image/PDF reject legacy `page_segmentation_mode`, `grayscale`, `threshold`, and `threshold_value`; batch also rejects `combine_output` and `combined_filename`. Compilation and direct execution reject these keys explicitly rather than silently ignoring them. Executable, language, and Poppler readiness refresh on each check. See [OCR](OCR.md) for the dependency matrix, configuration migration, displayed status, and dry-run behavior. Real OCR success remains unverified under V11-05; V11-06 is separate.
+Image and batch expose only `language`. Image/PDF reject legacy `page_segmentation_mode`, `grayscale`, `threshold`, and `threshold_value`; batch also rejects `combine_output` and `combined_filename`. Compilation and direct execution reject these keys explicitly rather than silently ignoring them. Executable, language, and Poppler readiness refresh on each check. See [OCR](OCR.md) for the dependency matrix, configuration migration, displayed status, and dry-run behavior. Real OCR success remains unverified; controlled real-OCR qualification (V11-06, issue #10) is deferred and is not part of the 1.1.0 release scope.
 
 ## Aggregate workflow and termination
 
