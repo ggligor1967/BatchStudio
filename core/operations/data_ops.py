@@ -18,23 +18,27 @@ class CSVFilterOperation(Operation):
 
     def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         try:
+            valid, error = self.validate_config()
+            if not valid:
+                return OperationResult(success=False, error=f"Invalid CSV filter configuration: {error}")
             df = pd.read_csv(file_path)
             original_rows = len(df)
             column = self.config.get("column")
             operator = self.config.get("operator", "==")
             value = self.config.get("value")
 
-            if column and column in df.columns:
-                if operator == "==":
-                    df = df[df[column] == value]
-                elif operator == "!=":
-                    df = df[df[column] != value]
-                elif operator == ">":
-                    df = df[df[column] > float(value)]
-                elif operator == "<":
-                    df = df[df[column] < float(value)]
-                elif operator == "contains":
-                    df = df[df[column].astype(str).str.contains(str(value), na=False)]
+            if column not in df.columns:
+                return OperationResult(success=False, error=f"CSV column {column!r} is missing from the input file")
+            if operator == "==":
+                df = df[df[column] == value]
+            elif operator == "!=":
+                df = df[df[column] != value]
+            elif operator == ">":
+                df = df[df[column] > float(value)]
+            elif operator == "<":
+                df = df[df[column] < float(value)]
+            elif operator == "contains":
+                df = df[df[column].astype(str).str.contains(str(value), na=False)]
 
             if not dry_run:
                 with exclusive_output(output_path, text=True, newline="") as stream:
@@ -58,7 +62,7 @@ class CSVFilterOperation(Operation):
 
     def get_config_schema(self):
         return {
-            "column": {"type": "str", "default": ""},
+            "column": {"type": "str", "default": "", "required": True, "non_empty": True},
             "operator": {"type": "choice", "default": "==", "choices": ["==", "!=", ">", "<", "contains"]},
             "value": {"type": "str", "default": ""},
         }

@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs six test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests; V11-02 increases it to 107:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eight test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, and V11-03/V11-04 to 199:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -24,6 +24,9 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 - `tests/test_aggregate_lifecycle.py`: empty input, output publication, event-controlled stop/pause boundaries, dry-run plans, partial-invalid-input policy, and success/failure/stop/success isolation.
 - `tests/test_e2e_release_blockers.py`: resize/convert chains, PDF merge and containment, dry run, malformed configuration, OCR dependency absence, pause, and cancellation.
 - `tests/test_output_ownership.py`: 53 focused V11-01 cases for all registered per-file writers, direct entrypoints, final-path collisions, deterministic counter interleaving, canonical reservation aliases, exclusive creation, aggregate ownership, intermediate cleanup, and normal probe ownership. Symlink cases skip explicitly if the OS does not permit link creation.
+
+- `tests/test_csv_contracts.py`: 39 V11-03 cases for generic required/non-empty and float parity, compiler/direct CSV rejection, missing concrete columns, normal matching/zero-row output, dry-run counts, and both numeric operators.
+- `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
 
 Run the discovered suite:
 
@@ -56,6 +59,19 @@ pytest -q tests/test_aggregate_lifecycle.py tests/test_workflow.py tests/test_e2
 Before production changes, the original 27-case selection produced 12 failures and 15 passes on the admitted V11-01 source. Four additional review regressions failed before the empty-input validation-order correction, then passed: blank workflow name, invalid aggregate configuration, enabled predecessor, and multiple aggregates. Stop tests use events, including after the last consumption has completed; pause tests exercise the existing pause loop with its timed wait replaced by events. They do not use sleeps or claim cancellation after finalization begins. Final-write failure is injected through the real PDF writer, checking owned-partial cleanup, preservation of an earlier output, and fresh state on subsequent runs.
 
 The canonical `test_e2e_pdf_merge` cases cover two, three, and five inputs through `tests/pdf_merge_cases.py`, with asserted page counts, non-lexical input order, one actual final output, and zero failures. The root diagnostics reuse this helper.
+
+## V11-03 and V11-04 regressions
+
+Run the two contracts independently:
+
+```powershell
+pytest -q tests/test_csv_contracts.py
+pytest -q tests/test_dry_run_contracts.py
+```
+
+Before production changes, the initial CSV matrix produced 21 failures and 16 passes; the initial dry-run matrix produced 43 failures and one pass. Additional cases check dry-run CSV counts, normal manual reports, and interceptor calibration. The existing V11-01 CSV writer fixture now supplies valid required configuration so ownership assertions still reach the writer. The V11-02 dry-run assertion now requires the missing output directory to remain absent; lifecycle assertions are preserved.
+
+The dry-run suite intercepts attempted output-scoped directory creation, writable opens, temporary files, exclusive writers, copying/renaming, cleanup, aggregate/PDF writes, and report writers; it also compares directory contents and bytes before/after. It covers all nine registered per-file operations plus aggregate merge, including both batch OCR delegates, with existing and missing output directories. OCR capability/extraction boundaries are mocked without invoking real OCR or rasterization. UI tests run real worker threads with thread-checking variable doubles and queued completion callbacks; they exercise option/checkbox mutation without requiring a graphical display. These are focused route tests, not an interactive GUI qualification. See the [precise dry-run boundary](SECURITY_MODEL.md#dry-run-output-suppression).
 
 ## Root checks
 
@@ -97,6 +113,8 @@ On 2026-09-04 at the documentation baseline, this command passed 24 tests and re
 On 2026-09-05, V11-01 validation on Windows/Python 3.13 passed 77 tests and reported 37% across 2,543 production statements. `core/security.py` reached 99%; the writer modules ranged from 73% to 97%, and `core/processor.py` reached 81%. UI modules remained unexecuted and `main` was not imported. Local pytest runs disabled unrelated globally installed plugin autoload via `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`; no repository dependencies or pytest configuration changed. CI separately verifies the required Python 3.10/3.12 environments.
 
 On 2026-09-05, V11-02 validation on Windows/Python 3.13 passed 107 tests and reported 38% across 2,559 production statements (985 executed). `core/processor.py` reached 85%, with 21 of 25 changed executable lines covered (four reindented output-directory error-handling lines were unexecuted); the PDF operations module reached 94% and output security remained at 99%. UI modules remained unexecuted and `main` was not imported. The same local plugin-autoload isolation was used. Coverage remains diagnostic, with no global threshold.
+
+On 2026-09-05, V11-03/V11-04 validation on Windows/Python 3.13 passed 199 tests and reported 48.65% production coverage (1,259 of 2,588 statements; the console rounds to 49%). The shared operation base reached 89.41%, CSV operations 89.58%, processor 86.74%, RunPanel 34.74%, and LogsPanel 18.47%. Output security remained 98.63% and PDF operations reached 95.24%. Changed executable-line coverage was 24/26 in the shared base, 12/15 in CSV, 25/27 in the processor, and 21/21 across both UI panels. Uncovered changed lines include existing boolean/choice rejection branches, reindented CSV `!=`/`contains` handling, invalid empty/NUL destination rejection, and the no-existing-parent fallback. UI coverage exercises routes with doubles rather than rendering widgets; `main` was not imported. Local runs used the same plugin-autoload isolation. These measurements are diagnostic, with no threshold.
 
 ## OCR tests
 

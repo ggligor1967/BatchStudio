@@ -14,19 +14,19 @@ Select an available operation, add it, then use **Move Up**, **Move Down**, and 
 
 Workflows can be saved to and loaded from JSON files. Built-in templates are editable presets, not guarantees about file size, appearance, OCR accuracy, or fitness for a particular service. Review their steps and configuration before running them.
 
-Workflow steps are not reordered by drag-and-drop. Compilation checks registered IDs, configuration value types and choices, file-operation type transitions, required capabilities, and the aggregate-last rule. See [Workflows](WORKFLOWS.md).
+Workflow steps are not reordered by drag-and-drop. Compilation checks registered IDs, configuration value types, choices, and required/non-empty constraints, file-operation type transitions, required capabilities, and the aggregate-last rule. See [Workflows](WORKFLOWS.md).
 
 ## Run
 
 Choose an output directory, a naming pattern, a worker count from 1 to 16, dry-run mode, and report generation. Naming patterns recognize `{original}`, `{timestamp}`, and `{counter}`. Unsafe path characters and traversal fragments are sanitized, and duplicate initial allocations receive a numeric suffix. Operation-specific suffix or name changes have the collision limitation described in [Limitations](LIMITATIONS.md).
 
-Use **Dry Run** first. It suppresses operation output files and the automatic report. Output-directory validation still resolves and checks the directory and can create a missing directory plus a transient `.write_test` probe.
+Use **Dry Run** first. It creates no output directory, probe, temporary file, operation output, or report. It checks path feasibility without physically verifying future write permission. Options are captured when the run starts; changing the checkbox afterward cannot change that run's identity. Dry run may read/parse inputs, and unsupported dry-run operations are rejected before execution. See the precise [application-write boundary](SECURITY_MODEL.md#dry-run-output-suppression) and [multi-step limitation](LIMITATIONS.md#dry-run-and-output-safety).
 
 **Pause** stops new work from being scheduled; it does not suspend a task already executing. **Stop** cancels work that has not started and prevents new submissions; a running library call cannot be forcibly terminated.
 
 ## Logs
 
-The Logs tab displays successful items, failures, and a summary. It can export a CSV report or create/open an HTML report. Report generation escapes HTML fields and neutralizes leading spreadsheet formula characters in CSV cells.
+The Logs tab displays successful items, failures, and a summary. For normal-run results it can export a CSV report or create/open an HTML report. Reports are unavailable for dry-run results, even after unchecking Dry Run; an older HTML report is not opened as their report. Report generation escapes HTML fields and neutralizes leading spreadsheet formula characters in CSV cells.
 
 ## Output behavior
 

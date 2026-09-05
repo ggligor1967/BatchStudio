@@ -37,7 +37,7 @@ WRITERS = [
     ("ocr_pdf", {"mode": "native"}, ".pdf", "planned.txt"),
     ("ocr_batch", {}, ".png", "planned.txt"),
     ("pdf_watermark", {}, ".pdf", "planned.pdf"),
-    ("csv_filter", {}, ".csv", "planned.csv"),
+    ("csv_filter", {"column": "status", "value": "active"}, ".csv", "planned.csv"),
 ]
 
 

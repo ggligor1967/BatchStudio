@@ -16,7 +16,7 @@ BatchStudio is a local desktop batch processor. Its controls reduce accidental p
 
 `Operation.execute` resolves operation-specific names and suffixes before batch allocation. `OutputPathAllocator` reserves canonical final paths under a mutex, checks existing paths, and adds `_001`, `_002`, and later counters. Reservations remain unique across preferred-name aliases such as `same`, `same`, and `same_001`.
 
-All registered per-file writers and aggregate PDF finalization use `exclusive_output`: exclusive creation (`x`/`xb`) followed by writes through the created handle. An occupied destination, including one created after reservation, causes an explicit failure without truncating or replacing it. Direct operation calls receive the same write protection; batch calls can allocate an alternative final path. Successful results identify the actual destination. Report export is a separate, unchanged write path.
+All registered per-file writers and aggregate PDF finalization use `exclusive_output`: exclusive creation (`x`/`xb`) followed by writes through the created handle. An occupied destination, including one created after reservation, causes an explicit failure without truncating or replacing it. Direct operation calls receive the same write protection; batch calls can allocate an alternative final path. Successful results identify the actual destination. Normal report export remains a separate write path; dry-run report export is rejected.
 
 Operation instances shallow-copy their configuration mappings. Rename counters are injected only into worker-local operation configuration; nested values are not mutated or blindly deep-copied. Successful intermediate outputs are recorded with filesystem identity, and cleanup skips missing or identity-mismatched paths. Failed writes remove only the exclusively created partial file while its identity matches. These checks are not a defense against hostile replacement during the identity-check/unlink interval.
 
@@ -24,7 +24,13 @@ Normal output-directory validation uses `tempfile.NamedTemporaryFile` for a uniq
 
 ### Dry-run output suppression
 
-Registered operations avoid their normal output writes during dry run, aggregate merge does not create a writer, and the UI skips automatic report generation. Tests assert that an existing output directory remains without operation output. This is not a strict zero-filesystem-touch promise: output-directory validation may create the directory and creates then removes an exclusively owned probe.
+A dry-run processing execution performs zero BatchStudio-controlled execution/report filesystem writes. It creates no missing output directory, writability probe, temporary processing file, operation output, copy/rename, aggregate output, or automatic/manual HTML/CSV report. Empty input creates no output directory. Dry run may read inputs, parse CSV/PDF/image metadata, and inspect filesystem metadata. OS-managed metadata changes and unrelated settings persistence outside the execution path are outside this guarantee.
+
+Output validation resolves the path and inspects its nearest existing parent without writing. Dry run validates path feasibility but does not physically verify future write permission. It is not a filesystem sandbox, an ACL guarantee, or protection against filesystem races. Normal execution retains its owned physical probe and exclusive output ownership.
+
+`ProcessingStats.dry_run` captures the invocation and exposes a read-only property, serialized by `to_dict()`. RunPanel snapshots options on the Tk thread; later checkbox changes cannot change active/completed provenance. Automatic reports use that provenance; manual CSV/HTML routes provide informational rejection and cannot open an old HTML file as the dry-run report. The processor's public `generate_report` returns `False` for dry-run stats before invoking a writer, preserving existing destination bytes.
+
+Both operation bases declare `supports_dry_run`; the processor rejects unsupported per-file execution and aggregate initialization before invoking them. [Write-interception regressions](../tests/test_dry_run_contracts.py) detect attempted writes through output-scoped primitives as well as checking actual directory contents before and after. OCR capability paths are deterministic mocks; no real OCR success is claimed.
 
 ### Report encoding
 
@@ -32,7 +38,7 @@ Dynamic HTML report values pass through `html.escape`. CSV fields that begin wit
 
 ### Input and operation validation
 
-Input paths must exist, be files, use the processor extension allow-list, and be no larger than 500 MiB. Workflow compilation rejects unknown operations, invalid schema values, incompatible per-file type transitions, missing declared capabilities, and non-final aggregates. Individual operations validate parseability before processing.
+Input paths must exist, be files, use the processor extension allow-list, and be no larger than 500 MiB. Workflow compilation rejects unknown operations, invalid schema types/choices, missing required keys, declared non-empty string violations, incompatible per-file type transitions, missing declared capabilities, and non-final aggregates. Per-file and aggregate configuration validation share one helper, including float validation. CSV requires a non-empty string column; a missing concrete CSV column fails at execution without output, while valid zero-match filters succeed. This is a data-processing correctness contract, not a confidentiality claim. Individual operations validate parseability before processing.
 
 ### Typed operation output
 

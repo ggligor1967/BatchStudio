@@ -8,6 +8,31 @@ from core.contracts import OperationResult
 from core.security import OutputPathAllocator, resolve_safe_output
 
 
+def validate_schema_config(config: Dict[str, Any], schema: Dict[str, Dict[str, Any]]) -> tuple[bool, str]:
+    for key, rules in schema.items():
+        if key not in config:
+            if rules.get("required", False):
+                return False, f"config '{key}' is required"
+            continue
+        value = config[key]
+        expected = rules.get("type")
+        if expected == "int" and not isinstance(value, int):
+            return False, f"config '{key}' must be int"
+        if expected == "float" and not isinstance(value, (int, float)):
+            return False, f"config '{key}' must be float"
+        if expected == "bool" and not isinstance(value, bool):
+            return False, f"config '{key}' must be bool"
+        if expected == "str" and not isinstance(value, str):
+            return False, f"config '{key}' must be str"
+        if rules.get("non_empty", False) and (not isinstance(value, str) or not value.strip()):
+            return False, f"config '{key}' must be a non-empty string"
+        if expected == "choice":
+            choices = rules.get("choices", [])
+            if value not in choices:
+                return False, f"config '{key}' must be one of {choices}"
+    return True, ""
+
+
 class Operation(ABC):
     id = "operation"
     name = "Operation"
@@ -49,25 +74,7 @@ class Operation(ABC):
         return None
 
     def validate_config(self) -> tuple[bool, str]:
-        schema = self.get_config_schema()
-        for key, rules in schema.items():
-            if key not in self.config:
-                continue
-            value = self.config[key]
-            expected = rules.get("type")
-            if expected == "int" and not isinstance(value, int):
-                return False, f"config '{key}' must be int"
-            if expected == "float" and not isinstance(value, (int, float)):
-                return False, f"config '{key}' must be float"
-            if expected == "bool" and not isinstance(value, bool):
-                return False, f"config '{key}' must be bool"
-            if expected == "str" and not isinstance(value, str):
-                return False, f"config '{key}' must be str"
-            if expected == "choice":
-                choices = rules.get("choices", [])
-                if value not in choices:
-                    return False, f"config '{key}' must be one of {choices}"
-        return True, ""
+        return validate_schema_config(self.config, self.get_config_schema())
 
 
 class AggregateOperation(ABC):
@@ -76,6 +83,7 @@ class AggregateOperation(ABC):
     description = ""
     accepted_types = {"pdf"}
     output_type = "pdf"
+    supports_dry_run = True
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = dict(config) if config is not None else {}
@@ -84,23 +92,7 @@ class AggregateOperation(ABC):
         return {}
 
     def validate_config(self) -> tuple[bool, str]:
-        schema = self.get_config_schema()
-        for key, rules in schema.items():
-            if key not in self.config:
-                continue
-            value = self.config[key]
-            expected = rules.get("type")
-            if expected == "int" and not isinstance(value, int):
-                return False, f"config '{key}' must be int"
-            if expected == "bool" and not isinstance(value, bool):
-                return False, f"config '{key}' must be bool"
-            if expected == "str" and not isinstance(value, str):
-                return False, f"config '{key}' must be str"
-            if expected == "choice":
-                choices = rules.get("choices", [])
-                if value not in choices:
-                    return False, f"config '{key}' must be one of {choices}"
-        return True, ""
+        return validate_schema_config(self.config, self.get_config_schema())
 
     @abstractmethod
     def begin(self, output_path: Path, dry_run: bool = False) -> None:

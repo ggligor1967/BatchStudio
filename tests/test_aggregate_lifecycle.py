@@ -240,7 +240,7 @@ def test_aggregate_dry_run_reports_plan_without_completed_output(merge_case):
     assert len(case.begun) == len(case.finalized) == 1
     assert case.begun[0]._writer is None
     assert case.consumed == list(map(Path, case.files))
-    assert not list(case.out.iterdir())
+    assert not case.out.exists()
     assert_no_completed_output(stats)
     assert {record["result"]["planned_output"] for record in stats.results} == {str(case.out / "merged.pdf")}
     assert_settled(case.processor, stats)
