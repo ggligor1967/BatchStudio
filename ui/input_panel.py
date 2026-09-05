@@ -12,9 +12,8 @@ from copy import deepcopy
 from queue import Empty, SimpleQueue
 import threading
 
-from core.processor import validate_file_path
 from core.operations.registry import OperationRegistry
-from ui.input_support import get_input_error, get_picker_filetypes
+from ui.input_support import InputCapabilityRegistry, get_input_error, get_picker_filetypes
 
 # Try to import tkinterdnd2 for drag & drop support
 try:
@@ -177,17 +176,18 @@ class InputPanel:
         """Handle file drop event."""
         # Parse dropped files (format varies by OS)
         files = self._parse_drop_data(event.data)
-        candidates = []
 
-        for filepath in files:
-            if os.path.isdir(filepath):
-                candidates.extend(self._folder_files(filepath))
-            else:
-                candidates.append(filepath)
-        self._accept_files(candidates)
+        def candidates():
+            for filepath in files:
+                if os.path.isdir(filepath):
+                    yield from self._folder_files(filepath)
+                else:
+                    yield filepath
+
+        self._accept_files(candidates())
 
         # Reset listbox appearance
-        self.file_listbox.config(bg='white')
+        self.file_listbox.config(bg="white")
         return event.action
     
     def _parse_drop_data(self, data):
@@ -230,15 +230,10 @@ class InputPanel:
         return 'break'
     
     def _add_single_file(self, filepath):
-        """Add a single file if valid."""
+        """Insert a worker-validated file once; this method only updates UI state."""
         if filepath in self.selected_files:
             return False
-        
-        valid, error = validate_file_path(filepath)
-        if not valid:
-            self.main_window.set_status(error, 'warning')
-            return False
-        
+
         self.selected_files.append(filepath)
         self.file_listbox.insert(tk.END, os.path.basename(filepath))
         self._update_drop_zone_visibility()
@@ -280,21 +275,17 @@ class InputPanel:
         self.frame.after(0, poll)
 
     def _accept_files(self, files):
-        files = list(files)
-        if not files:
-            return
         workflow = deepcopy(self.main_window.get_workflow())
 
         def check():
-            registry = OperationRegistry()
+            registry = InputCapabilityRegistry()
             return [(path, get_input_error(path, workflow, registry)) for path in files]
 
         def complete(results):
             current = self.main_window.get_workflow()
-            if ((current.to_dict() if current else None)
-                    != (workflow.to_dict() if workflow else None)):
+            if (current.to_dict() if current else None) != (workflow.to_dict() if workflow else None):
                 messagebox.showwarning("Selection changed", "Workflow changed; select inputs again.")
-                self.main_window.set_status("Workflow changed; select inputs again.", 'warning')
+                self.main_window.set_status("Workflow changed; select inputs again.", "warning")
                 return
             added = 0
             rejected = []

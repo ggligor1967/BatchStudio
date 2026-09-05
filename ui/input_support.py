@@ -1,5 +1,6 @@
 """Picker and selection adapters for the existing backend contracts."""
 
+from copy import deepcopy
 from pathlib import Path
 
 from core.operations.base import AggregateOperation
@@ -8,9 +9,43 @@ from core.operations.registry import FILE_TYPE_BY_EXTENSION, OperationRegistry
 from core.processor import ALLOWED_EXTENSIONS, validate_file_path
 
 
+class InputCapabilityRegistry(OperationRegistry):
+    """Reuse equivalent OCR probes only for one UI selection/preflight pass."""
+
+    def __init__(self):
+        super().__init__()
+        self._capability_results = []
+
+    def get_operation(self, operation_id, config=None):
+        operation = super().get_operation(operation_id, config)
+        if not isinstance(operation, OCROperation):
+            return operation
+        probe = operation.get_capability_error
+
+        def capability_error(file_path=None):
+            if isinstance(operation, OCRBatchOperation):
+                if file_path is None:
+                    return probe()
+                concrete = operation._operation_for_input(file_path)
+            else:
+                concrete = operation
+            # The existing concrete OCR checks depend on configuration, not file identity.
+            # Keep the full configuration so different languages/modes cannot share a result.
+            key = (type(concrete), concrete.config)
+            for previous_key, error in self._capability_results:
+                if previous_key == key:
+                    return error
+            error = probe(file_path)
+            self._capability_results.append((deepcopy(key), error))
+            return error
+
+        operation.get_capability_error = capability_error
+        return operation
+
+
 def get_input_error(file_path, workflow, registry=None, *, check_path=True):
     """Check input eligibility without executing, recognizing, or rasterizing it."""
-    registry = registry or OperationRegistry()
+    registry = registry or InputCapabilityRegistry()
     path = Path(file_path)
     if check_path:
         valid, error = validate_file_path(str(path))
@@ -69,7 +104,7 @@ def get_input_error(file_path, workflow, registry=None, *, check_path=True):
 
 def get_picker_filetypes(workflow, registry=None):
     """Derive Tk patterns from backend formats and current workflow requirements."""
-    registry = registry or OperationRegistry()
+    registry = registry or InputCapabilityRegistry()
     groups = {}
     # Readiness is identical within a backend input type for the current operations.
     eligibility = {}

@@ -10,9 +10,9 @@ import threading
 from copy import deepcopy
 from datetime import datetime
 
-from core import BatchProcessor, OperationRegistry
+from core import BatchProcessor
 from core.processor import compile_workflow
-from ui.input_support import get_input_error
+from ui.input_support import InputCapabilityRegistry, get_input_error
 
 
 class RunPanel:
@@ -257,12 +257,17 @@ class RunPanel:
     def _run_batch(self, files, workflow, output_dir, naming_pattern, dry_run, generate_report):
         """Run batch processing (in separate thread)."""
         try:
-            registry = OperationRegistry()
+            valid, error = workflow.validate()
+            if not valid:
+                self.frame.after(0, self._processing_error, f"Invalid workflow: {error}")
+                return
+            registry = InputCapabilityRegistry()
             for file_path in files:
                 error = get_input_error(file_path, workflow, registry)
                 if error:
-                    self.frame.after(0, self._processing_error,
-                                     f"{os.path.basename(file_path)}: {error}")
+                    self.frame.after(
+                        0, self._processing_error, f"{os.path.basename(file_path)}: {error}"
+                    )
                     return
             compilation = compile_workflow(workflow, registry)
             if not compilation.valid:
@@ -270,16 +275,12 @@ class RunPanel:
                 return
             self.frame.after(0, self._processing_started)
             stats = self.processor.process_batch(
-                files,
-                workflow,
-                output_dir,
-                naming_pattern=naming_pattern,
-                dry_run=dry_run
+                files, workflow, output_dir, naming_pattern=naming_pattern, dry_run=dry_run
             )
-            
+
             # Update UI from main thread
             self.frame.after(0, self._processing_complete, stats, output_dir, generate_report)
-            
+
         except Exception as e:
             self.frame.after(0, self._processing_error, str(e))
     
