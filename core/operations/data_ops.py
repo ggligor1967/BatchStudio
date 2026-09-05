@@ -37,7 +37,7 @@ class CSVFilterOperation(Operation):
                     df = df[df[column].astype(str).str.contains(str(value), na=False)]
 
             if not dry_run:
-                with exclusive_output(output_path, text=True) as stream:
+                with exclusive_output(output_path, text=True, newline="") as stream:
                     df.to_csv(stream, index=False)
 
             return OperationResult(

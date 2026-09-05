@@ -63,7 +63,7 @@ def deterministic_ocr(monkeypatch):
     monkeypatch.setattr(
         ocr_ops,
         "pytesseract",
-        SimpleNamespace(image_to_string=lambda *args, **kwargs: "extracted text"),
+        SimpleNamespace(image_to_string=lambda *args, **kwargs: "extracted\ntext"),
         raising=False,
     )
 
@@ -94,6 +94,9 @@ def test_direct_writer_success_reports_actual_owned_output(
     tmp_path, operation_id, config, suffix, final_name
 ):
     source = make_source(tmp_path / "source" / ("input" + suffix))
+    if operation_id == "file_rename":
+        os.utime(source, ns=(1_600_000_000_000_000_000, 1_600_000_000_000_000_000))
+    source_mtime = source.stat().st_mtime_ns
     original = source.read_bytes()
     out = tmp_path / "out"
     out.mkdir()
@@ -109,9 +112,15 @@ def test_direct_writer_success_reports_actual_owned_output(
     assert set(out.iterdir()) == {result.output_path}
     assert source.read_bytes() == original
     if operation_id in {"ocr_image", "ocr_batch"}:
-        assert result.output_path.read_text(encoding="utf-8") == "extracted text"
+        assert result.output_path.read_bytes() == f"extracted{os.linesep}text".encode("utf-8")
+    elif operation_id == "csv_filter":
+        assert (
+            result.output_path.read_bytes()
+            == f"status,value{os.linesep}active,1{os.linesep}".encode("utf-8")
+        )
     elif operation_id == "file_rename":
         assert result.output_path.read_bytes() == original
+        assert result.output_path.stat().st_mtime_ns == source_mtime
     elif operation_id == "pdf_watermark":
         assert len(PdfReader(result.output_path).pages) == 1
 

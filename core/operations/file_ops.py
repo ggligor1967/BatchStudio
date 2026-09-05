@@ -39,6 +39,8 @@ class FileRenameOperation(Operation):
             with exclusive_output(target) as destination:
                 with file_path.open("rb") as source:
                     shutil.copyfileobj(source, destination)
+                # Closing the write handle can update mtime, so copy metadata afterward.
+                destination.close()
                 shutil.copystat(file_path, target)
             return OperationResult(success=True, output_path=target, message=f"Renamed to {target.name}")
         except Exception as exc:

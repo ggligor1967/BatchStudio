@@ -56,9 +56,9 @@ def remove_owned_output(path: Path, identity: tuple[int, int]) -> None:
 
 
 @contextmanager
-def exclusive_output(path: Path, *, text: bool = False):
+def exclusive_output(path: Path, *, text: bool = False, newline: str | None = None):
     """Create once and write through that handle; never reopen a destination for writing."""
-    options = {"encoding": "utf-8", "newline": ""} if text else {}
+    options = {"encoding": "utf-8", "newline": newline} if text else {}
     identity = None
     try:
         with path.open("x" if text else "xb", **options) as stream:
