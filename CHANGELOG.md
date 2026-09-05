@@ -30,7 +30,7 @@ This release establishes a single canonical application version source and recon
 
 ### Runtime
 
-- No functional processing behavior changes in this release. OCR production behavior is unchanged and OCR qualification was not reopened.
+- The V11-R/V11-F release-preparation work introduced no additional functional processing behavior changes. OCR production behavior is unchanged and OCR qualification was not reopened.
 
 ## [1.0.1] - 2026-09-04
 
