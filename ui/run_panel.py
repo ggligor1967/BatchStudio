@@ -10,7 +10,9 @@ import threading
 from copy import deepcopy
 from datetime import datetime
 
-from core import BatchProcessor
+from core import BatchProcessor, OperationRegistry
+from core.processor import compile_workflow
+from ui.input_support import get_input_error
 
 
 class RunPanel:
@@ -226,8 +228,8 @@ class RunPanel:
         # Update UI state
         self.is_running = True
         self.start_button.config(state=tk.DISABLED)
-        self.pause_button.config(state=tk.NORMAL)
-        self.stop_button.config(state=tk.NORMAL)
+        self.pause_button.config(state=tk.DISABLED)
+        self.stop_button.config(state=tk.DISABLED)
         
         # Configure processor
         self.processor = BatchProcessor(max_workers=workers)
@@ -236,7 +238,7 @@ class RunPanel:
         
         # Log start
         self._log("="*60, 'info')
-        self._log(f"Starting batch processing: {workflow.name}", 'info')
+        self._log(f"Checking batch availability: {workflow.name}", 'info')
         self._log(f"Files: {len(files)}", 'info')
         self._log(f"Steps: {len(workflow.steps)}", 'info')
         self._log(f"Output: {output_dir}", 'info')
@@ -244,7 +246,7 @@ class RunPanel:
             self._log("Mode: DRY RUN (no files will be modified)", 'warning')
         self._log("="*60, 'info')
         
-        self.status_label.config(text="🚀 Processing in progress...")
+        self.status_label.config(text="Checking input and workflow availability...")
         
         # Start processing in separate thread
         thread = threading.Thread(target=self._run_batch,
@@ -255,6 +257,18 @@ class RunPanel:
     def _run_batch(self, files, workflow, output_dir, naming_pattern, dry_run, generate_report):
         """Run batch processing (in separate thread)."""
         try:
+            registry = OperationRegistry()
+            for file_path in files:
+                error = get_input_error(file_path, workflow, registry)
+                if error:
+                    self.frame.after(0, self._processing_error,
+                                     f"{os.path.basename(file_path)}: {error}")
+                    return
+            compilation = compile_workflow(workflow, registry)
+            if not compilation.valid:
+                self.frame.after(0, self._processing_error, "\n".join(compilation.errors))
+                return
+            self.frame.after(0, self._processing_started)
             stats = self.processor.process_batch(
                 files,
                 workflow,
@@ -269,6 +283,11 @@ class RunPanel:
         except Exception as e:
             self.frame.after(0, self._processing_error, str(e))
     
+    def _processing_started(self):
+        self.status_label.config(text="🚀 Processing in progress...")
+        self.pause_button.config(state=tk.NORMAL)
+        self.stop_button.config(state=tk.NORMAL)
+
     def _processing_complete(self, stats, output_dir, generate_report):
         """Handle processing completion."""
         self.current_stats = stats

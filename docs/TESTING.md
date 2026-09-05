@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs nine test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, and V11-05 to 289:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs ten test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, and V11-05 to 289:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -28,6 +28,8 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 - `tests/test_csv_contracts.py`: 43 V11-03 cases for generic required/non-empty and float parity, numeric boolean rejection, compiler/direct CSV rejection, missing concrete columns, normal matching/zero-row output, dry-run counts, and both numeric operators.
 - `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
 - `tests/test_ocr_contracts.py`: 86 deterministic V11-05 cases covering schema/legacy-key parity, all four OCR templates, separate dependency failures, live readiness refresh, PDF modes and forwarding, batch delegates, and schema/status UI routes.
+
+- `tests/test_input_capabilities.py`: V11-07 backend-to-picker mapping, independent image/native PDF/PDF OCR states, unsupported and unavailable selection boundaries, picker/folder/drop routes, stale/failed worker probes, and run preflight. Runtime readiness is mocked; OCR qualification is not repeated. Run independently with `python -m pytest -q tests/test_input_capabilities.py`.
 
 Run the discovered suite:
 
