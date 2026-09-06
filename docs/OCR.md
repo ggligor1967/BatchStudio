@@ -59,7 +59,7 @@ V11-06 (issue #10) adds a separate fail-closed real-OCR qualification path after
 
 ### Controlled environment
 
-The authoritative machine-readable contract is `qualification/real_ocr/contract.json`. The dedicated workflow uses Ubuntu 24.04 amd64, Python 3.12.11, `pytesseract==0.3.13`, `pdf2image==1.17.0`, Pillow 11.3.0, pypdf 6.0.0, and reportlab 4.4.3. Remaining Python qualification packages are exactly resolved in `qualification/real_ocr/requirements.txt`.
+The authoritative machine-readable contract is `qualification/real_ocr/contract.json`. The dedicated workflow uses Ubuntu 24.04 amd64, Python 3.12.11, `pytesseract==0.3.13`, `pdf2image==1.17.0`, Pillow 12.3.0, pypdf 6.0.0, and reportlab 4.4.3. Remaining Python qualification packages are exactly resolved in `qualification/real_ocr/requirements.txt`.
 
 | Component | Controlled identity | Artifact SHA256 | Runtime location |
 |---|---|---|---|

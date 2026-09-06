@@ -6,7 +6,7 @@
     "python": "3.12.11"
   },
   "python_packages": {
-    "Pillow": "11.3.0",
+    "Pillow": "12.3.0",
     "pdf2image": "1.17.0",
     "pypdf": "6.0.0",
     "pytesseract": "0.3.13",
