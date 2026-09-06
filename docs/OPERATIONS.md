@@ -2,6 +2,8 @@
 
 `core/operations/registry.py` is authoritative. It registers nine per-file operations and one aggregate operation. Extension classification maps images to `image`, PDF to `pdf`, CSV to `csv`, Excel extensions to `spreadsheet`, and TXT/JSON/XML to `text`.
 
+The UI admission policy is intentionally narrower than core classification: only images, PDF, and CSV are selectable through picker, folder, and drop routes. Excel, TXT, JSON, and XML remain classified for core compatibility, including generic rename and generated OCR TXT, but they are not initial UI inputs.
+
 | Operation ID | Class | Accepted input | Output | Configuration | Mode | Dry-run behavior | Dependencies | Principal failure modes |
 |---|---|---|---|---|---|---|---|---|
 | `image_resize` | `ImageResizeOperation` | `image`: jpg, jpeg, png, gif, bmp, webp, tiff, tif | Image, input suffix | `width:int=800`, `height:int=600`, `maintain_aspect:bool=true`, `quality:int=95` | File | Returns planned path; does not open or write the image | Pillow | Unreadable image, unsupported encoder/mode, write error |

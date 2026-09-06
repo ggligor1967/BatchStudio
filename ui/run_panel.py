@@ -68,7 +68,7 @@ class RunPanel:
                  width=30).pack(side=tk.LEFT, padx=5)
         
         ttk.Label(naming_frame,
-                 text="Use: {original}, {timestamp}",
+                 text="Use: {original}, {timestamp}, {counter}",
                  foreground='gray').pack(side=tk.LEFT, padx=5)
         
         # Options
@@ -306,8 +306,13 @@ class RunPanel:
         self._log(f"⏱️ Duration: {stats.get_duration():.1f} seconds", 'info')
         self._log("="*60, 'info')
         
-        # Show confetti (Easter egg!)
-        self._show_confetti()
+        if (
+            not stats.dry_run
+            and stats.total_files > 0
+            and stats.failed_files == 0
+            and stats.processed_files == stats.total_files
+        ):
+            self._show_confetti()
         
         # Generate report
         if generate_report and not stats.dry_run:

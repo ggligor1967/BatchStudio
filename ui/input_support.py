@@ -9,6 +9,14 @@ from core.operations.registry import FILE_TYPE_BY_EXTENSION, OperationRegistry
 from core.processor import ALLOWED_EXTENSIONS, validate_file_path
 
 
+SELECTABLE_INPUT_TYPES = frozenset({"image", "pdf", "csv"})
+SELECTABLE_INPUT_EXTENSIONS = frozenset(
+    extension
+    for extension in ALLOWED_EXTENSIONS
+    if FILE_TYPE_BY_EXTENSION.get(extension) in SELECTABLE_INPUT_TYPES
+)
+
+
 class InputCapabilityRegistry(OperationRegistry):
     """Reuse equivalent OCR probes only for one UI selection/preflight pass."""
 
@@ -51,8 +59,11 @@ def get_input_error(file_path, workflow, registry=None, *, check_path=True):
         valid, error = validate_file_path(str(path))
         if not valid:
             return error
-    if path.suffix.lower() not in ALLOWED_EXTENSIONS:
-        return f"File type '{path.suffix.lower()}' not allowed"
+    extension = path.suffix.lower()
+    if extension not in ALLOWED_EXTENSIONS:
+        return f"File type '{extension}' not allowed"
+    if extension not in SELECTABLE_INPUT_EXTENSIONS:
+        return f"File type '{extension}' is supported only for core compatibility and is not selectable"
     if workflow is None:
         return None
 
@@ -108,7 +119,7 @@ def get_picker_filetypes(workflow, registry=None):
     groups = {}
     # Readiness is identical within a backend input type for the current operations.
     eligibility = {}
-    for extension in sorted(ALLOWED_EXTENSIONS):
+    for extension in sorted(SELECTABLE_INPUT_EXTENSIONS):
         input_type = registry.classify_extension(extension)
         if input_type not in eligibility:
             eligibility[input_type] = get_input_error(
