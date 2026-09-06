@@ -400,6 +400,7 @@ class BatchProcessor:
             return
         finalize = aggregate_operation.finalize()
         self._aggregate_finalization_pending = False
+        self.stats.stopped = False
         if not finalize.success:
             self.stats.add_error("pdf_merge_finalize", finalize.error or "Finalize failed")
         else:

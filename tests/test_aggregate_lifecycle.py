@@ -122,6 +122,42 @@ def test_aggregate_success_publishes_only_after_finalize(merge_case):
     assert_settled(case.processor, stats)
 
 
+@pytest.mark.parametrize("finalize_fails", [False, True], ids=["success", "failure"])
+def test_stop_during_aggregate_finalize_uses_finalization_outcome(
+    merge_case,
+    monkeypatch,
+    finalize_fails,
+):
+    case = merge_case
+    observed_finalize = PDFAggregateMergeOperation.finalize
+
+    def stop_during_finalize(operation):
+        case.processor.stop()
+        return observed_finalize(operation)
+
+    monkeypatch.setattr(PDFAggregateMergeOperation, "finalize", stop_during_finalize)
+    if finalize_fails:
+
+        def fail_write(_writer, _stream):
+            raise OSError("injected finalize failure")
+
+        monkeypatch.setattr(PdfWriter, "write", fail_write)
+
+    stats = case.processor.process_batch(case.files, case.workflow, str(case.out))
+
+    assert stats.stopped is False
+    assert stats.processed_files == stats.total_files == 3
+    if finalize_fails:
+        assert stats.failed_files == 1
+        assert stats.errors[0]["file"] == "pdf_merge_finalize"
+        assert_no_completed_output(stats)
+        assert not list(case.out.iterdir())
+    else:
+        assert stats.failed_files == 0
+        assert {record["output"] for record in stats.results} == {str(case.out / "merged.pdf")}
+        assert list(case.out.iterdir()) == [case.out / "merged.pdf"]
+
+
 @pytest.mark.parametrize("consumed_count", [0, 1, 3], ids=["before-first", "between-inputs", "after-last"])
 @pytest.mark.parametrize("paused", [False, True], ids=["stop", "pause-stop"])
 def test_aggregate_stop_before_finalize(merge_case, monkeypatch, consumed_count, paused):
