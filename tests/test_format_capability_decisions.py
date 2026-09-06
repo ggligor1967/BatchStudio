@@ -242,5 +242,5 @@ def test_canonical_docs_record_every_v12_03_decision_and_boundary():
     assert "not user data inputs" in operations
     assert "does not parse or transform a TXT input" in operations
     assert "V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY`" in roadmap
-    assert "**V12-04 is the next admissible implementation unit**" in roadmap
+    assert "**V12-PERF is the next admissible implementation unit**" in roadmap
     assert "previews admitted images, PDF metadata, and CSV rows" in user_guide
