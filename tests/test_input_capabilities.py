@@ -169,6 +169,8 @@ def test_processing_completion_celebrates_only_fully_successful_real_runs(
     assert summary_phrase in panel._log.call_args_list[1].args[0].lower()
     assert status_phrase in panel.status_label.config.call_args.kwargs["text"].lower()
     if not celebrates:
+        assert all(call.args[1] != "success" for call in panel._log.call_args_list)
+        assert all("✅" not in call.args[0] for call in panel._log.call_args_list)
         outcome_text = "\n".join(
             (
                 panel._log.call_args_list[1].args[0],

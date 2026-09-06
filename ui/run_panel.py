@@ -352,8 +352,10 @@ class RunPanel:
         self._log(completion_summary, completion_tag)
         if stats.dry_run:
             self._log(f"🔍 Planned: {stats.processed_files}", 'info')
-        else:
+        elif is_full_success:
             self._log(f"✅ Processed: {stats.processed_files}", 'success')
+        else:
+            self._log(f"Processed: {stats.processed_files}", 'info')
         if stats.failed_files > 0:
             self._log(f"❌ Failed: {stats.failed_files}", 'error')
         self._log(f"⏱️ Duration: {stats.get_duration():.1f} seconds", 'info')
