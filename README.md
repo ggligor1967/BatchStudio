@@ -44,12 +44,12 @@ See the [Quick start](QUICKSTART.md) for a reproducible example and the [User gu
 
 ## Limitations
 
-- OCR availability depends on external executables and language data; release validation verifies the missing-capability path, not a real OCR success path.
+- OCR availability depends on external executables and language data. General tests mock those tools; the separate controlled qualification covers real English OCR only for its exact successful CI commit and pinned environment.
 - Pause and stop prevent further scheduling but cannot forcibly terminate an operation already running.
 - Thread-based execution does not bypass Python's GIL for CPU-bound Python code.
-- UI selection is limited to images, PDF, and CSV. Excel, TXT, JSON, and XML remain core-classified compatibility inputs but are not selectable in the UI.
-- Text and structured-text inputs have no dedicated transformation; the generic file-copy rename operation remains available through the core compatibility path and for generated OCR TXT.
-- Dry run suppresses operation outputs and reports, but output-directory validation can create a missing directory and a transient write-test file.
+- UI selection is limited to images, PDF, and CSV. XLS, XLSX, TXT, JSON, and XML are Level 1 generic-file compatibility formats, not product-admitted or format-aware input capabilities.
+- The programmatic core path can copy those five opaque files under a new name without interpreting their content. OCR-generated TXT is an output contract, not TXT input processing.
+- Dry run suppresses operation outputs and reports; output-directory validation checks path feasibility without creating a directory or transient write-test file.
 - No throughput or maximum-batch guarantee is made. See [Limitations](docs/LIMITATIONS.md).
 
 ## Documentation

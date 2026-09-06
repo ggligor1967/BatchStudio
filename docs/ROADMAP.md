@@ -5,33 +5,21 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-V12-03
-→ V12-04
+V12-04
 → V12-PERF
 ```
 
-This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), and V11-06 controlled real-OCR qualification (issue #10) establish the remaining order but are no longer active or schedulable roadmap items. **V12-03 is the next admissible implementation unit**; it does not start automatically. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
+This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), and V12-03 format-capability decision (issue #33) establish the remaining order but are no longer active or schedulable roadmap items. **V12-04 is the next admissible implementation unit**; it does not start automatically. V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
 
-## Completed post-v1.1 unit
+## Completed post-v1.1 units
 
-This unit was explicitly **not** part of the 1.1.0 release gate. The published 1.1.0 release does not depend on it.
+These units were explicitly **not** part of the 1.1.0 release gate. The published 1.1.0 release does not depend on them.
 
 V11-06 (issue #10) established the dedicated fail-closed `real-ocr-qualification` job, checksum-pinned Tesseract/Poppler/English data, reproducible hashed fixtures, real image and image-only PDF OCR, and a distinct native-text PDF case. No OCR production behavior or aggregate semantics changed. The qualification is limited to the exact successful job SHA and controlled English environment; it is not cross-platform, multilingual, arbitrary-document, or accuracy-benchmark certification. The deterministic mocked V11-05 coverage remains the only OCR qualification shipped in 1.1.0; see [OCR](OCR.md).
 
+V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY` for XLS, XLSX, TXT, JSON, and XML. All five remain classified and core-valid for byte-preserving generic rename, but none is product-admitted or has a format-aware input operation or template. Workflow/settings JSON and OCR-generated TXT remain control/output formats, not input-processing capabilities. The decision added no parser, format feature, dependency, or future support unit; see [Operations](OPERATIONS.md#capability-levels-and-v12-03-decisions).
+
 ## V12 backlog units
-
-### V12-03 — Excel / structured-text capability decision
-
-- **Problem:** `.xls`/`.xlsx` and non-CSV structured-text extensions are core-classified, while UI admission excludes them and no dedicated registered operation transforms their content. The product needs an explicit support or restriction decision before capability claims expand.
-- **Existing evidence:** `core/operations/registry.py` classifies Excel as `spreadsheet` and TXT/JSON/XML as `text`; `ui/input_support.py` admits only images, PDF, and CSV. Current documentation limits Excel and structured text to compatibility paths such as generic rename and generated OCR TXT. CSV already has a real, separately documented transformation.
-- **Risk:** P2 product correctness. Ambiguous classification can imply unsupported processing, while premature support can introduce parser, dependency, data-loss, and format-fidelity risks.
-- **Priority:** P2.
-- **Scope:** Produce a per-format decision for `.xls`, `.xlsx`, `.txt`, `.json`, and `.xml`: implement supported operations in a separately approved unit, retain an explicitly restricted compatibility role, or remove the classification/claim. Define the user-visible and runtime consequences of each disposition.
-- **Explicit non-goals:** Automatic feature implementation, adding spreadsheet/parser dependencies, treating generic rename as content support, changing CSV behavior, or claiming format fidelity without fixtures and tests.
-- **Dependencies:** Completed V11-07 capability-truth work, V11-08 behavioral coverage, and settled V12-02 workflow semantics. If support is selected, a new approved implementation unit and dependency decision are required.
-- **Acceptance criteria:** Every listed extension has one documented disposition, and registry classification, processor allow-list, picker/folder/drop admission, operation compatibility, templates, and user-facing claims are consistent with it. A support decision includes concrete operations, dependency review, fixtures, failure policy, and follow-on acceptance criteria; it does not itself imply implementation.
-- **Test strategy:** Use the existing capability-route matrix to lock the selected restriction/removal behavior. Any later support unit must add synthetic format fixtures and compiler, direct-operation, batch, dry-run, malformed-input, and UI-route tests before claims change.
-- **Documentation impact:** Reconcile [Operations](OPERATIONS.md), [User guide](USER_GUIDE.md), [Workflows](WORKFLOWS.md), and [Limitations](LIMITATIONS.md) with the selected disposition.
 
 ### V12-04 — Page-aware PDF watermark placement
 

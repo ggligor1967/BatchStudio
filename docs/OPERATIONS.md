@@ -1,8 +1,32 @@
 # Operations reference
 
-`core/operations/registry.py` is authoritative. It registers nine per-file operations and one aggregate operation. Extension classification maps images to `image`, PDF to `pdf`, CSV to `csv`, Excel extensions to `spreadsheet`, and TXT/JSON/XML to `text`.
+`core/operations/registry.py` is authoritative for operation registration and extension classification. It registers nine per-file operations and one aggregate operation. Classification maps images to `image`, PDF to `pdf`, CSV to `csv`, Excel extensions to `spreadsheet`, and TXT/JSON/XML to `text`.
 
-The UI admission policy is intentionally narrower than core classification: only images, PDF, and CSV are selectable through picker, folder, and drop routes. Excel, TXT, JSON, and XML remain classified for core compatibility, including generic rename and generated OCR TXT, but they are not initial UI inputs.
+The UI admission policy is intentionally narrower than core classification: only images, PDF, and CSV are selectable through picker, folder, and drop routes. XLS, XLSX, TXT, JSON, and XML retain only generic core compatibility and are not initial UI inputs. OCR-generated TXT is an output of image/PDF OCR, not evidence of TXT input processing.
+
+## Capability levels and V12-03 decisions
+
+Capability claims use these levels:
+
+- **Level 0 — Known extension:** the core classifies the suffix.
+- **Level 1 — Generic file compatibility:** format-agnostic, file-safe operations can handle opaque bytes without understanding the format.
+- **Level 2 — Product-admitted input:** picker, folder, drop, and Run preflight intentionally admit the format into normal UI workflows.
+- **Level 3 — Format-specific capability:** a registered operation understands and meaningfully processes the format.
+- **Level 4 — Qualified capability:** fixtures, tests, failure policy, and documentation cover the format-aware operation.
+
+Levels are cumulative for initial product inputs. Classification or an installed parser dependency alone does not establish a higher level. Generic rename preserves file bytes and suffix but makes no workbook, sheet, cell, column, encoding, schema, namespace, validation, transformation, or round-trip-fidelity guarantee.
+
+| Format | Core classification | Current level | Target level | Product admission | Format-aware input operation | V12-03 decision |
+|---|---|---:|---:|---|---|---|
+| `.xls` | `spreadsheet` | 1 | 1 | No | None | `RESTRICT_TO_GENERIC_COMPATIBILITY` |
+| `.xlsx` | `spreadsheet` | 1 | 1 | No | None | `RESTRICT_TO_GENERIC_COMPATIBILITY` |
+| `.txt` | `text` | 1 | 1 | No | None | `RESTRICT_TO_GENERIC_COMPATIBILITY` |
+| `.json` | `text` | 1 | 1 | No | None | `RESTRICT_TO_GENERIC_COMPATIBILITY` |
+| `.xml` | `text` | 1 | 1 | No | None | `RESTRICT_TO_GENERIC_COMPATIBILITY` |
+
+These decisions preserve classification, core validation, and the programmatic `file_rename` copy path while keeping picker, folder, drop, Run preflight, and format-specific templates closed. No repository evidence selects future real support, so V12-03 creates no follow-up format implementation unit. Any future support proposal must remain unadvertised until a separately approved unit defines useful operations, dependencies, synthetic fixtures, malformed-input behavior, security limits, fidelity guarantees, UI routes, and qualification gates.
+
+Workflow and settings files use JSON as a control-plane persistence format. They are not user data inputs and do not make JSON a Level 2 or Level 3 capability. Likewise, qualified OCR may produce UTF-8 TXT, but BatchStudio does not parse or transform a TXT input.
 
 | Operation ID | Class | Accepted input | Output | Configuration | Mode | Dry-run behavior | Dependencies | Principal failure modes |
 |---|---|---|---|---|---|---|---|---|

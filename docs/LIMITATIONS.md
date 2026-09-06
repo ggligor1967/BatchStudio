@@ -34,8 +34,8 @@ This document records observed boundaries of the current implementation, includi
 
 ## Formats and operations
 
-- Excel files remain core-classified compatibility inputs, but `.xlsx` and `.xls` are not selectable through UI admission routes and no registered operation transforms their content.
-- TXT, JSON, and XML remain core-classified compatibility inputs for generic rename and generated OCR TXT, but they are not selectable through UI admission routes and have no dedicated transformation.
+- XLS, XLSX, TXT, JSON, and XML remain Level 1 generic core compatibility formats. They are not product-admitted inputs, and no registered operation parses or transforms their content.
+- The programmatic `file_rename` path copies those opaque files byte-for-byte under a new name. It provides no format-aware fidelity guarantee. OCR-generated TXT and workflow/settings JSON are output/control contracts, not TXT or JSON input processing.
 - `file_rename` copies the file to a new name; it does not move or delete the source.
 - CSV filtering requires a non-empty string column configuration. A column missing from the concrete CSV is a runtime failure; a valid zero-row result is success. Numeric comparisons retain pandas behavior.
 - PDF watermark rendering uses a fixed letter-sized watermark canvas and fixed placement; page-specific layout is not calculated.
