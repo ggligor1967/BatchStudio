@@ -14,6 +14,8 @@ The active `main-protection` ruleset requires a pull request branch to be up to 
 
 The first six run for pull requests and pushes to `main`; `dependency-review` is intentionally pull-request-only. The Windows and Ubuntu jobs validate non-interactive compatibility and do not prove interactive Linux GUI behavior. `repository-truth` enforces version/document/link hygiene, artifact exclusions, stable job names, changed-line whitespace, and full-SHA action pins. `package-build-install` audits one wheel and one source distribution, then installs and imports the wheel from outside the repository in a fresh virtual environment.
 
+V11-06 additionally requires the separately readable `real-ocr-qualification` job for candidate and final-main OCR evidence. It runs on pull requests and pushes to `main`. It is an issue-level release gate in addition to the seven ruleset-required checks; it is not silently folded into the general CI matrix.
+
 ## Test topology
 
 `pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs fourteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, and V12-02 to 462 on a supported graphical Windows session:
@@ -171,6 +173,20 @@ The initial 64-case regression matrix on the admitted source produced 49 failure
 The inherited ownership and complete 53-case dry-run write-interception suites use fresh version/language/rasterizer mocks; their original assertions remain intact. Dry runs check only unconditional capabilities and never recognize or rasterize. Auto dry run does not predict fallback. The critical end-to-end absence test now deterministically mocks a missing executable rather than potentially invoking real OCR when local tools happen to be installed.
 
 UI tests exercise the actual operation-list/configuration methods with widget doubles, including refreshed status for applied language/mode and absence of inert controls; they are not interactive GUI qualification. Controlled real-OCR qualification (V11-06, issue #10) was not admitted to the 1.1.0 release scope and is deferred; see [Roadmap](ROADMAP.md). **Real OCR success is not verified in this repository.** No external tools or language packs are installed by these tests.
+
+## Controlled real-OCR qualification
+
+The dedicated suite is outside `pyproject.toml`'s default `tests/` discovery so ordinary CI remains deterministic and mock-based. The `real-ocr-qualification` job explicitly provisions and verifies the environment before invoking it:
+
+```bash
+pytest -q qualification/real_ocr/test_real_ocr.py -ra
+```
+
+The suite contains 13 real-environment cases and permits zero skips. It proves real image recognition; forced and auto image-only PDF recognition; absence of a useful scanned-PDF native text layer; separate native PDF extraction with external OCR commands unavailable; both `ocr_batch` delegates; normal UTF-8 TXT output; four write-free dry-run branches; V12-01 collision-safe final names; invalid-image failure; and fail-closed missing-tool detection.
+
+Before pytest, CI runs the checksum-validating downloader, the environment verifier, and byte-for-byte fixture regeneration. Logs identify `GITHUB_SHA`, runner image fields, `/etc/os-release`, `uname`, Python/package resolution, exact Debian package versions, command version output, executable hashes, traineddata identity, and all fixture hashes. A successful job is evidence only for its logged SHA. The workflow has no skip or xfail path: setup, identity, regeneration, or test failure makes the job red.
+
+The exact environment, artifact sources, hashes, expected strings, normalization policy, native/OCR distinction, reproduction sequence, and limitations are canonical in [OCR](OCR.md#controlled-environment).
 
 ## Release-critical sequence
 

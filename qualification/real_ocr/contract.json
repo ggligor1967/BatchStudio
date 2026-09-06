@@ -1,0 +1,67 @@
+{
+  "environment": {
+    "architecture": "x86_64",
+    "os_id": "ubuntu",
+    "os_version": "24.04",
+    "python": "3.12.11"
+  },
+  "python_packages": {
+    "Pillow": "11.3.0",
+    "pdf2image": "1.17.0",
+    "pypdf": "6.0.0",
+    "pytesseract": "0.3.13",
+    "reportlab": "4.4.3"
+  },
+  "tools": {
+    "tesseract": {
+      "artifact_name": "tesseract-ocr_5.3.4-1build5_amd64.deb",
+      "artifact_sha256": "2dfac382d77215aee0c3de4a2a2205505d5f2195e72e79b54ad32154fc08da77",
+      "artifact_url": "https://archive.ubuntu.com/ubuntu/pool/universe/t/tesseract/tesseract-ocr_5.3.4-1build5_amd64.deb",
+      "command": "tesseract",
+      "dpkg_name": "tesseract-ocr",
+      "package_version": "5.3.4-1build5",
+      "runtime_path": "/usr/bin/tesseract",
+      "upstream": "https://github.com/tesseract-ocr/tesseract/tree/5.3.4",
+      "license": "https://github.com/tesseract-ocr/tesseract/blob/5.3.4/LICENSE"
+    },
+    "poppler": {
+      "artifact_name": "poppler-utils_24.02.0-1ubuntu9.9_amd64.deb",
+      "artifact_sha256": "fb936375b183a9d8ecb5b1fc5665a44110ca130c445946fb575c0b800b1dc0f4",
+      "artifact_url": "https://archive.ubuntu.com/ubuntu/pool/main/p/poppler/poppler-utils_24.02.0-1ubuntu9.9_amd64.deb",
+      "commands": ["pdfinfo", "pdftoppm"],
+      "dpkg_name": "poppler-utils",
+      "package_version": "24.02.0-1ubuntu9.9",
+      "runtime_paths": ["/usr/bin/pdfinfo", "/usr/bin/pdftoppm"],
+      "upstream": "https://gitlab.freedesktop.org/poppler/poppler/-/tree/poppler-24.02.0",
+      "license": "https://gitlab.freedesktop.org/poppler/poppler/-/blob/poppler-24.02.0/COPYING"
+    },
+    "eng_traineddata": {
+      "artifact_name": "eng.traineddata",
+      "artifact_sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+      "artifact_url": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/65727574dfcd264acbb0c3e07860e4e9e9b22185/eng.traineddata",
+      "source_commit": "65727574dfcd264acbb0c3e07860e4e9e9b22185",
+      "source_tag": "4.1.0",
+      "upstream": "https://github.com/tesseract-ocr/tessdata_fast/tree/4.1.0",
+      "license": "https://github.com/tesseract-ocr/tessdata_fast/blob/4.1.0/LICENSE"
+    }
+  },
+  "fixtures": {
+    "image": {
+      "path": "qualification/real_ocr/fixtures/known_text.png",
+      "sha256": "921405601cf234e16204ee5bb08492b5844ad0a66779a9e029aa4f1e7fda6c8a",
+      "dimensions": [1600, 400],
+      "expected_text": "BATCHSTUDIO OCR 7319"
+    },
+    "scanned_pdf": {
+      "path": "qualification/real_ocr/fixtures/scanned_text.pdf",
+      "sha256": "4aa016a90a43188d6213eb5dbeab6b4eb3f0f8d3d61d4e98647e47980023bbdd",
+      "expected_text": "SCANNED PDF OCR 4827"
+    },
+    "native_pdf": {
+      "path": "qualification/real_ocr/fixtures/native_text.pdf",
+      "sha256": "bab971c93a289c7b4c090f0f62c943957b6640249fdac3c1670ed69c0fc5347a",
+      "expected_text": "NATIVE PDF TEXT 5631"
+    }
+  },
+  "normalization": "Normalize CRLF/CR to LF, collapse all whitespace runs, and trim outer whitespace; preserve every non-whitespace character and case."
+}
