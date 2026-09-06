@@ -134,6 +134,7 @@ def test_ocr_output_remains_compatible_with_generic_rename(monkeypatch):
         (2, 0, 2, False, False, None, False, "Processing Failed", "failed", "failed"),
         (0, 0, 0, False, False, None, False, "No Files Processed", "no files", "no files"),
         (2, 2, 0, True, False, None, False, "Dry Run Complete", "dry run", "dry run"),
+        (2, 1, 0, True, True, None, False, "Dry Run Stopped", "stopped", "stopped"),
         (2, 1, 0, False, True, None, False, "Processing Stopped", "stopped", "stopped"),
         (2, 2, 0, False, True, None, False, "Processing Stopped", "stopped", "stopped"),
         (
@@ -155,6 +156,7 @@ def test_ocr_output_remains_compatible_with_generic_rename(monkeypatch):
         "failed",
         "empty",
         "dry-run",
+        "dry-run-stopped",
         "stopped-partway",
         "stopped-after-last-input",
         "aggregate-finalize-failed",

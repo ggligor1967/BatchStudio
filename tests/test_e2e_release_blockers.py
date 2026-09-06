@@ -242,3 +242,26 @@ def test_e2e_cancel_stops_future_submissions(tmp_path: Path, monkeypatch):
     assert result["stats"].stopped is True
     assert started_count["value"] == 1
     assert result["stats"].processed_files < len(files)
+
+
+def test_e2e_stop_after_final_output_does_not_reclassify_completed_run(tmp_path: Path):
+    source = tmp_path / "source.png"
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    _img(source)
+
+    workflow = Workflow("completed-before-stop")
+    workflow.add_step("image_resize", {"width": 12, "height": 12, "maintain_aspect": False})
+    processor = BatchProcessor(max_workers=1)
+    processor.set_progress_callback(
+        lambda current, total, message: processor.stop()
+        if current == total and message.startswith("Processed ")
+        else None
+    )
+
+    stats = processor.process_batch([str(source)], workflow, str(output_dir), "{original}")
+
+    assert stats.processed_files == stats.total_files == 1
+    assert stats.failed_files == 0
+    assert stats.stopped is False
+    assert len(list(output_dir.glob("*.png"))) == 1

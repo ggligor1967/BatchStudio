@@ -309,24 +309,28 @@ class RunPanel:
             and stats.processed_files == stats.total_files
         )
         if stats.dry_run:
-            completion_title = "Dry Run Complete"
             if stats.stopped:
+                completion_title = "Dry Run Stopped"
                 completion_summary = "Dry run stopped before completion."
                 completion_status = "⚠️ Dry run stopped before completion."
                 completion_tag = 'warning'
             elif stats.failed_files > 0:
+                completion_title = "Dry Run Complete"
                 completion_summary = "Dry run completed with errors."
                 completion_status = "⚠️ Dry run completed with errors."
                 completion_tag = 'warning'
             elif stats.total_files == 0:
+                completion_title = "Dry Run Complete"
                 completion_summary = "Dry run completed with no input files."
                 completion_status = "ℹ️ Dry run completed with no input files."
                 completion_tag = 'info'
             elif stats.processed_files < stats.total_files:
+                completion_title = "Dry Run Stopped"
                 completion_summary = "Dry run stopped before all inputs were checked."
                 completion_status = "⚠️ Dry run stopped before completion."
                 completion_tag = 'warning'
             else:
+                completion_title = "Dry Run Complete"
                 completion_summary = "Dry run complete; no files were written."
                 completion_status = "🔍 Dry run complete; no files were written."
                 completion_tag = 'info'
