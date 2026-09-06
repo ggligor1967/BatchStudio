@@ -11,7 +11,7 @@ from ui.input_panel import InputPanel
 from ui.workflow_panel import WorkflowPanel
 from ui.run_panel import RunPanel
 from ui.logs_panel import LogsPanel
-from core import __version__, BatchProcessor, WorkflowManager, get_settings
+from core import __version__, BatchProcessor, get_settings
 
 
 class MainWindow:
@@ -50,7 +50,6 @@ class MainWindow:
         
         # Initialize core components
         self.processor = BatchProcessor(max_workers=self.settings.get('default_workers', 4))
-        self.workflow_manager = WorkflowManager()
         
         # State
         self.current_files = []
@@ -262,8 +261,7 @@ class MainWindow:
                           f"🎨 BatchStudio v{__version__}\n\n"
                           "A Tkinter desktop application for\n"
                           "registry-backed file workflows.\n\n"
-                          "Built with Python & Tkinter\n"
-                          "© 2024 BatchStudio")
+                          "Built with Python & Tkinter")
     
     def _show_dev_console(self):
         """Show hidden developer console (Easter egg)."""

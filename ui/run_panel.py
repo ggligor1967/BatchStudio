@@ -297,21 +297,69 @@ class RunPanel:
         self.pause_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.DISABLED)
         
+        is_full_success = (
+            not stats.dry_run
+            and stats.total_files > 0
+            and stats.failed_files == 0
+            and stats.processed_files == stats.total_files
+        )
+        if stats.dry_run:
+            completion_title = "Dry Run Complete"
+            if stats.failed_files > 0:
+                completion_summary = "Dry run completed with errors."
+                completion_status = "⚠️ Dry run completed with errors."
+                completion_tag = 'warning'
+            elif stats.total_files == 0:
+                completion_summary = "Dry run completed with no input files."
+                completion_status = "ℹ️ Dry run completed with no input files."
+                completion_tag = 'info'
+            elif stats.processed_files < stats.total_files:
+                completion_summary = "Dry run stopped before all inputs were checked."
+                completion_status = "⚠️ Dry run stopped before completion."
+                completion_tag = 'warning'
+            else:
+                completion_summary = "Dry run complete; no files were written."
+                completion_status = "🔍 Dry run complete; no files were written."
+                completion_tag = 'info'
+        elif stats.total_files == 0 and stats.failed_files == 0:
+            completion_title = "No Files Processed"
+            completion_summary = "No files were processed."
+            completion_status = "ℹ️ No files were processed."
+            completion_tag = 'info'
+        elif stats.failed_files > 0 and stats.processed_files > 0:
+            completion_title = "Partial Completion"
+            completion_summary = "Processing partially completed."
+            completion_status = "⚠️ Processing partially completed."
+            completion_tag = 'warning'
+        elif stats.failed_files > 0:
+            completion_title = "Processing Failed"
+            completion_summary = "Processing failed."
+            completion_status = "❌ Processing failed."
+            completion_tag = 'error'
+        elif stats.processed_files < stats.total_files:
+            completion_title = "Processing Stopped"
+            completion_summary = "Processing stopped before all files were processed."
+            completion_status = "⏹️ Processing stopped before completion."
+            completion_tag = 'warning'
+        else:
+            completion_title = "Complete"
+            completion_summary = "Processing completed successfully."
+            completion_status = "✅ Processing completed successfully."
+            completion_tag = 'success'
+
         # Log summary
         self._log("="*60, 'info')
-        self._log("Processing complete!", 'success')
-        self._log(f"✅ Processed: {stats.processed_files}", 'success')
+        self._log(completion_summary, completion_tag)
+        if stats.dry_run:
+            self._log(f"🔍 Planned: {stats.processed_files}", 'info')
+        else:
+            self._log(f"✅ Processed: {stats.processed_files}", 'success')
         if stats.failed_files > 0:
             self._log(f"❌ Failed: {stats.failed_files}", 'error')
         self._log(f"⏱️ Duration: {stats.get_duration():.1f} seconds", 'info')
         self._log("="*60, 'info')
         
-        if (
-            not stats.dry_run
-            and stats.total_files > 0
-            and stats.failed_files == 0
-            and stats.processed_files == stats.total_files
-        ):
+        if is_full_success:
             self._show_confetti()
         
         # Generate report
@@ -320,11 +368,12 @@ class RunPanel:
             if self.processor.generate_report(stats, report_path, format='html'):
                 self._log(f"📊 Report generated: {report_path}", 'info')
         
-        self.status_label.config(text="✅ Processing complete!")
+        self.status_label.config(text=completion_status)
         
-        messagebox.showinfo("Complete",
-                          f"Batch processing complete!\n\n"
-                          f"Processed: {stats.processed_files}\n"
+        count_label = "Planned" if stats.dry_run else "Processed"
+        messagebox.showinfo(completion_title,
+                          f"{completion_summary}\n\n"
+                          f"{count_label}: {stats.processed_files}\n"
                           f"Failed: {stats.failed_files}\n"
                           f"Duration: {stats.get_duration():.1f}s")
     
