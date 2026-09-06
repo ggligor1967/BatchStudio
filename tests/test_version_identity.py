@@ -134,17 +134,19 @@ def test_release_process_routes_through_protected_pull_request():
     assert "protected" in lowered
 
 
-def test_ocr_docs_do_not_reopen_or_claim_real_qualification():
+def test_ocr_docs_distinguish_mocked_and_controlled_real_qualification():
     for doc in ("docs/OCR.md", "docs/LIMITATIONS.md", "docs/OPERATIONS.md", "docs/TESTING.md"):
         lowered = _read_text(doc).lower()
         assert "qualification remains outstanding" not in lowered, doc
-        assert "real ocr success is verified" not in lowered, doc
     ocr = _read_text("docs/OCR.md")
     assert "deferred" in ocr.lower()
+    assert "fail-closed real-ocr qualification" in ocr.lower()
+    assert "exact commit" in ocr.lower()
+    assert "not certification" in ocr.lower()
     assert "#10" in ocr
 
 
-def test_roadmap_marks_v12_02_complete_and_v11_06_next():
+def test_roadmap_marks_v11_06_complete_and_v12_03_next():
     text = _read_text("docs/ROADMAP.md")
     lowered = text.lower()
     assert "v11-08" in lowered
@@ -153,10 +155,12 @@ def test_roadmap_marks_v12_02_complete_and_v11_06_next():
     assert "#25" in text
     assert "v12-02 aggregate semantic hardening" in lowered
     assert "#27" in text
-    assert "**v11-06 is the next admissible implementation unit**" in lowered
+    assert "v11-06 controlled real-ocr qualification" in lowered
+    assert "**v12-03 is the next admissible implementation unit**" in lowered
     assert "- **v12-01" not in lowered
     assert "### v12-02" not in lowered
     assert "- **v11-08" not in lowered
+    assert "## active deferred v1.1 unit" not in lowered
     assert "v11-06" in lowered
     assert "#10" in text
 

@@ -55,7 +55,7 @@ Missing package, executable, requested language, `pdf2image`, and Poppler failur
 
 V11-05 verification uses deterministic mocked executables, languages, rasterization, and recognition. It establishes capability and contract behavior, not real recognition. Those fast mocked tests remain in ordinary CI.
 
-V11-06 (issue #10) adds a separate fail-closed real-OCR qualification path after being deferred at the 1.1.0 release boundary. A successful `real-ocr-qualification` job proves BatchStudio behavior only for the exact commit, runner, toolchain, language data, fixtures, and assertions verified by that job. It does not change OCR production behavior or retroactively make real OCR part of the published 1.1.0 release evidence.
+V11-06 (issue #10) established a separate fail-closed real-OCR qualification path after being deferred at the 1.1.0 release boundary. A successful `real-ocr-qualification` job proves BatchStudio behavior only for the exact commit, runner, toolchain, language data, fixtures, and assertions verified by that job. It does not change OCR production behavior or retroactively make real OCR part of the published 1.1.0 release evidence.
 
 ### Controlled environment
 

@@ -172,7 +172,7 @@ The initial 64-case regression matrix on the admitted source produced 49 failure
 
 The inherited ownership and complete 53-case dry-run write-interception suites use fresh version/language/rasterizer mocks; their original assertions remain intact. Dry runs check only unconditional capabilities and never recognize or rasterize. Auto dry run does not predict fallback. The critical end-to-end absence test now deterministically mocks a missing executable rather than potentially invoking real OCR when local tools happen to be installed.
 
-UI tests exercise the actual operation-list/configuration methods with widget doubles, including refreshed status for applied language/mode and absence of inert controls; they are not interactive GUI qualification. Controlled real-OCR qualification (V11-06, issue #10) was not admitted to the 1.1.0 release scope and is deferred; see [Roadmap](ROADMAP.md). **Real OCR success is not verified in this repository.** No external tools or language packs are installed by these tests.
+UI tests exercise the actual operation-list/configuration methods with widget doubles, including refreshed status for applied language/mode and absence of inert controls; they are not interactive GUI qualification. Controlled real-OCR qualification (V11-06, issue #10) remains separate from the published 1.1.0 release evidence and from these mocked tests; see [Roadmap](ROADMAP.md). Real OCR is qualified only by a successful dedicated job for its exact SHA and pinned English environment. Ordinary tests install no external tools or language packs.
 
 ## Controlled real-OCR qualification
 
