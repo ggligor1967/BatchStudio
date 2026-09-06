@@ -17,7 +17,7 @@ This release establishes a single canonical application version source and recon
 - `scripts/verify_package.py` and the package workflow verify the release version `1.1.0` and fail on divergence from `core/_version.py`.
 - [Release process](docs/RELEASE_PROCESS.md) integration path is stated explicitly as branch to pull request to required checks to protected `main`; the instruction to push `main` directly was removed and immutable new-tag behavior is documented.
 - OCR, limitations, operations, and testing documentation reconciled: 1.1.0 ships the deterministic mocked OCR capability and contract coverage completed in V11-05; controlled real-OCR qualification (V11-06, issue #10) is deferred and is not a 1.1.0 release gate.
-- [Roadmap](docs/ROADMAP.md) marks V11-06 as deferred/conditional and V11-08 (behavioral Tkinter flow coverage) as P2 / stretch, non-blocking for 1.1.0.
+- At the 1.1.0 release boundary, V11-06 was deferred/conditional and V11-08 (behavioral Tkinter flow coverage) was P2 / stretch and non-blocking; neither was a 1.1.0 release gate.
 
 ### Fixed
 
