@@ -282,16 +282,21 @@ class LogsPanel:
             self.main_window.set_status("Reports are unavailable for dry-run results.")
             return
         
+        report_path = self.current_stats.generated_report_paths.get('html')
+        if report_path and os.path.exists(report_path):
+            webbrowser.open(f'file://{os.path.abspath(report_path)}')
+            return
+
         output_dir = self.main_window.run_panel.output_dir.get()
         report_path = os.path.join(output_dir, 'report.html')
-        
-        if os.path.exists(report_path):
+        processor = self.main_window.processor
+        if processor.generate_report(self.current_stats, report_path, format='html'):
             webbrowser.open(f'file://{os.path.abspath(report_path)}')
         else:
-            # Generate report on the fly
-            processor = self.main_window.processor
-            if processor.generate_report(self.current_stats, report_path, format='html'):
-                webbrowser.open(f'file://{os.path.abspath(report_path)}')
+            self.main_window.set_status(
+                "HTML report unavailable; the destination is occupied or could not be written.",
+                'danger',
+            )
     
     def _open_output_folder(self):
         """Open the output folder in file explorer."""

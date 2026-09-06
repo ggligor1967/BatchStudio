@@ -392,6 +392,11 @@ class RunPanel:
             report_path = os.path.join(output_dir, 'report.html')
             if self.processor.generate_report(stats, report_path, format='html'):
                 self._log(f"📊 Report generated: {report_path}", 'info')
+            else:
+                self._log(
+                    f"⚠️ Report not generated; destination is occupied or unavailable: {report_path}",
+                    'warning',
+                )
         
         self.status_label.config(text=completion_status)
         

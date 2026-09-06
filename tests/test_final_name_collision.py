@@ -7,6 +7,8 @@ from contextlib import contextmanager
 import os
 from pathlib import Path
 import threading
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -15,6 +17,8 @@ from core import processor as processor_module
 from core.processor import BatchProcessor, ProcessingStats, process_single_file
 from core.security import OutputPathAllocator, exclusive_output
 from core.workflow import Workflow
+from ui import logs_panel
+from ui.logs_panel import LogsPanel
 
 
 SENTINEL = b"unrelated output: preserve these bytes\x00\xff"
@@ -31,13 +35,13 @@ def make_report_stats(label: str) -> ProcessingStats:
 def test_existing_report_destination_is_not_overwritten(tmp_path, report_format):
     target = tmp_path / f"report.{report_format}"
     target.write_bytes(SENTINEL)
+    stats = make_report_stats("new-report")
 
-    generated = BatchProcessor().generate_report(
-        make_report_stats("new-report"), str(target), report_format
-    )
+    generated = BatchProcessor().generate_report(stats, str(target), report_format)
 
     assert generated is False
     assert target.read_bytes() == SENTINEL
+    assert stats.generated_report_paths == {}
 
 
 @pytest.mark.parametrize("report_format", ["html", "csv"])
@@ -93,6 +97,51 @@ def test_concurrent_reports_have_one_explicit_owner(tmp_path, monkeypatch, repor
     report = target.read_text(encoding="utf-8")
     assert sorted(outcomes) == [False, True]
     assert sum(label in report for label in labels) == 1
+
+
+def test_html_view_does_not_open_unowned_stale_report(tmp_path, monkeypatch):
+    target = tmp_path / "report.html"
+    target.write_bytes(SENTINEL)
+    browser = Mock()
+    monkeypatch.setattr(logs_panel.webbrowser, "open", browser)
+    panel = LogsPanel.__new__(LogsPanel)
+    panel.current_stats = make_report_stats("current-run")
+    panel.main_window = SimpleNamespace(
+        processor=BatchProcessor(),
+        run_panel=SimpleNamespace(output_dir=SimpleNamespace(get=lambda: str(tmp_path))),
+        set_status=Mock(),
+    )
+
+    panel._view_html_report()
+
+    browser.assert_not_called()
+    assert target.read_bytes() == SENTINEL
+    panel.main_window.set_status.assert_called_once_with(
+        "HTML report unavailable; the destination is occupied or could not be written.",
+        "danger",
+    )
+
+
+def test_html_view_opens_only_report_recorded_for_current_stats(tmp_path, monkeypatch):
+    target = tmp_path / "report.html"
+    processor = BatchProcessor()
+    stats = make_report_stats("current-run")
+    assert processor.generate_report(stats, str(target), "html")
+    processor.generate_report = Mock(wraps=processor.generate_report)
+    browser = Mock()
+    monkeypatch.setattr(logs_panel.webbrowser, "open", browser)
+    panel = LogsPanel.__new__(LogsPanel)
+    panel.current_stats = stats
+    panel.main_window = SimpleNamespace(
+        processor=processor,
+        run_panel=SimpleNamespace(output_dir=SimpleNamespace(get=lambda: str(tmp_path))),
+        set_status=Mock(),
+    )
+
+    panel._view_html_report()
+
+    processor.generate_report.assert_not_called()
+    browser.assert_called_once_with(f"file://{target.resolve()}")
 
 
 def test_independent_workers_converging_on_final_path_have_one_owner(tmp_path, monkeypatch):

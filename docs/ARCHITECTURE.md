@@ -72,7 +72,7 @@ The processor resolves the output root. `_render_name` and operation-specific na
 
 ## Reporting
 
-`ProcessingStats` records total, processed, failed, skipped, start/end times, successful result dictionaries, error dictionaries, and a read-only `dry_run` property initialized from the batch invocation and included in `to_dict()`. Automatic/manual report routes and the processor report entrypoint reject dry-run provenance independently of current UI state. HTML reports escape file names and messages. CSV reports neutralize leading formula characters. Both writers create the caller-selected destination exclusively; an occupied or concurrently claimed report path returns `False` without changing the existing file. Report generation returns a boolean and suppresses exceptions at its public boundary.
+`ProcessingStats` records total, processed, failed, skipped, start/end times, successful result dictionaries, error dictionaries, a read-only `dry_run` property initialized from the batch invocation and included in `to_dict()`, and the successfully generated report paths for the current run. Automatic/manual report routes and the processor report entrypoint reject dry-run provenance independently of current UI state. HTML reports escape file names and messages. CSV reports neutralize leading formula characters. Both writers create the caller-selected destination exclusively; an occupied or concurrently claimed report path returns `False` without changing the existing file. The HTML viewer opens only a path recorded as successfully generated for the current statistics, so a collision cannot present a stale report as current. Report generation returns a boolean and suppresses exceptions at its public boundary.
 
 ## Persistence
 
