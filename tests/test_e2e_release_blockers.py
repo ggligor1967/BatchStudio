@@ -1,3 +1,4 @@
+from concurrent.futures import ALL_COMPLETED, wait as wait_for_futures
 from pathlib import Path
 import threading
 import time
@@ -8,6 +9,7 @@ from pypdf import PdfWriter
 
 from core.operations.image_ops import ImageResizeOperation
 from core.operations import ocr_ops
+from core import processor as processor_module
 from core.processor import BatchProcessor
 from core.workflow import Workflow
 from tests.pdf_merge_cases import assert_merge_case
@@ -265,3 +267,35 @@ def test_e2e_stop_after_final_output_does_not_reclassify_completed_run(tmp_path:
     assert stats.failed_files == 0
     assert stats.stopped is False
     assert len(list(output_dir.glob("*.png"))) == 1
+
+
+def test_e2e_stop_during_completed_future_set_does_not_reclassify_all_outputs(
+    tmp_path: Path,
+    monkeypatch,
+):
+    sources = [tmp_path / "first.png", tmp_path / "second.png"]
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    for source in sources:
+        _img(source)
+
+    workflow = Workflow("completed-future-set-before-stop")
+    workflow.add_step("image_resize", {"width": 12, "height": 12, "maintain_aspect": False})
+    processor = BatchProcessor(max_workers=2)
+    processor.set_progress_callback(
+        lambda current, total, message: processor.stop()
+        if current == 1 and message.startswith("Processed ")
+        else None
+    )
+
+    def return_all_completed(futures, **_kwargs):
+        return wait_for_futures(futures, return_when=ALL_COMPLETED)
+
+    monkeypatch.setattr(processor_module, "wait", return_all_completed)
+
+    stats = processor.process_batch(list(map(str, sources)), workflow, str(output_dir), "{original}")
+
+    assert stats.processed_files == stats.total_files == 2
+    assert stats.failed_files == 0
+    assert stats.stopped is False
+    assert len(list(output_dir.glob("*.png"))) == 2

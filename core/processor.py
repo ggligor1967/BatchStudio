@@ -544,6 +544,9 @@ class BatchProcessor:
 
                 submit_next_available()
 
+        completed_input_count = self.stats.processed_files + self.stats.failed_files
+        if completed_input_count >= self.stats.total_files:
+            self.stats.stopped = False
         self.stats.end_time = datetime.now()
         self.is_running = False
         return self.stats
