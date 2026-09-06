@@ -3,6 +3,7 @@
 from pathlib import Path
 import sys
 import threading
+import time
 
 import pytest
 import tkinter as tk
@@ -20,23 +21,31 @@ TK_WAIT_TIMEOUT_SECONDS = 5.0
 TK_PUMP_INTERVAL_MILLISECONDS = 5
 
 
-def pump_tk_events_until(root, condition, description):
+def pump_tk_events_until(
+    root, condition, description, timeout_seconds=TK_WAIT_TIMEOUT_SECONDS
+):
     """Run Tk callbacks until a condition succeeds or the bounded deadline expires."""
     outcome = {"completed": False}
+    poll_callback_id = None
 
     def poll_condition():
+        nonlocal poll_callback_id
+        poll_callback_id = None
         if condition():
             outcome["completed"] = True
             root.quit()
             return
-        root.after(TK_PUMP_INTERVAL_MILLISECONDS, poll_condition)
+        poll_callback_id = root.after(TK_PUMP_INTERVAL_MILLISECONDS, poll_condition)
 
-    poll_condition()
-    timeout_id = root.after(round(TK_WAIT_TIMEOUT_SECONDS * 1000), root.quit)
+    poll_callback_id = root.after(0, poll_condition)
+    timeout_id = root.after(max(1, round(timeout_seconds * 1000)), root.quit)
     root.mainloop()
-    root.after_cancel(timeout_id)
+    if outcome["completed"]:
+        root.after_cancel(timeout_id)
+    elif poll_callback_id is not None:
+        root.after_cancel(poll_callback_id)
     if not outcome["completed"]:
-        pytest.fail(f"Timed out after {TK_WAIT_TIMEOUT_SECONDS:.1f}s waiting for {description}")
+        pytest.fail(f"Timed out after {timeout_seconds:g}s waiting for {description}")
 
 
 def create_supported_png(path):
@@ -145,7 +154,7 @@ def tkinter_application(tmp_path, monkeypatch, tk_root):
         child.destroy()
 
     assert not leaked_threads, f"Tk behavioral workers still alive: {leaked_threads}"
-    assert not isolated_settings.config_file.exists(), "Behavioral test wrote real settings"
+    assert not isolated_settings.config_file.exists(), "Behavioral test wrote isolated settings"
 
 
 def admit_input(harness, source):
@@ -220,6 +229,21 @@ def record_processor_and_ui_threads(monkeypatch, panel):
     monkeypatch.setattr(run_panel_module, "BatchProcessor", ThreadRecordingBatchProcessor)
     monkeypatch.setattr(panel.status_label, "config", record_status_mutation)
     return thread_ids, main_thread_id
+
+
+def test_tk_event_wait_timeout_fails_deterministically(tk_root):
+    started_at = time.monotonic()
+
+    with pytest.raises(pytest.fail.Exception, match="Timed out after 0.01s waiting for sentinel"):
+        pump_tk_events_until(
+            tk_root,
+            condition=lambda: False,
+            description="sentinel",
+            timeout_seconds=0.01,
+        )
+
+    assert time.monotonic() - started_at < 1.0
+    assert not tk_root.tk.splitlist(tk_root.tk.call("after", "info"))
 
 
 def test_successful_input_workflow_run_results_flow(tmp_path, monkeypatch, tkinter_application):
