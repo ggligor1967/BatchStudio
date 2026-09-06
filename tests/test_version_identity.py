@@ -144,11 +144,16 @@ def test_ocr_docs_do_not_reopen_or_claim_real_qualification():
     assert "#10" in ocr
 
 
-def test_roadmap_marks_stretch_and_deferred_items():
+def test_roadmap_marks_v11_08_complete_and_v12_01_next():
     text = _read_text("docs/ROADMAP.md")
     lowered = text.lower()
     assert "v11-08" in lowered
-    assert "stretch" in lowered
-    assert "non-blocking" in lowered
+    assert "v11-08 behavioral tkinter coverage" in lowered
+    assert "**v12-01 is the next admissible implementation unit**" in lowered
+    assert "- **v11-08" not in lowered
     assert "v11-06" in lowered
     assert "#10" in text
+
+    changelog = _read_text("CHANGELOG.md")
+    assert "At the 1.1.0 release boundary" in changelog
+    assert "[Roadmap](docs/ROADMAP.md) marks" not in changelog

@@ -5,9 +5,7 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-BACKLOG-H0
-→ V11-08
-→ V12-01
+V12-01
 → V12-02
 → V11-06
 → V12-03
@@ -15,13 +13,12 @@ BACKLOG-H0
 → V12-PERF
 ```
 
-This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. `BACKLOG-H0` is the provenance marker for the governance gate completed by the merge that introduces this sequence, not an active or schedulable roadmap item afterward. **V11-08 is the next admissible implementation unit**; no later unit starts automatically. V11-08 first supplies minimal behavioral GUI protection. V12-01 then settles final-output data safety, and V12-02 settles core workflow semantics. V11-06 can then qualify real OCR in a controlled environment. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
+This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate and V11-08 behavioral Tkinter coverage establish the remaining order but are no longer active or schedulable roadmap items. **V12-01 is the next admissible implementation unit**; no later unit starts automatically. V12-01 settles final-output data safety, and V12-02 settles core workflow semantics. V11-06 can then qualify real OCR in a controlled environment. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
 
-## Active deferred v1.1 units
+## Active deferred v1.1 unit
 
-These units carry open issues and were explicitly **not** part of the 1.1.0 release gate. The published 1.1.0 release does not depend on either.
+This unit carries an open issue and was explicitly **not** part of the 1.1.0 release gate. The published 1.1.0 release does not depend on it.
 
-- **V11-08 — minimal behavioral Tkinter flow coverage** (issue #12, priority P2 / stretch, non-blocking for v1.1). Add one successful four-tab flow plus failure propagation and main-thread callback behavior using the existing pytest and Tkinter setup with isolated settings, dialogs, and synthetic files. Substantial UI redesign, screenshot-only assertions, OS-wide automation, and broad drag-and-drop certification are out of scope.
 - **V11-06 — controlled real-OCR qualification** (issue #10, priority P1 conditional). Provision a reproducible Tesseract/Poppler/`eng` environment, freeze high-contrast image and image-only PDF fixtures with known text and hashes, assert normalized real tokens, and retain a native-text PDF case. This unit does not change OCR production behavior or claim cross-platform, multilingual, or accuracy-benchmark certification. The deterministic mocked V11-05 coverage remains the only OCR qualification shipped in 1.1.0; see [OCR](OCR.md).
 
 ## V12 backlog units
