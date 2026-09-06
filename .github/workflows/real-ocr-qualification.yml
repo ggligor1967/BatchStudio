@@ -71,4 +71,4 @@ jobs:
       - name: Verify fixture byte reproducibility
         run: python qualification/real_ocr/generate_fixtures.py --check
       - name: Run controlled real-OCR qualification
-        run: pytest -q qualification/real_ocr/test_real_ocr.py -ra
+        run: python -m pytest -q qualification/real_ocr/test_real_ocr.py -ra

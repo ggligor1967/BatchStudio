@@ -179,7 +179,7 @@ UI tests exercise the actual operation-list/configuration methods with widget do
 The dedicated suite is outside `pyproject.toml`'s default `tests/` discovery so ordinary CI remains deterministic and mock-based. The `real-ocr-qualification` job explicitly provisions and verifies the environment before invoking it:
 
 ```bash
-pytest -q qualification/real_ocr/test_real_ocr.py -ra
+python -m pytest -q qualification/real_ocr/test_real_ocr.py -ra
 ```
 
 The suite contains 13 real-environment cases and permits zero skips. It proves real image recognition; forced and auto image-only PDF recognition; absence of a useful scanned-PDF native text layer; separate native PDF extraction with external OCR commands unavailable; both `ocr_batch` delegates; normal UTF-8 TXT output; four write-free dry-run branches; V12-01 collision-safe final names; invalid-image failure; and fail-closed missing-tool detection.

@@ -19,7 +19,6 @@ from qualification.real_ocr.verify_environment import (
     verify_external_toolchain,
 )
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = Path(__file__).with_name("contract.json")
 CONTRACT = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))

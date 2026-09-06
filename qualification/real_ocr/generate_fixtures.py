@@ -12,7 +12,6 @@ from PIL import Image, ImageDraw, ImageFont
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
 
-
 IMAGE_SIZE = (1600, 400)
 PDF_PAGE_SIZE = (576, 144)
 IMAGE_TEXT = "BATCHSTUDIO OCR 7319"
