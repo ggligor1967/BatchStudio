@@ -57,6 +57,10 @@ class WorkflowCompilation:
     valid: bool
     errors: List[str]
     aggregate_operation_id: Optional[str] = None
+    execution_mode: Optional[str] = None
+    enabled_operation_ids: tuple[str, ...] = ()
+    aggregate_input_source: Optional[str] = None
+    accepted_input_types: frozenset[str] = frozenset()
 
 
 def validate_file_path(file_path: str, base_dir: Optional[str] = None) -> tuple[bool, str]:
@@ -121,6 +125,7 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry) -> Workflo
 
     current_type = "any"
     aggregate_id: Optional[str] = None
+    aggregate_input_types: frozenset[str] = frozenset()
 
     for index, step in enumerate(enabled_steps):
         op = registry.get_operation(step.operation_id, step.config)
@@ -142,6 +147,7 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry) -> Workflo
             if index != len(enabled_steps) - 1:
                 errors.append("Aggregate operations must be the last enabled workflow step")
             aggregate_id = step.operation_id
+            aggregate_input_types = frozenset(agg.accepted_types)
             continue
 
         assert op is not None
@@ -162,7 +168,64 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry) -> Workflo
         if getattr(op, "output_type", "any") != "same":
             current_type = getattr(op, "output_type", current_type)
 
-    return WorkflowCompilation(valid=len(errors) == 0, errors=errors, aggregate_operation_id=aggregate_id)
+    if errors:
+        return WorkflowCompilation(valid=False, errors=errors)
+
+    enabled_operation_ids = tuple(step.operation_id for step in enabled_steps)
+    if aggregate_id is not None:
+        return WorkflowCompilation(
+            valid=True,
+            errors=[],
+            aggregate_operation_id=aggregate_id,
+            execution_mode="aggregate",
+            enabled_operation_ids=enabled_operation_ids,
+            aggregate_input_source="original_inputs",
+            accepted_input_types=aggregate_input_types,
+        )
+    return WorkflowCompilation(
+        valid=True,
+        errors=[],
+        execution_mode="per_file",
+        enabled_operation_ids=enabled_operation_ids,
+    )
+
+
+def _get_aggregate_input_errors(
+    file_list: List[str],
+    compilation: WorkflowCompilation,
+    registry: OperationRegistry,
+) -> List[Dict[str, str]]:
+    if compilation.aggregate_operation_id is None:
+        return []
+
+    aggregate = registry.get_aggregate_operation(compilation.aggregate_operation_id)
+    operation_name = aggregate.name if aggregate is not None else compilation.aggregate_operation_id
+    expected_types = ", ".join(sorted(compilation.accepted_input_types))
+    errors = []
+    for file_path in file_list:
+        valid, error = validate_file_path(file_path)
+        if not valid:
+            errors.append(
+                {
+                    "file": file_path,
+                    "error": f"{operation_name} input preflight failed: {error}",
+                }
+            )
+            continue
+
+        input_type = registry.classify_extension(Path(file_path).suffix)
+        accepted_types = compilation.accepted_input_types
+        if "any" not in accepted_types and input_type not in accepted_types:
+            errors.append(
+                {
+                    "file": file_path,
+                    "error": (
+                        f"{operation_name} expected input type(s) {expected_types}; "
+                        f"got {input_type} for {Path(file_path).name}"
+                    ),
+                }
+            )
+    return errors
 
 
 def _render_name(pattern: str, file_path: Path, index: int) -> str:
@@ -192,6 +255,24 @@ def process_single_file(
             return {"success": False, "file": file_path, "error": error}
 
         workflow = Workflow.from_dict(workflow_dict)
+        aggregate_step = next(
+            (
+                step
+                for step in workflow.get_enabled_steps()
+                if registry.get_aggregate_operation(step.operation_id, step.config) is not None
+            ),
+            None,
+        )
+        if aggregate_step is not None:
+            return {
+                "success": False,
+                "file": file_path,
+                "error": (
+                    f"Aggregate operation {aggregate_step.operation_id} requires batch execution "
+                    "and cannot run in the per-file worker"
+                ),
+            }
+
         output_root = Path(output_dir).resolve(strict=False)
         if allocator is None:
             allocator = OutputPathAllocator(output_root)
@@ -201,9 +282,6 @@ def process_single_file(
         generated_files: List[tuple[Path, tuple[int, int]]] = []
 
         for step in workflow.get_enabled_steps():
-            if registry.get_aggregate_operation(step.operation_id, step.config) is not None:
-                continue
-
             operation = registry.get_operation(step.operation_id, step.config)
             if operation is None:
                 return {"success": False, "file": file_path, "error": f"Unknown operation: {step.operation_id}"}
@@ -382,7 +460,14 @@ class BatchProcessor:
         )
         merge_path = resolve_safe_output(output_root, merge_name, required_suffix=".pdf")
         merge_path = OutputPathAllocator(output_root).allocate(merge_path.stem, merge_path.suffix)
-        aggregate_operation.begin(merge_path, dry_run=dry_run)
+        try:
+            aggregate_operation.begin(merge_path, dry_run=dry_run)
+        except Exception as exc:
+            self.stats.add_error(
+                f"{aggregate_operation.id}_begin",
+                f"{aggregate_operation.name} begin failed: {exc}",
+            )
+            return
 
         for index, file_path in enumerate(file_list, start=1):
             if not self.is_running:
@@ -390,7 +475,12 @@ class BatchProcessor:
             self._wait_if_paused()
             if not self.is_running:
                 return
-            result = aggregate_operation.consume(Path(file_path))
+            try:
+                result = aggregate_operation.consume(Path(file_path))
+            except Exception as exc:
+                self.stats.add_error(file_path, f"{aggregate_operation.name} consume failed: {exc}")
+                self._update_progress(index, len(file_list), str(exc))
+                continue
             if result.success:
                 self.stats.add_result(file_path, {"message": result.message})
             else:
@@ -400,7 +490,15 @@ class BatchProcessor:
         self._wait_if_paused()
         if not self.is_running:
             return
-        finalize = aggregate_operation.finalize()
+        try:
+            finalize = aggregate_operation.finalize()
+        except Exception as exc:
+            self._aggregate_finalization_pending = False
+            self.stats.add_error(
+                f"{aggregate_operation.id}_finalize",
+                f"{aggregate_operation.name} finalize failed: {exc}",
+            )
+            return
         self._aggregate_finalization_pending = False
         self.stats.stopped = False
         if not finalize.success:
@@ -430,41 +528,69 @@ class BatchProcessor:
         self.stats.total_files = len(file_list)
         self.stats.start_time = datetime.now()
 
-        empty_aggregate_batch = not file_list and any(
+        aggregate_candidate = any(
             isinstance(step.operation_id, str)
             and step.operation_id in self.operation_registry.aggregate_operations
             for step in workflow.get_enabled_steps()
         )
-        if not empty_aggregate_batch:
-            is_valid, error = validate_output_directory(output_dir, dry_run=dry_run)
-            if not is_valid:
-                self.stats.add_error("output_dir", f"Invalid output directory: {error}")
+        compilation = None
+        if aggregate_candidate:
+            workflow_valid, workflow_error = workflow.validate()
+            if not workflow_valid:
+                self.stats.add_error("workflow", f"Invalid workflow: {workflow_error}")
                 self.stats.end_time = datetime.now()
                 self.is_running = False
                 return self.stats
 
-        workflow_valid, workflow_error = workflow.validate()
-        if not workflow_valid:
-            self.stats.add_error("workflow", f"Invalid workflow: {workflow_error}")
-            self.stats.end_time = datetime.now()
-            self.is_running = False
-            return self.stats
+            compilation = compile_workflow(workflow, self.operation_registry)
+            if not compilation.valid:
+                for comp_error in compilation.errors:
+                    self.stats.add_error("workflow", comp_error)
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
 
-        compilation = compile_workflow(workflow, self.operation_registry)
-        if not compilation.valid:
-            for comp_error in compilation.errors:
-                self.stats.add_error("workflow", comp_error)
-            self.stats.end_time = datetime.now()
-            self.is_running = False
-            return self.stats
+            if not file_list:
+                self.stats.add_error(
+                    compilation.aggregate_operation_id,
+                    "No input files were provided for aggregate processing",
+                )
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
 
-        if empty_aggregate_batch and compilation.aggregate_operation_id:
-            self.stats.add_error(
-                compilation.aggregate_operation_id, "No input files were provided for aggregate processing"
+            aggregate_input_errors = _get_aggregate_input_errors(
+                file_list, compilation, self.operation_registry
             )
+            if aggregate_input_errors:
+                for input_error in aggregate_input_errors:
+                    self.stats.add_error(input_error["file"], input_error["error"])
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
+
+        is_valid, error = validate_output_directory(output_dir, dry_run=dry_run)
+        if not is_valid:
+            self.stats.add_error("output_dir", f"Invalid output directory: {error}")
             self.stats.end_time = datetime.now()
             self.is_running = False
             return self.stats
+
+        if compilation is None:
+            workflow_valid, workflow_error = workflow.validate()
+            if not workflow_valid:
+                self.stats.add_error("workflow", f"Invalid workflow: {workflow_error}")
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
+
+            compilation = compile_workflow(workflow, self.operation_registry)
+            if not compilation.valid:
+                for comp_error in compilation.errors:
+                    self.stats.add_error("workflow", comp_error)
+                self.stats.end_time = datetime.now()
+                self.is_running = False
+                return self.stats
 
         if dry_run:
             self._update_progress(
@@ -476,7 +602,10 @@ class BatchProcessor:
             self._update_progress(0, len(file_list), "Starting batch processing")
 
         if compilation.aggregate_operation_id == "pdf_merge":
-            aggregate = self.operation_registry.get_aggregate_operation("pdf_merge", workflow.get_enabled_steps()[-1].config)
+            aggregate = self.operation_registry.get_aggregate_operation(
+                compilation.aggregate_operation_id,
+                workflow.get_enabled_steps()[-1].config,
+            )
             if aggregate is None:
                 self.stats.add_error("workflow", "Aggregate PDF merge operation could not be created")
             else:

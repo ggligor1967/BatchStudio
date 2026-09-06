@@ -144,15 +144,18 @@ def test_ocr_docs_do_not_reopen_or_claim_real_qualification():
     assert "#10" in ocr
 
 
-def test_roadmap_marks_v12_01_complete_and_v12_02_next():
+def test_roadmap_marks_v12_02_complete_and_v11_06_next():
     text = _read_text("docs/ROADMAP.md")
     lowered = text.lower()
     assert "v11-08" in lowered
     assert "v11-08 behavioral tkinter coverage" in lowered
     assert "v12-01 final-name collision protection" in lowered
     assert "#25" in text
-    assert "**v12-02 is the next admissible implementation unit**" in lowered
+    assert "v12-02 aggregate semantic hardening" in lowered
+    assert "#27" in text
+    assert "**v11-06 is the next admissible implementation unit**" in lowered
     assert "- **v12-01" not in lowered
+    assert "### v12-02" not in lowered
     assert "- **v11-08" not in lowered
     assert "v11-06" in lowered
     assert "#10" in text

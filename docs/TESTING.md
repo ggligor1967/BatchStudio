@@ -16,12 +16,13 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs thirteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, and V12-01 to 434 on a supported graphical Windows session:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs fourteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, and V12-02 to 462 on a supported graphical Windows session:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
 - `tests/test_workflow.py`: workflow/compiler rejection cases, aggregate-only acceptance, disabled-step handling, and enabled-predecessor/multiple-aggregate rejection.
 - `tests/test_aggregate_lifecycle.py`: empty input, output publication, event-controlled stop/pause boundaries, dry-run plans, partial-invalid-input policy, and success/failure/stop/success isolation.
+- `tests/test_aggregate_semantics.py`: complete registry classification, explicit compiled plans, every aggregate composition shape, original-input flow, core/UI type preflight parity, defensive per-file rejection, and lifecycle exception boundaries.
 - `tests/test_e2e_release_blockers.py`: resize/convert chains, PDF merge and containment, dry run, malformed configuration, OCR dependency absence, pause, and cancellation.
 - `tests/test_output_ownership.py`: 53 focused V11-01 cases for all registered per-file writers, direct entrypoints, final-path collisions, deterministic counter interleaving, canonical reservation aliases, exclusive creation, aggregate ownership, intermediate cleanup, and normal probe ownership. Symlink cases skip explicitly if the OS does not permit link creation.
 - `tests/test_final_name_collision.py`: 12 V12-01 cases for occupied and collision-at-open reports, barrier-controlled concurrent report and independent-worker ownership, different initial names converging on one final class, sanitizer aliases, Windows case aliases, and current-run report provenance that prevents stale report viewing after a collision.
@@ -88,6 +89,16 @@ pytest -q tests/test_aggregate_lifecycle.py tests/test_workflow.py tests/test_e2
 Before production changes, the original 27-case selection produced 12 failures and 15 passes on the admitted V11-01 source. Four additional review regressions failed before the empty-input validation-order correction, then passed: blank workflow name, invalid aggregate configuration, enabled predecessor, and multiple aggregates. Stop tests use events, including after the last consumption has completed; pause tests exercise the existing pause loop with its timed wait replaced by events. They do not use sleeps or claim cancellation after finalization begins. Final-write failure is injected through the real PDF writer, checking owned-partial cleanup, preservation of an earlier output, and fresh state on subsequent runs.
 
 The canonical `test_e2e_pdf_merge` cases cover two, three, and five inputs through `tests/pdf_merge_cases.py`, with asserted page counts, non-lexical input order, one actual final output, and zero failures. The root diagnostics reuse this helper.
+
+## V12-02 aggregate semantic regressions
+
+Run the focused compiler/preflight/runtime contract independently:
+
+```powershell
+pytest -q tests/test_aggregate_semantics.py
+```
+
+The 28 cases account for all nine per-file and one aggregate registry entries. They assert explicit valid plan metadata, no executable plan on rejection, every mixed workflow shape under Contract A, disabled-step behavior, original input order/content, missing-path and homogeneous/mixed wrong-type rejection before output preparation, UI/core preflight agreement, direct per-file aggregate refusal before any predecessor executes, and begin/consume/finalize exception reporting. The initial test-first run produced 23 failures and two passes before production changes; UI wrong-type, missing-path, and direct-worker ordering regressions were added during implementation/audit, bringing the final focused set to 28. V11-02 partial-invalid-PDF, event-controlled cancellation, and V12-01 ownership remain separate preserved suites.
 
 ## V11-03 and V11-04 regressions
 

@@ -38,11 +38,11 @@ Dynamic HTML report values pass through `html.escape`. CSV fields that begin wit
 
 ### Input and operation validation
 
-Input paths must exist, be files, use the processor extension allow-list, and be no larger than 500 MiB. Workflow compilation rejects unknown operations, invalid schema types/choices, missing required keys, declared non-empty string violations, incompatible per-file type transitions, missing declared capabilities, and non-final aggregates. Per-file and aggregate configuration validation share one helper, including float validation; numeric `int`/`float` rules reject booleans. CSV requires a non-empty string column; a missing concrete CSV column fails at execution without output, while valid zero-match filters succeed. This is a data-processing correctness contract, not a confidentiality claim. Individual operations validate parseability before processing.
+Input paths must exist, be files, use the processor extension allow-list, and be no larger than 500 MiB. Workflow compilation rejects unknown operations, invalid schema types/choices, missing required keys, declared non-empty string violations, incompatible per-file type transitions, missing declared capabilities, and unsupported aggregate composition. A valid aggregate plan identifies original inputs and accepted registry types. Core and UI preflight reject every wrong-type or mixed-type aggregate batch before output preparation or `begin`; correctly typed PDFs still undergo parseability validation during consumption. Per-file and aggregate configuration validation share one helper, including float validation; numeric `int`/`float` rules reject booleans. CSV requires a non-empty string column; a missing concrete CSV column fails at execution without output, while valid zero-match filters succeed. This is a data-processing correctness contract, not a confidentiality claim. Individual operations validate parseability before processing.
 
 ### Typed operation output
 
-All operation lifecycle calls return `OperationResult`. The processor rejects a successful per-file result without an output path and records exceptions as failures rather than silently treating them as success.
+Operation execution and aggregate consumption/finalization use `OperationResult`; aggregate `begin` has no return value. The processor rejects a successful per-file result without an output path, rejects aggregate declarations in its per-file worker, and records unexpected per-file or aggregate lifecycle exceptions as failures rather than silently treating them as success.
 
 ## Security limitations
 
