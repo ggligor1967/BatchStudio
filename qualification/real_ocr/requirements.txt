@@ -10,7 +10,7 @@ Pillow==12.3.0
 pluggy==1.6.0
 Pygments==2.19.2
 pypdf==6.17.0
-pytest==8.4.2
+pytest==9.0.3
 python-dateutil==2.9.0.post0
 pytesseract==0.3.13
 pytz==2025.2
