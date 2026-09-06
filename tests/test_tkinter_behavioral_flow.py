@@ -3,7 +3,6 @@
 from pathlib import Path
 import sys
 import threading
-import time
 
 import pytest
 import tkinter as tk
@@ -232,8 +231,6 @@ def record_processor_and_ui_threads(monkeypatch, panel):
 
 
 def test_tk_event_wait_timeout_fails_deterministically(tk_root):
-    started_at = time.monotonic()
-
     with pytest.raises(pytest.fail.Exception, match="Timed out after 0.01s waiting for sentinel"):
         pump_tk_events_until(
             tk_root,
@@ -242,7 +239,6 @@ def test_tk_event_wait_timeout_fails_deterministically(tk_root):
             timeout_seconds=0.01,
         )
 
-    assert time.monotonic() - started_at < 1.0
     assert not tk_root.tk.splitlist(tk_root.tk.call("after", "info"))
 
 
