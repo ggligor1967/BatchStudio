@@ -138,6 +138,8 @@ def test_ocr_docs_distinguish_mocked_and_controlled_real_qualification():
     for doc in ("docs/OCR.md", "docs/LIMITATIONS.md", "docs/OPERATIONS.md", "docs/TESTING.md"):
         lowered = _read_text(doc).lower()
         assert "qualification remains outstanding" not in lowered, doc
+        assert "real ocr success remains unverified" not in lowered, doc
+        assert "real ocr success is not verified" not in lowered, doc
     ocr = _read_text("docs/OCR.md")
     assert "deferred" in ocr.lower()
     assert "fail-closed real-ocr qualification" in ocr.lower()

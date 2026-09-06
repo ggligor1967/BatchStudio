@@ -209,6 +209,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (QualificationError, OSError, subprocess.SubprocessError) as error:
+    except Exception as error:
         print(f"REAL_OCR_ENVIRONMENT_VERIFIED=NO: {error}", file=sys.stderr)
         raise SystemExit(1) from None

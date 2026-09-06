@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 
 import pytest
 from pypdf import PdfReader
@@ -187,3 +189,26 @@ def test_checked_out_sha_mismatch_fails_closed(monkeypatch) -> None:
             CONTRACT_PATH,
             Path(os.environ["QUALIFICATION_ARTIFACT_DIR"]),
         )
+
+
+def test_unexpected_verifier_error_emits_failure_marker(tmp_path: Path) -> None:
+    invalid_contract = tmp_path / "invalid-contract.json"
+    invalid_contract.write_text("not json", encoding="utf-8")
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("verify_environment.py")),
+            "--contract",
+            str(invalid_contract),
+            "--artifact-directory",
+            os.environ["QUALIFICATION_ARTIFACT_DIR"],
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 1
+    assert completed.stderr.startswith("REAL_OCR_ENVIRONMENT_VERIFIED=NO:")
+    assert "Traceback" not in completed.stderr
