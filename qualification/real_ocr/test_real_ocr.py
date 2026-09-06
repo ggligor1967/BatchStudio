@@ -176,3 +176,14 @@ def test_missing_controlled_tool_fails_closed(tmp_path: Path, monkeypatch) -> No
 
     with pytest.raises(QualificationError, match="Controlled executable is missing"):
         verify_external_toolchain(CONTRACT, Path(os.environ["TESSDATA_PREFIX"]))
+
+
+def test_checked_out_sha_mismatch_fails_closed(monkeypatch) -> None:
+    monkeypatch.setenv("QUALIFICATION_REPOSITORY_SHA", "0" * 40)
+
+    with pytest.raises(QualificationError, match="checked-out repository SHA"):
+        verify_environment(
+            REPOSITORY_ROOT,
+            CONTRACT_PATH,
+            Path(os.environ["QUALIFICATION_ARTIFACT_DIR"]),
+        )

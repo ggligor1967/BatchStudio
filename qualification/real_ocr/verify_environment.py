@@ -165,9 +165,15 @@ def verify_environment(
         "architecture": platform.machine().lower(),
         "python": actual_python,
     }
-    github_sha = os.environ.get("GITHUB_SHA")
-    if github_sha:
-        require_equal("checked-out repository SHA", identities["repository_sha"], github_sha)
+    expected_repository_sha = os.environ.get("QUALIFICATION_REPOSITORY_SHA") or os.environ.get(
+        "GITHUB_SHA"
+    )
+    if expected_repository_sha:
+        require_equal(
+            "checked-out repository SHA",
+            identities["repository_sha"],
+            expected_repository_sha,
+        )
 
     for package_name, expected_version in contract["python_packages"].items():
         actual_version = installed_version(package_name)
