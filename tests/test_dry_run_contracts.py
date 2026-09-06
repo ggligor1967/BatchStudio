@@ -365,7 +365,7 @@ class MainThreadVariable:
 def test_run_panel_snapshots_options_and_reports_from_provenance(
     tmp_path, monkeypatch, forbid_output_writes, dry_run, report_intent
 ):
-    source = make_source(tmp_path / "input.txt")
+    source = make_source(tmp_path / "input.csv")
     workflow = Workflow("snapshot")
     workflow.add_step("file_rename", {"pattern": "original"})
     panel = RunPanel.__new__(RunPanel)

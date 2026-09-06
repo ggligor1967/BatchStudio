@@ -47,8 +47,8 @@ See the [Quick start](QUICKSTART.md) for a reproducible example and the [User gu
 - OCR availability depends on external executables and language data; release validation verifies the missing-capability path, not a real OCR success path.
 - Pause and stop prevent further scheduling but cannot forcibly terminate an operation already running.
 - Thread-based execution does not bypass Python's GIL for CPU-bound Python code.
-- `.xlsx` and `.xls` files can be selected, but no spreadsheet transformation is registered.
-- Text and structured-text inputs have no dedicated transformation; the generic file-copy rename operation is the applicable registered operation.
+- UI selection is limited to images, PDF, and CSV. Excel, TXT, JSON, and XML remain core-classified compatibility inputs but are not selectable in the UI.
+- Text and structured-text inputs have no dedicated transformation; the generic file-copy rename operation remains available through the core compatibility path and for generated OCR TXT.
 - Dry run suppresses operation outputs and reports, but output-directory validation can create a missing directory and a transient write-test file.
 - No throughput or maximum-batch guarantee is made. See [Limitations](docs/LIMITATIONS.md).
 

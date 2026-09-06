@@ -1,16 +1,17 @@
 """V11-07 UI consumption tests; environmental readiness is always mocked."""
 
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 import threading
 
 import pytest
 
-from core import Workflow, OperationRegistry
+from core import BatchProcessor, OperationRegistry, ProcessingStats, Workflow
 from core.operations import ocr_ops, registry as registry_module
 from core.operations.ocr_ops import OCRReadiness
-from core.processor import ALLOWED_EXTENSIONS
-from ui import input_panel
+from core.processor import validate_file_path
+from ui import input_panel, run_panel
 from ui.input_panel import InputPanel
 from ui.input_support import get_input_error, get_picker_filetypes
 from ui.run_panel import RunPanel
@@ -42,6 +43,89 @@ def patterns(workflow):
     return set(filetypes[0][1]) if filetypes else set()
 
 
+V11_07_SELECTABLE_EXTENSIONS = (
+    ".bmp",
+    ".csv",
+    ".gif",
+    ".jpeg",
+    ".jpg",
+    ".pdf",
+    ".png",
+    ".tif",
+    ".tiff",
+    ".webp",
+)
+V11_07_COMPATIBILITY_ONLY_EXTENSIONS = (
+    ".json",
+    ".txt",
+    ".xls",
+    ".xlsx",
+    ".xml",
+)
+
+
+def test_run_panel_naming_hint_lists_every_supported_placeholder(monkeypatch):
+    def widget_factory(*args, **kwargs):
+        return Mock()
+
+    label_factory = Mock(side_effect=widget_factory)
+    for widget_name in (
+        "Button",
+        "Checkbutton",
+        "Entry",
+        "Frame",
+        "LabelFrame",
+        "Progressbar",
+        "Scrollbar",
+        "Spinbox",
+    ):
+        monkeypatch.setattr(run_panel.ttk, widget_name, widget_factory)
+    monkeypatch.setattr(run_panel.ttk, "Label", label_factory)
+    monkeypatch.setattr(run_panel.tk, "Text", widget_factory)
+    for variable_name in ("BooleanVar", "IntVar", "StringVar"):
+        monkeypatch.setattr(run_panel.tk, variable_name, widget_factory)
+
+    RunPanel(Mock(), SimpleNamespace())
+
+    hint = next(
+        call.kwargs["text"]
+        for call in label_factory.call_args_list
+        if call.kwargs.get("text", "").startswith("Use:")
+    )
+    assert hint == "Use: {original}, {timestamp}, {counter}"
+
+
+@pytest.mark.parametrize(
+    "total,processed,failed,dry_run,celebrates",
+    [
+        (2, 2, 0, False, True),
+        (2, 1, 1, False, False),
+        (0, 0, 0, False, False),
+        (2, 2, 0, True, False),
+        (2, 1, 0, False, False),
+    ],
+    ids=("successful-real", "failed", "empty", "dry-run", "stopped-partial"),
+)
+def test_processing_completion_celebrates_only_fully_successful_real_runs(
+    monkeypatch, total, processed, failed, dry_run, celebrates
+):
+    stats = ProcessingStats(dry_run=dry_run)
+    stats.total_files = total
+    stats.processed_files = processed
+    stats.failed_files = failed
+    panel = RunPanel.__new__(RunPanel)
+    panel.processor = Mock()
+    panel._log = Mock()
+    panel._show_confetti = Mock()
+    for widget_name in ("start_button", "pause_button", "stop_button", "status_label"):
+        setattr(panel, widget_name, Mock())
+    monkeypatch.setattr(run_panel.messagebox, "showinfo", Mock())
+
+    panel._processing_complete(stats, "unused", generate_report=False)
+
+    assert panel._show_confetti.called is celebrates
+
+
 @pytest.mark.parametrize(
     "image,native,pdf_ocr,operation,config,extension,eligible",
     [
@@ -60,7 +144,6 @@ def patterns(workflow):
         (True, True, False, "ocr_batch", {"mode": "ocr"}, ".png", True),
         (False, True, False, "image_resize", {}, ".png", True),
         (False, True, False, "pdf_merge", {}, ".pdf", True),
-        (False, True, False, "file_rename", {}, ".xlsx", True),
     ],
 )
 def test_picker_and_selection_follow_backend(
@@ -78,8 +161,8 @@ def test_picker_and_selection_follow_backend(
         assert "prerequisite unavailable" in error
 
 
-@pytest.mark.parametrize("extension", sorted(ALLOWED_EXTENSIONS))
-def test_general_ingestion_keeps_every_backend_format(tmp_path, readiness, extension):
+@pytest.mark.parametrize("extension", V11_07_SELECTABLE_EXTENSIONS)
+def test_ui_admission_keeps_every_v11_07_input_format(tmp_path, readiness, extension):
     for key in readiness:
         readiness[key] = OCRReadiness("unavailable")
     source = tmp_path / ("input" + extension)
@@ -87,6 +170,26 @@ def test_general_ingestion_keeps_every_backend_format(tmp_path, readiness, exten
     assert "*" + extension in patterns(None)
     assert get_input_error(source, None) is None
     assert get_input_error(source, workflow_for("file_rename")) is None
+    ocr_ops.get_image_ocr_readiness.assert_not_called()
+    ocr_ops.get_pdf_ocr_readiness.assert_not_called()
+
+
+@pytest.mark.parametrize("extension", V11_07_COMPATIBILITY_ONLY_EXTENSIONS)
+def test_ui_admission_excludes_core_compatibility_only_formats(
+    tmp_path, readiness, extension
+):
+    source = tmp_path / ("input" + extension)
+    source.write_bytes(b"input")
+    assert "*" + extension not in patterns(None)
+    assert "not selectable" in get_input_error(source, None)
+    assert "not selectable" in get_input_error(source, workflow_for("file_rename"))
+    assert validate_file_path(str(source)) == (True, "")
+    stats = BatchProcessor(max_workers=1).process_batch(
+        [str(source)], workflow_for("file_rename"), str(tmp_path / "out")
+    )
+    assert stats.processed_files == 1
+    assert stats.failed_files == 0
+    assert Path(stats.results[0]["output"]).is_file()
     ocr_ops.get_image_ocr_readiness.assert_not_called()
     ocr_ops.get_pdf_ocr_readiness.assert_not_called()
 
@@ -106,7 +209,9 @@ def test_unsupported_inputs_precede_ocr_checks(tmp_path, readiness, operation, e
     source = tmp_path / ("input" + extension)
     source.write_bytes(b"input")
     error = get_input_error(source, workflow_for(operation))
-    assert "Unsupported input" in error or "not allowed" in error
+    assert any(
+        reason in error for reason in ("Unsupported input", "not allowed", "not selectable")
+    )
     ocr_ops.get_image_ocr_readiness.assert_not_called()
     ocr_ops.get_pdf_ocr_readiness.assert_not_called()
 
@@ -152,12 +257,13 @@ def panel(monkeypatch):
     return panel
 
 
+@pytest.mark.parametrize("rejected_extension", V11_07_COMPATIBILITY_ONLY_EXTENSIONS)
 @pytest.mark.parametrize("route", ["picker", "folder", "drop"])
 def test_every_selection_route_rejects_unsupported_files(
-    tmp_path, monkeypatch, panel, readiness, route
+    tmp_path, monkeypatch, panel, readiness, route, rejected_extension
 ):
     accepted = tmp_path / "input.tif"
-    rejected = tmp_path / "input.exe"
+    rejected = tmp_path / ("input" + rejected_extension)
     for source in (accepted, rejected):
         source.write_bytes(b"input")
     if route == "picker":
@@ -173,7 +279,7 @@ def test_every_selection_route_rejects_unsupported_files(
         panel._parse_drop_data = lambda data: [str(tmp_path)]
         assert panel._on_drop(SimpleNamespace(data="", action="copy")) == "copy"
     assert panel.selected_files == [str(accepted)]
-    assert "not allowed" in input_panel.messagebox.showwarning.call_args.args[1]
+    assert "not selectable" in input_panel.messagebox.showwarning.call_args.args[1]
     ocr_ops.get_image_ocr_readiness.assert_not_called()
 
 
@@ -341,6 +447,35 @@ def test_run_boundary_never_enters_unavailable_processing(
     assert panel.processor.process_batch.called is eligible
     assert panel._processing_started.called is eligible
     assert panel._processing_error.called is not eligible
+    assert not (tmp_path / "out").exists()
+
+
+@pytest.mark.parametrize("extension", V11_07_COMPATIBILITY_ONLY_EXTENSIONS)
+def test_run_preflight_rejects_core_compatibility_only_inputs(tmp_path, extension):
+    source = tmp_path / ("input" + extension)
+    source.write_bytes(b"input")
+    panel = RunPanel.__new__(RunPanel)
+    panel.processor = Mock()
+    panel.frame = Mock()
+    panel._processing_error = Mock()
+    panel._processing_started = Mock()
+    panel._processing_complete = Mock()
+
+    panel._run_batch(
+        [str(source)],
+        workflow_for("file_rename"),
+        str(tmp_path / "out"),
+        "{original}",
+        False,
+        False,
+    )
+    for call in panel.frame.after.call_args_list:
+        _, callback, *args = call.args
+        callback(*args)
+
+    panel.processor.process_batch.assert_not_called()
+    panel._processing_started.assert_not_called()
+    assert "not selectable" in panel._processing_error.call_args.args[0]
     assert not (tmp_path / "out").exists()
 
 

@@ -4,9 +4,9 @@ BatchStudio presents one window with four tabs. The ordinary path is to select i
 
 ## Input Files
 
-Use **Add Files** for individual files or **Add Folder** for a recursive scan. The panel accepts image extensions (`jpg`, `jpeg`, `png`, `gif`, `bmp`, `webp`, `tiff`, `tif`), PDF, CSV, Excel extensions, and text/data extensions (`txt`, `json`, `xml`). Acceptance by the picker does not imply that a transformation exists for every type; consult [Operations](OPERATIONS.md).
+Use **Add Files** for individual files or **Add Folder** for a recursive scan. The panel accepts image extensions (`jpg`, `jpeg`, `png`, `gif`, `bmp`, `webp`, `tiff`, `tif`), PDF, and CSV. Excel extensions and text/data extensions (`txt`, `json`, `xml`) remain classified by the core for compatibility but are not selectable through UI admission routes; consult [Operations](OPERATIONS.md).
 
-Picker filters come from the backend input types and the current workflow's operation requirements. Without a workflow, all ingestible formats remain selectable: image editing and file rename do not require OCR. With a workflow, unavailable input types are omitted. Files selected through the dialog, folder scan, or drop hook are checked again before acceptance; unsupported inputs and missing prerequisites receive a specific refusal. Readiness checks run in a worker, and a changed workflow requires a fresh selection.
+Picker filters come from the V11-07 UI input policy and the current workflow's operation requirements. Without a workflow, all UI-selectable image, PDF, and CSV formats are offered: image editing and file rename do not require OCR. With a workflow, unavailable input types are omitted. Files selected through the dialog, folder scan, or drop hook are checked again before acceptance; unsupported inputs and missing prerequisites receive a specific refusal. Readiness checks run in a worker, and a changed workflow requires a fresh selection.
 
 Native and auto PDF modes remain eligible when PDF OCR is unavailable. Auto mode does not predict whether a document will need fallback; the Workflow tab separately reports native PDF and PDF OCR fallback readiness. The backend checks fallback at execution. See [OCR](OCR.md#operation-requirements).
 

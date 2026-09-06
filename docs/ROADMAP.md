@@ -13,7 +13,6 @@ These units carry open issues and are explicitly **not** part of the 1.1.0 relea
 
 - Make collision protection cover operation-specific final suffix/name changes, not only the processor's initially allocated path.
 - Clarify or tighten aggregate workflow compilation so preceding steps and aggregate input types cannot imply behavior the aggregate execution path does not perform.
-- Decide whether Excel and structured-text selection should gain operations or be narrowed in the picker.
 - Replace fixed PDF-watermark layout with page-aware placement only after defined rendering tests exist.
 
 Performance work requires a reproducible benchmark definition under DOC-07 before any numeric claim is accepted.
