@@ -5,11 +5,10 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-V12-04
-→ V12-PERF
+V12-PERF
 ```
 
-This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), and V12-03 format-capability decision (issue #33) establish the remaining order but are no longer active or schedulable roadmap items. **V12-04 is the next admissible implementation unit**; it does not start automatically. V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
+This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), V12-03 format-capability decision (issue #33), and V12-04 page-aware PDF watermark placement (issue #35) establish the remaining order but are no longer active or schedulable roadmap items. **V12-PERF is the next admissible implementation unit**; it does not start automatically and remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
 
 ## Completed post-v1.1 units
 
@@ -19,20 +18,9 @@ V11-06 (issue #10) established the dedicated fail-closed `real-ocr-qualification
 
 V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY` for XLS, XLSX, TXT, JSON, and XML. All five remain classified and core-valid for byte-preserving generic rename, but none is product-admitted or has a format-aware input operation or template. Workflow/settings JSON and OCR-generated TXT remain control/output formats, not input-processing capabilities. The decision added no parser, format feature, dependency, or future support unit; see [Operations](OPERATIONS.md#capability-levels-and-v12-03-decisions).
 
+V12-04 (issue #35) replaced the fixed Letter watermark overlay with a per-page CropBox and rotation contract. Its byte-deterministic F1-F11 fixtures cover A4, Letter, small and large custom pages, mixed page sizes, rotations 90/180/270, and non-default CropBoxes. Structural tests assert exact visible-coordinate placement, shrink-only containment, page geometry, source content, style, page count, and output ownership without raster comparison or dependency changes; see [Operations](OPERATIONS.md#pdf-watermark-geometry-contract).
+
 ## V12 backlog units
-
-### V12-04 — Page-aware PDF watermark placement
-
-- **Problem:** The watermark uses one fixed letter-sized canvas and fixed coordinates for every page, so placement is not derived from actual page geometry.
-- **Existing evidence:** `PDFWatermarkOperation` creates a reportlab `letter` canvas, translates to fixed coordinates, and merges that same page onto every source page. Existing ownership coverage verifies successful output and page count, not placement across page sizes, crop boxes, or rotation. [Limitations](LIMITATIONS.md) records the fixed-layout boundary.
-- **Risk:** P2 rendering correctness. Watermarks can be clipped, displaced, scaled unexpectedly, or absent from the visible area on non-letter or rotated pages.
-- **Priority:** P2.
-- **Scope:** First define placement coordinates, scaling, rotation, crop/media-box handling, supported page geometries, and deterministic fixtures. Only then implement per-page watermark construction and merge behavior against that contract.
-- **Explicit non-goals:** OCR, arbitrary graphic overlays, typography/layout engines, pixel-identical rendering across unspecified PDF renderers, or dependency additions without approval.
-- **Dependencies:** Stable output/workflow contracts from V12-01/V12-02. Contract and fixtures precede implementation; existing pypdf/reportlab behavior remains authoritative until then.
-- **Acceptance criteria:** The approved contract covers portrait, landscape, mixed-size, rotated, and non-default-box fixtures. Watermark placement remains within the defined visible region on every supported page, preserves page count and source geometry, reports controlled failures, and keeps output ownership guarantees.
-- **Test strategy:** Commit synthetic PDFs with documented geometry and hashes. Assert page boxes/rotation and watermark transform semantics; use a pinned, documented renderer for any raster placement assertion, with tolerances fixed before implementation. Preserve ownership, malformed/encrypted-PDF, and dry-run regressions.
-- **Documentation impact:** Update [Operations](OPERATIONS.md) and [Limitations](LIMITATIONS.md), document the rendering contract and fixture identities, and add no visual guarantee beyond the tested geometries.
 
 ### V12-PERF — Reproducible performance baseline
 

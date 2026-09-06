@@ -2,6 +2,7 @@ prune .git
 prune .venv
 prune __pycache__
 prune .pytest_cache
+include tests/pdf_watermark_fixtures.py
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *.pyd
