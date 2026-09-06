@@ -20,6 +20,7 @@ try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
     HAS_DND = True
 except ImportError:
+    DND_FILES = None
     HAS_DND = False
 
 # Try to import pypdf for PDF preview
@@ -78,11 +79,13 @@ class InputPanel:
         content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         
         # Left: File list with drag & drop zone
-        list_frame = ttk.LabelFrame(content_frame, text="Selected Files (Drag & Drop supported)", padding=10)
-        list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        self.file_list_frame = ttk.LabelFrame(
+            content_frame, text="Selected Files", padding=10
+        )
+        self.file_list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
         
         # Search/filter entry
-        filter_frame = ttk.Frame(list_frame)
+        filter_frame = ttk.Frame(self.file_list_frame)
         filter_frame.pack(fill=tk.X, pady=(0, 5))
         
         ttk.Label(filter_frame, text="🔍").pack(side=tk.LEFT)
@@ -95,10 +98,10 @@ class InputPanel:
                   command=lambda: self.filter_var.set('')).pack(side=tk.RIGHT)
         
         # Scrollbar for file list
-        list_scroll = ttk.Scrollbar(list_frame)
+        list_scroll = ttk.Scrollbar(self.file_list_frame)
         list_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         
-        self.file_listbox = tk.Listbox(list_frame, yscrollcommand=list_scroll.set,
+        self.file_listbox = tk.Listbox(self.file_list_frame, yscrollcommand=list_scroll.set,
                                        font=('Segoe UI', 10), selectmode=tk.EXTENDED)
         self.file_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         list_scroll.config(command=self.file_listbox.yview)
@@ -109,8 +112,8 @@ class InputPanel:
         self.file_listbox.bind('<Control-a>', self._select_all)
         
         # Drop zone indicator (shown when empty)
-        self.drop_label = ttk.Label(list_frame, 
-                                   text="📂 Drop files here\nor use buttons above",
+        self.drop_label = ttk.Label(self.file_list_frame,
+                                   text="📂 Use buttons above to add files",
                                    font=('Segoe UI', 12),
                                    foreground='gray')
         
@@ -166,6 +169,8 @@ class InputPanel:
                 self.file_listbox.dnd_bind('<<Drop>>', self._on_drop)
                 self.file_listbox.dnd_bind('<<DragEnter>>', self._on_drag_enter)
                 self.file_listbox.dnd_bind('<<DragLeave>>', self._on_drag_leave)
+                self.file_list_frame.config(text="Selected Files (Drag & Drop supported)")
+                self.drop_label.config(text="📂 Drop files here\nor use buttons above")
             except Exception as e:
                 print(f"Drag & drop setup failed: {e}")
         

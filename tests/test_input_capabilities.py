@@ -7,13 +7,21 @@ import threading
 
 import pytest
 
-from core import BatchProcessor, OperationRegistry, ProcessingStats, Workflow
+from core import (
+    __version__,
+    BatchProcessor,
+    OperationRegistry,
+    ProcessingStats,
+    Workflow,
+    compile_workflow,
+)
 from core.operations import ocr_ops, registry as registry_module
 from core.operations.ocr_ops import OCRReadiness
 from core.processor import validate_file_path
-from ui import input_panel, run_panel
+from ui import input_panel, main_window, run_panel
 from ui.input_panel import InputPanel
 from ui.input_support import get_input_error, get_picker_filetypes
+from ui.main_window import MainWindow
 from ui.run_panel import RunPanel
 from ui.workflow_panel import WorkflowPanel
 
@@ -95,35 +103,217 @@ def test_run_panel_naming_hint_lists_every_supported_placeholder(monkeypatch):
     assert hint == "Use: {original}, {timestamp}, {counter}"
 
 
+def test_tif_is_in_aggregate_and_image_picker_patterns():
+    filetypes, errors = get_picker_filetypes(None)
+    patterns_by_name = dict(filetypes)
+
+    assert errors == []
+    assert "*.tif" in patterns_by_name["Eligible inputs"]
+    assert "*.tif" in patterns_by_name["Image"]
+
+
+def test_ocr_output_remains_compatible_with_generic_rename(monkeypatch):
+    monkeypatch.setattr(
+        ocr_ops.OCRImageOperation,
+        "get_capability_error",
+        lambda self, *args: None,
+    )
+    workflow = workflow_for("ocr_image")
+    workflow.add_step("file_rename", {"pattern": "{original}_{counter}"})
+
+    compilation = compile_workflow(workflow, OperationRegistry())
+
+    assert compilation.valid, compilation.errors
+
+
 @pytest.mark.parametrize(
-    "total,processed,failed,dry_run,celebrates",
+    "total,processed,failed,dry_run,stopped,error_file,celebrates,title,status_phrase,summary_phrase",
     [
-        (2, 2, 0, False, True),
-        (2, 1, 1, False, False),
-        (0, 0, 0, False, False),
-        (2, 2, 0, True, False),
-        (2, 1, 0, False, False),
+        (2, 2, 0, False, False, None, True, "Complete", "successfully", "successfully"),
+        (2, 1, 1, False, False, None, False, "Partial Completion", "partially", "partially"),
+        (2, 0, 2, False, False, None, False, "Processing Failed", "failed", "failed"),
+        (0, 0, 0, False, False, None, False, "No Files Processed", "no files", "no files"),
+        (2, 2, 0, True, False, None, False, "Dry Run Complete", "dry run", "dry run"),
+        (2, 1, 0, True, True, None, False, "Dry Run Stopped", "stopped", "stopped"),
+        (2, 1, 0, False, True, None, False, "Processing Stopped", "stopped", "stopped"),
+        (2, 2, 0, False, True, None, False, "Processing Stopped", "stopped", "stopped"),
+        (
+            2,
+            2,
+            1,
+            False,
+            False,
+            "pdf_merge_finalize",
+            False,
+            "Processing Failed",
+            "failed",
+            "failed",
+        ),
     ],
-    ids=("successful-real", "failed", "empty", "dry-run", "stopped-partial"),
+    ids=(
+        "successful-real",
+        "partial",
+        "failed",
+        "empty",
+        "dry-run",
+        "dry-run-stopped",
+        "stopped-partway",
+        "stopped-after-last-input",
+        "aggregate-finalize-failed",
+    ),
 )
 def test_processing_completion_celebrates_only_fully_successful_real_runs(
-    monkeypatch, total, processed, failed, dry_run, celebrates
+    monkeypatch,
+    total,
+    processed,
+    failed,
+    dry_run,
+    stopped,
+    error_file,
+    celebrates,
+    title,
+    status_phrase,
+    summary_phrase,
 ):
     stats = ProcessingStats(dry_run=dry_run)
     stats.total_files = total
     stats.processed_files = processed
     stats.failed_files = failed
+    stats.stopped = stopped
+    if error_file:
+        stats.errors.append({"file": error_file, "error": "injected", "timestamp": ""})
     panel = RunPanel.__new__(RunPanel)
     panel.processor = Mock()
     panel._log = Mock()
     panel._show_confetti = Mock()
     for widget_name in ("start_button", "pause_button", "stop_button", "status_label"):
         setattr(panel, widget_name, Mock())
-    monkeypatch.setattr(run_panel.messagebox, "showinfo", Mock())
+    dialog = Mock()
+    monkeypatch.setattr(run_panel.messagebox, "showinfo", dialog)
 
     panel._processing_complete(stats, "unused", generate_report=False)
 
     assert panel._show_confetti.called is celebrates
+    assert dialog.call_args.args[0] == title
+    assert summary_phrase in panel._log.call_args_list[1].args[0].lower()
+    assert status_phrase in panel.status_label.config.call_args.kwargs["text"].lower()
+    if not celebrates:
+        assert all(call.args[1] != "success" for call in panel._log.call_args_list)
+        assert all("✅" not in call.args[0] for call in panel._log.call_args_list)
+        outcome_text = "\n".join(
+            (
+                panel._log.call_args_list[1].args[0],
+                panel.status_label.config.call_args.kwargs["text"],
+                dialog.call_args.args[1],
+            )
+        ).lower()
+        assert "success" not in outcome_text
+
+
+def test_drag_drop_labels_are_neutral_before_registration(monkeypatch):
+    def widget_factory(*args, **kwargs):
+        return Mock()
+
+    label_frame_factory = Mock(side_effect=widget_factory)
+    label_factory = Mock(side_effect=widget_factory)
+    monkeypatch.setattr(input_panel.ttk, "LabelFrame", label_frame_factory)
+    monkeypatch.setattr(input_panel.ttk, "Label", label_factory)
+    for widget_name in ("Button", "Entry", "Frame", "Scrollbar"):
+        monkeypatch.setattr(input_panel.ttk, widget_name, widget_factory)
+    for widget_name in ("Canvas", "Listbox", "Text"):
+        monkeypatch.setattr(input_panel.tk, widget_name, widget_factory)
+    monkeypatch.setattr(input_panel.tk, "StringVar", widget_factory)
+
+    panel = InputPanel.__new__(InputPanel)
+    panel.frame = Mock()
+    panel.selected_files = []
+    panel._create_widgets()
+
+    selected_files_heading = next(
+        call.kwargs["text"]
+        for call in label_frame_factory.call_args_list
+        if call.kwargs.get("text", "").startswith("Selected Files")
+    )
+    empty_state_text = next(
+        call.kwargs["text"]
+        for call in label_factory.call_args_list
+        if "buttons above" in call.kwargs.get("text", "")
+    )
+    assert "drag" not in selected_files_heading.lower()
+    assert "drop" not in empty_state_text.lower()
+
+
+def test_drag_drop_registration_success_enables_capability_labels(monkeypatch):
+    monkeypatch.setattr(input_panel, "HAS_DND", True)
+    monkeypatch.setattr(input_panel, "DND_FILES", "dnd-files", raising=False)
+    panel = InputPanel.__new__(InputPanel)
+    panel.file_list_frame = Mock()
+    panel.file_listbox = Mock()
+    panel.drop_label = Mock()
+
+    panel._setup_drag_drop()
+
+    panel.file_listbox.drop_target_register.assert_called_once_with(input_panel.DND_FILES)
+    assert panel.file_listbox.dnd_bind.call_count == 3
+    panel.file_list_frame.config.assert_called_once_with(
+        text="Selected Files (Drag & Drop supported)"
+    )
+    panel.drop_label.config.assert_called_once_with(
+        text="📂 Drop files here\nor use buttons above"
+    )
+
+
+@pytest.mark.parametrize("available", [False, True], ids=("unavailable", "registration-fails"))
+def test_drag_drop_unavailable_or_failed_keeps_capability_labels_disabled(
+    monkeypatch, available
+):
+    monkeypatch.setattr(input_panel, "HAS_DND", available)
+    panel = InputPanel.__new__(InputPanel)
+    panel.file_list_frame = Mock()
+    panel.file_listbox = Mock()
+    panel.drop_label = Mock()
+    if available:
+        panel.file_listbox.drop_target_register.side_effect = RuntimeError("not registered")
+
+    panel._setup_drag_drop()
+
+    panel.file_list_frame.config.assert_not_called()
+    panel.drop_label.config.assert_not_called()
+    panel.file_listbox.bind.assert_called_once_with("<Button-1>", panel._on_click)
+
+
+def test_main_window_initialization_does_not_create_cwd_workflows(tmp_path, monkeypatch):
+    settings = Mock()
+    settings.get_window_geometry.return_value = (1200, 800, 10, 10)
+    settings.get.side_effect = lambda key, default=None: default
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(main_window, "get_settings", Mock(return_value=settings))
+    monkeypatch.setattr(main_window.ttk, "Style", Mock)
+    for method_name in (
+        "_configure_styles",
+        "_create_menu",
+        "_create_main_interface",
+        "_create_statusbar",
+        "_setup_shortcuts",
+    ):
+        monkeypatch.setattr(MainWindow, method_name, Mock())
+
+    MainWindow(Mock())
+
+    assert not (tmp_path / "workflows").exists()
+
+
+def test_about_uses_version_metadata_without_stale_copyright_year(monkeypatch):
+    dialog = Mock()
+    monkeypatch.setattr(main_window.messagebox, "showinfo", dialog)
+
+    MainWindow.__new__(MainWindow)._show_about()
+
+    title, body = dialog.call_args.args
+    assert title == "About BatchStudio"
+    assert f"BatchStudio v{__version__}" in body
+    assert "2024" not in body
+    assert "©" not in body
 
 
 @pytest.mark.parametrize(

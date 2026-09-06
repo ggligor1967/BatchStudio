@@ -122,6 +122,42 @@ def test_aggregate_success_publishes_only_after_finalize(merge_case):
     assert_settled(case.processor, stats)
 
 
+@pytest.mark.parametrize("finalize_fails", [False, True], ids=["success", "failure"])
+def test_stop_during_aggregate_finalize_uses_finalization_outcome(
+    merge_case,
+    monkeypatch,
+    finalize_fails,
+):
+    case = merge_case
+    observed_finalize = PDFAggregateMergeOperation.finalize
+
+    def stop_during_finalize(operation):
+        case.processor.stop()
+        return observed_finalize(operation)
+
+    monkeypatch.setattr(PDFAggregateMergeOperation, "finalize", stop_during_finalize)
+    if finalize_fails:
+
+        def fail_write(_writer, _stream):
+            raise OSError("injected finalize failure")
+
+        monkeypatch.setattr(PdfWriter, "write", fail_write)
+
+    stats = case.processor.process_batch(case.files, case.workflow, str(case.out))
+
+    assert stats.stopped is False
+    assert stats.processed_files == stats.total_files == 3
+    if finalize_fails:
+        assert stats.failed_files == 1
+        assert stats.errors[0]["file"] == "pdf_merge_finalize"
+        assert_no_completed_output(stats)
+        assert not list(case.out.iterdir())
+    else:
+        assert stats.failed_files == 0
+        assert {record["output"] for record in stats.results} == {str(case.out / "merged.pdf")}
+        assert list(case.out.iterdir()) == [case.out / "merged.pdf"]
+
+
 @pytest.mark.parametrize("consumed_count", [0, 1, 3], ids=["before-first", "between-inputs", "after-last"])
 @pytest.mark.parametrize("paused", [False, True], ids=["stop", "pause-stop"])
 def test_aggregate_stop_before_finalize(merge_case, monkeypatch, consumed_count, paused):
@@ -210,6 +246,7 @@ def test_aggregate_success_failure_stop_success_has_fresh_state(merge_case, monk
     case.processor.set_progress_callback(lambda current, *_: case.processor.stop() if current == 1 else None)
     stopped = case.processor.process_batch(case.files, case.workflow, str(case.out))
     assert stopped.processed_files == 1 and stopped.failed_files == 0
+    assert stopped.stopped is True
     assert_no_completed_output(stopped)
     assert_settled(case.processor, stopped)
     assert list(case.out.iterdir()) == [first_output]
@@ -218,6 +255,7 @@ def test_aggregate_success_failure_stop_success_has_fresh_state(merge_case, monk
     last = case.processor.process_batch(case.files[-1:], case.workflow, str(case.out))
     last_output = case.out / "merged_001.pdf"
     assert last.processed_files == 1 and last.failed_files == 0
+    assert last.stopped is False
     assert {record["output"] for record in last.results} == {str(last_output)}
     assert set(case.out.iterdir()) == {first_output, last_output}
     assert [float(page.mediabox.width) for page in PdfReader(last_output).pages] == [400]

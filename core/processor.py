@@ -282,6 +282,7 @@ class ProcessingStats:
         self.processed_files = 0
         self.failed_files = 0
         self.skipped_files = 0
+        self.stopped = False
         self.start_time = None
         self.end_time = None
         self.errors: List[Dict[str, str]] = []
@@ -319,6 +320,7 @@ class ProcessingStats:
             "processed_files": self.processed_files,
             "failed_files": self.failed_files,
             "skipped_files": self.skipped_files,
+            "stopped": self.stopped,
             "duration_seconds": self.get_duration(),
             "errors": self.errors,
             "results": self.results,
@@ -334,6 +336,7 @@ class BatchProcessor:
         self.dry_run = False
         self.progress_callback: Optional[Callable] = None
         self.stats = ProcessingStats()
+        self._aggregate_finalization_pending = False
         self._lock = threading.Lock()
 
     def set_progress_callback(self, callback: Callable):
@@ -396,6 +399,8 @@ class BatchProcessor:
         if not self.is_running:
             return
         finalize = aggregate_operation.finalize()
+        self._aggregate_finalization_pending = False
+        self.stats.stopped = False
         if not finalize.success:
             self.stats.add_error("pdf_merge_finalize", finalize.error or "Finalize failed")
         else:
@@ -419,6 +424,7 @@ class BatchProcessor:
         self.is_paused = False
         self.dry_run = dry_run
         self.stats = ProcessingStats(dry_run=dry_run)
+        self._aggregate_finalization_pending = False
         self.stats.total_files = len(file_list)
         self.stats.start_time = datetime.now()
 
@@ -472,7 +478,11 @@ class BatchProcessor:
             if aggregate is None:
                 self.stats.add_error("workflow", "Aggregate PDF merge operation could not be created")
             else:
-                self._process_aggregate_pdf_merge(file_list, aggregate, output_dir, naming_pattern, dry_run)
+                self._aggregate_finalization_pending = True
+                try:
+                    self._process_aggregate_pdf_merge(file_list, aggregate, output_dir, naming_pattern, dry_run)
+                finally:
+                    self._aggregate_finalization_pending = False
 
             self.stats.end_time = datetime.now()
             self.is_running = False
@@ -535,6 +545,9 @@ class BatchProcessor:
 
                 submit_next_available()
 
+        completed_input_count = self.stats.processed_files + self.stats.failed_files
+        if completed_input_count >= self.stats.total_files:
+            self.stats.stopped = False
         self.stats.end_time = datetime.now()
         self.is_running = False
         return self.stats
@@ -546,6 +559,10 @@ class BatchProcessor:
         self.is_paused = False
 
     def stop(self):
+        completed_input_count = self.stats.processed_files + self.stats.failed_files
+        has_unfinished_work = completed_input_count < self.stats.total_files
+        if self.is_running and (has_unfinished_work or self._aggregate_finalization_pending):
+            self.stats.stopped = True
         self.is_running = False
         self.is_paused = False
 
