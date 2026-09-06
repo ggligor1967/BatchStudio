@@ -210,6 +210,7 @@ def test_aggregate_success_failure_stop_success_has_fresh_state(merge_case, monk
     case.processor.set_progress_callback(lambda current, *_: case.processor.stop() if current == 1 else None)
     stopped = case.processor.process_batch(case.files, case.workflow, str(case.out))
     assert stopped.processed_files == 1 and stopped.failed_files == 0
+    assert stopped.stopped is True
     assert_no_completed_output(stopped)
     assert_settled(case.processor, stopped)
     assert list(case.out.iterdir()) == [first_output]
@@ -218,6 +219,7 @@ def test_aggregate_success_failure_stop_success_has_fresh_state(merge_case, monk
     last = case.processor.process_batch(case.files[-1:], case.workflow, str(case.out))
     last_output = case.out / "merged_001.pdf"
     assert last.processed_files == 1 and last.failed_files == 0
+    assert last.stopped is False
     assert {record["output"] for record in last.results} == {str(last_output)}
     assert set(case.out.iterdir()) == {first_output, last_output}
     assert [float(page.mediabox.width) for page in PdfReader(last_output).pages] == [400]

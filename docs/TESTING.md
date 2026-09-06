@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eleven test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, and V11-07R2 to 410:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eleven test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, and V11-07R2 to 412:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -29,7 +29,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 - `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
 - `tests/test_ocr_contracts.py`: 86 deterministic V11-05 cases covering schema/legacy-key parity, all four OCR templates, separate dependency failures, live readiness refresh, PDF modes and forwarding, batch delegates, and schema/status UI routes.
 
-- `tests/test_input_capabilities.py`: 107 V11-07/V11-07R/V11-07R2 cases for naming-hint placeholders, outcome-accurate completion and success-only celebration, truthful DnD labels, launch filesystem behavior, About metadata, the images/PDF/CSV UI policy, retained core and OCR-to-rename compatibility, independent image/native PDF/PDF OCR states, unsupported and unavailable selection boundaries, picker/folder/drop routes, stale/failed worker probes, and run preflight. Runtime readiness is mocked; OCR qualification is not repeated. Run independently with `python -m pytest -q tests/test_input_capabilities.py`.
+- `tests/test_input_capabilities.py`: 109 V11-07/V11-07R/V11-07R2 cases for naming-hint placeholders, outcome-accurate completion and success-only celebration, aggregate stop/finalization states, truthful DnD labels, launch filesystem behavior, About metadata, the images/PDF/CSV UI policy, retained core and OCR-to-rename compatibility, independent image/native PDF/PDF OCR states, unsupported and unavailable selection boundaries, picker/folder/drop routes, stale/failed worker probes, and run preflight. Runtime readiness is mocked; OCR qualification is not repeated. Run independently with `python -m pytest -q tests/test_input_capabilities.py`.
 
 - `tests/test_version_identity.py`: 14 V11-R cases for the canonical `core._version.__version__` source, the `pyproject.toml` dynamic-version contract, the runtime banner and UI version surfaces, installed distribution metadata, the repository and package version verifiers (including divergence detection), and release-documentation invariants (CHANGELOG candidate section, protected release-process integration path, OCR-qualification reconciliation, ROADMAP stretch/deferred markers). Run independently with `python -m pytest -q tests/test_version_identity.py`.
 

@@ -297,15 +297,24 @@ class RunPanel:
         self.pause_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.DISABLED)
         
+        aggregate_finalize_failed = any(
+            error.get("file") == "pdf_merge_finalize" for error in stats.errors
+        )
         is_full_success = (
             not stats.dry_run
+            and not stats.stopped
+            and not aggregate_finalize_failed
             and stats.total_files > 0
             and stats.failed_files == 0
             and stats.processed_files == stats.total_files
         )
         if stats.dry_run:
             completion_title = "Dry Run Complete"
-            if stats.failed_files > 0:
+            if stats.stopped:
+                completion_summary = "Dry run stopped before completion."
+                completion_status = "⚠️ Dry run stopped before completion."
+                completion_tag = 'warning'
+            elif stats.failed_files > 0:
                 completion_summary = "Dry run completed with errors."
                 completion_status = "⚠️ Dry run completed with errors."
                 completion_tag = 'warning'
@@ -321,6 +330,16 @@ class RunPanel:
                 completion_summary = "Dry run complete; no files were written."
                 completion_status = "🔍 Dry run complete; no files were written."
                 completion_tag = 'info'
+        elif stats.stopped:
+            completion_title = "Processing Stopped"
+            completion_summary = "Processing stopped before completion."
+            completion_status = "⏹️ Processing stopped before completion."
+            completion_tag = 'warning'
+        elif aggregate_finalize_failed:
+            completion_title = "Processing Failed"
+            completion_summary = "Processing failed during finalization."
+            completion_status = "❌ Processing failed during finalization."
+            completion_tag = 'error'
         elif stats.total_files == 0 and stats.failed_files == 0:
             completion_title = "No Files Processed"
             completion_summary = "No files were processed."

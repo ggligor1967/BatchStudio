@@ -239,5 +239,6 @@ def test_e2e_cancel_stops_future_submissions(tmp_path: Path, monkeypatch):
     worker.join(timeout=10)
 
     assert processor.is_running is False
+    assert result["stats"].stopped is True
     assert started_count["value"] == 1
     assert result["stats"].processed_files < len(files)

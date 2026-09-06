@@ -282,6 +282,7 @@ class ProcessingStats:
         self.processed_files = 0
         self.failed_files = 0
         self.skipped_files = 0
+        self.stopped = False
         self.start_time = None
         self.end_time = None
         self.errors: List[Dict[str, str]] = []
@@ -319,6 +320,7 @@ class ProcessingStats:
             "processed_files": self.processed_files,
             "failed_files": self.failed_files,
             "skipped_files": self.skipped_files,
+            "stopped": self.stopped,
             "duration_seconds": self.get_duration(),
             "errors": self.errors,
             "results": self.results,
@@ -546,6 +548,8 @@ class BatchProcessor:
         self.is_paused = False
 
     def stop(self):
+        if self.is_running:
+            self.stats.stopped = True
         self.is_running = False
         self.is_paused = False
 

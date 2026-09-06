@@ -127,16 +127,38 @@ def test_ocr_output_remains_compatible_with_generic_rename(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "total,processed,failed,dry_run,celebrates,title,status_phrase,summary_phrase",
+    "total,processed,failed,dry_run,stopped,error_file,celebrates,title,status_phrase,summary_phrase",
     [
-        (2, 2, 0, False, True, "Complete", "successfully", "successfully"),
-        (2, 1, 1, False, False, "Partial Completion", "partially", "partially"),
-        (2, 0, 2, False, False, "Processing Failed", "failed", "failed"),
-        (0, 0, 0, False, False, "No Files Processed", "no files", "no files"),
-        (2, 2, 0, True, False, "Dry Run Complete", "dry run", "dry run"),
-        (2, 1, 0, False, False, "Processing Stopped", "stopped", "stopped"),
+        (2, 2, 0, False, False, None, True, "Complete", "successfully", "successfully"),
+        (2, 1, 1, False, False, None, False, "Partial Completion", "partially", "partially"),
+        (2, 0, 2, False, False, None, False, "Processing Failed", "failed", "failed"),
+        (0, 0, 0, False, False, None, False, "No Files Processed", "no files", "no files"),
+        (2, 2, 0, True, False, None, False, "Dry Run Complete", "dry run", "dry run"),
+        (2, 1, 0, False, True, None, False, "Processing Stopped", "stopped", "stopped"),
+        (2, 2, 0, False, True, None, False, "Processing Stopped", "stopped", "stopped"),
+        (
+            2,
+            2,
+            1,
+            False,
+            False,
+            "pdf_merge_finalize",
+            False,
+            "Processing Failed",
+            "failed",
+            "failed",
+        ),
     ],
-    ids=("successful-real", "partial", "failed", "empty", "dry-run", "stopped"),
+    ids=(
+        "successful-real",
+        "partial",
+        "failed",
+        "empty",
+        "dry-run",
+        "stopped-partway",
+        "stopped-after-last-input",
+        "aggregate-finalize-failed",
+    ),
 )
 def test_processing_completion_celebrates_only_fully_successful_real_runs(
     monkeypatch,
@@ -144,6 +166,8 @@ def test_processing_completion_celebrates_only_fully_successful_real_runs(
     processed,
     failed,
     dry_run,
+    stopped,
+    error_file,
     celebrates,
     title,
     status_phrase,
@@ -153,6 +177,9 @@ def test_processing_completion_celebrates_only_fully_successful_real_runs(
     stats.total_files = total
     stats.processed_files = processed
     stats.failed_files = failed
+    stats.stopped = stopped
+    if error_file:
+        stats.errors.append({"file": error_file, "error": "injected", "timestamp": ""})
     panel = RunPanel.__new__(RunPanel)
     panel.processor = Mock()
     panel._log = Mock()
