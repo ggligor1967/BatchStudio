@@ -63,7 +63,10 @@ def get_input_error(file_path, workflow, registry=None, *, check_path=True):
     if extension not in ALLOWED_EXTENSIONS:
         return f"File type '{extension}' not allowed"
     if extension not in SELECTABLE_INPUT_EXTENSIONS:
-        return f"File type '{extension}' is supported only for core compatibility and is not selectable"
+        return (
+            f"File type '{extension}' has core generic-file compatibility only "
+            "and is not selectable"
+        )
     if workflow is None:
         return None
 

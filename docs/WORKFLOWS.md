@@ -69,7 +69,7 @@ Run options are captured on the Tk thread before worker startup. `ProcessingStat
 }
 ```
 
-Saving uses UTF-8 JSON with indentation. Loading malformed JSON or an incompatible shape returns no workflow and prints an error. JSON is data, not a plugin or executable extension mechanism.
+Saving uses UTF-8 JSON with indentation. Loading malformed JSON or an incompatible shape returns no workflow and prints an error. This is control-plane persistence, not JSON user-input processing; JSON is data, not a plugin or executable extension mechanism.
 
 ## Naming
 
@@ -77,6 +77,6 @@ The run naming pattern supports `{original}`, `{timestamp}`, and `{counter}`. Th
 
 ## Templates
 
-The UI exposes built-in JSON-equivalent presets for image, PDF watermark, CSV, rename, and OCR workflows. Templates are starting configurations. Their descriptive names do not establish file-size, quality, visual, compatibility, or OCR-accuracy guarantees.
+The UI exposes built-in JSON-equivalent presets for image, PDF watermark, CSV, generic rename, and OCR workflows. No preset claims XLS, XLSX, TXT, JSON, or XML input processing. Templates are starting configurations. Their descriptive names do not establish file-size, quality, visual, compatibility, or OCR-accuracy guarantees.
 
 All four OCR presets contain supported configuration only: Document Scanner OCR, Invoice Text Extractor, Book Page Digitizer, and Multilingual OCR. Image presets retain language; the book preset retains `auto`, English, and 300 DPI. They apply no preprocessing. Legacy workflow files containing the [rejected OCR keys](OCR.md#configuration-migration) fail compilation and direct execution until those keys are removed; the UI does not silently migrate them.

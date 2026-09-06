@@ -6,7 +6,7 @@ Run `python test_installation.py` from a source checkout to verify imports and e
 
 ## An input is rejected
 
-The processor requires an existing regular file, an allow-listed extension, and a size no greater than 500 MiB. Selection support is broader than operation support: Excel and text/data files have no dedicated transformation. Match the input to [Operations](OPERATIONS.md).
+Core path validation requires an existing regular file, an allow-listed extension, and a size no greater than 500 MiB. Product admission is narrower: XLS, XLSX, TXT, JSON, and XML retain generic core compatibility but are rejected by picker, folder, drop, and Run preflight because they have no format-aware input operation. Match the input to [Operations](OPERATIONS.md#capability-levels-and-v12-03-decisions).
 
 ## Workflow compilation fails
 

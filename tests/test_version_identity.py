@@ -148,7 +148,7 @@ def test_ocr_docs_distinguish_mocked_and_controlled_real_qualification():
     assert "#10" in ocr
 
 
-def test_roadmap_marks_v11_06_complete_and_v12_03_next():
+def test_roadmap_marks_v12_03_complete_and_v12_04_next():
     text = _read_text("docs/ROADMAP.md")
     lowered = text.lower()
     assert "v11-08" in lowered
@@ -158,7 +158,10 @@ def test_roadmap_marks_v11_06_complete_and_v12_03_next():
     assert "v12-02 aggregate semantic hardening" in lowered
     assert "#27" in text
     assert "v11-06 controlled real-ocr qualification" in lowered
-    assert "**v12-03 is the next admissible implementation unit**" in lowered
+    assert "v12-03 format-capability decision" in lowered
+    assert "#33" in text
+    assert "**v12-04 is the next admissible implementation unit**" in lowered
+    assert "### v12-03" not in lowered
     assert "- **v12-01" not in lowered
     assert "### v12-02" not in lowered
     assert "- **v11-08" not in lowered

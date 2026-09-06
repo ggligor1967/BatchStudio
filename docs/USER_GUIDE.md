@@ -4,13 +4,13 @@ BatchStudio presents one window with four tabs. The ordinary path is to select i
 
 ## Input Files
 
-Use **Add Files** for individual files or **Add Folder** for a recursive scan. The panel accepts image extensions (`jpg`, `jpeg`, `png`, `gif`, `bmp`, `webp`, `tiff`, `tif`), PDF, and CSV. Excel extensions and text/data extensions (`txt`, `json`, `xml`) remain classified by the core for compatibility but are not selectable through UI admission routes; consult [Operations](OPERATIONS.md).
+Use **Add Files** for individual files or **Add Folder** for a recursive scan. The panel accepts image extensions (`jpg`, `jpeg`, `png`, `gif`, `bmp`, `webp`, `tiff`, `tif`), PDF, and CSV. XLS, XLSX, TXT, JSON, and XML have Level 1 generic core compatibility only; they are not selectable through picker, folder, drop, or Run preflight routes. See the [capability decisions](OPERATIONS.md#capability-levels-and-v12-03-decisions).
 
 Picker filters come from the V11-07 UI input policy and the current workflow's operation requirements. Without a workflow, all UI-selectable image, PDF, and CSV formats are offered: image editing and file rename do not require OCR. With a workflow, unavailable input types are omitted. Files selected through the dialog, folder scan, or drop hook are checked again before acceptance; unsupported inputs and missing prerequisites receive a specific refusal. Readiness checks run in a worker, and a changed workflow requires a fresh selection.
 
 Native and auto PDF modes remain eligible when PDF OCR is unavailable. Auto mode does not predict whether a document will need fallback; the Workflow tab separately reports native PDF and PDF OCR fallback readiness. The backend checks fallback at execution. See [OCR](OCR.md#operation-requirements).
 
-The panel can preview images, PDF metadata, CSV rows, and text. It caches at most 50 image previews. File and folder dialogs are the verified input path. The source contains an optional `tkinterdnd2` hook, but input drag-and-drop is not a verified release capability.
+The panel previews admitted images, PDF metadata, and CSV rows. It caches at most 50 image previews. File and folder dialogs are the verified input path. The source contains an optional `tkinterdnd2` hook, but input drag-and-drop is not a verified release capability.
 
 ## Workflow
 
