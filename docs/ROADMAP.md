@@ -5,19 +5,18 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-V11-06
-→ V12-03
+V12-03
 → V12-04
 → V12-PERF
 ```
 
-This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), and V12-02 aggregate semantic hardening (issue #27) establish the remaining order but are no longer active or schedulable roadmap items. **V11-06 is the next admissible implementation unit**; it does not start automatically. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
+This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), and V11-06 controlled real-OCR qualification (issue #10) establish the remaining order but are no longer active or schedulable roadmap items. **V12-03 is the next admissible implementation unit**; it does not start automatically. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
 
-## Active deferred v1.1 unit
+## Completed post-v1.1 unit
 
-This unit carries an open issue and was explicitly **not** part of the 1.1.0 release gate. The published 1.1.0 release does not depend on it.
+This unit was explicitly **not** part of the 1.1.0 release gate. The published 1.1.0 release does not depend on it.
 
-- **V11-06 — controlled real-OCR qualification** (issue #10, priority P1 conditional). Provision a reproducible Tesseract/Poppler/`eng` environment, freeze high-contrast image and image-only PDF fixtures with known text and hashes, assert normalized real tokens, and retain a native-text PDF case. This unit does not change OCR production behavior or claim cross-platform, multilingual, or accuracy-benchmark certification. The deterministic mocked V11-05 coverage remains the only OCR qualification shipped in 1.1.0; see [OCR](OCR.md).
+V11-06 (issue #10) established the dedicated fail-closed `real-ocr-qualification` job, checksum-pinned Tesseract/Poppler/English data, reproducible hashed fixtures, real image and image-only PDF OCR, and a distinct native-text PDF case. No OCR production behavior or aggregate semantics changed. The qualification is limited to the exact successful job SHA and controlled English environment; it is not cross-platform, multilingual, arbitrary-document, or accuracy-benchmark certification. The deterministic mocked V11-05 coverage remains the only OCR qualification shipped in 1.1.0; see [OCR](OCR.md).
 
 ## V12 backlog units
 
