@@ -5,15 +5,14 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-V12-01
-→ V12-02
+V12-02
 → V11-06
 → V12-03
 → V12-04
 → V12-PERF
 ```
 
-This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate and V11-08 behavioral Tkinter coverage establish the remaining order but are no longer active or schedulable roadmap items. **V12-01 is the next admissible implementation unit**; no later unit starts automatically. V12-01 settles final-output data safety, and V12-02 settles core workflow semantics. V11-06 can then qualify real OCR in a controlled environment. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
+This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, and V12-01 final-name collision protection (issue #25) establish the remaining order but are no longer active or schedulable roadmap items. **V12-02 is the next admissible implementation unit**; no later unit starts automatically. V12-02 settles core workflow semantics after V12-01 settled final-output data safety. V11-06 can then qualify real OCR in a controlled environment. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
 
 ## Active deferred v1.1 unit
 
@@ -22,19 +21,6 @@ This unit carries an open issue and was explicitly **not** part of the 1.1.0 rel
 - **V11-06 — controlled real-OCR qualification** (issue #10, priority P1 conditional). Provision a reproducible Tesseract/Poppler/`eng` environment, freeze high-contrast image and image-only PDF fixtures with known text and hashes, assert normalized real tokens, and retain a native-text PDF case. This unit does not change OCR production behavior or claim cross-platform, multilingual, or accuracy-benchmark certification. The deterministic mocked V11-05 coverage remains the only OCR qualification shipped in 1.1.0; see [OCR](OCR.md).
 
 ## V12 backlog units
-
-### V12-01 — Final-name collision protection
-
-- **Problem:** Collision safety must apply to the final effective filename and path after an operation changes a suffix or name, not merely to the processor's initial proposal. The unit must first determine whether any supported path still violates that invariant rather than assume a defect.
-- **Existing evidence:** `Operation.execute` currently calls `resolve_output_path` before `OutputPathAllocator.allocate`; image conversion, rename, and OCR implement their suffix/name changes through that hook. `tests/test_output_ownership.py` exercises all registered writers, occupied final targets, shared allocation, races, and aggregate destinations. This evidence may already satisfy the historical candidate, so closure without runtime changes is valid if the complete matrix passes.
-- **Risk:** P1 correctness / data safety. A genuine bypass could overwrite or misidentify user output; an unsupported fix could duplicate V11-01 or destabilize proven ownership behavior.
-- **Priority:** P1 correctness / data safety.
-- **Scope:** Audit every registered per-file and aggregate writer from proposed path through returned `output_path`; verify containment, final-name allocation, exclusive creation, collision fallback or controlled failure, and truthful result reporting. Admit a production change only after a deterministic regression demonstrates an uncovered supported path.
-- **Explicit non-goals:** New naming features, overwrite modes, operation redesign, dependency changes, or speculative refactoring when current behavior satisfies the contract.
-- **Dependencies:** The V11-01 output-ownership foundation. Admission follows V11-08 under the completed governance sequence, but there is no technical dependency on GUI coverage.
-- **Acceptance criteria:** An evidence matrix covers every registered writer and every supported suffix/name mutation. Final effective destinations remain inside the output root, never overwrite an occupied path, and are the paths reported to callers. Concurrent same-basename and collision-at-open cases are deterministic. If no failing supported path exists, record the unit as already satisfied and remove the stale candidate without production changes.
-- **Test strategy:** Reuse the temporary-file ownership suite; add only the smallest deterministic regression for a newly proven gap. Cover direct calls, batch allocation, multi-step intermediates, aggregate finalization, symlink containment where supported, and dry-run planned paths.
-- **Documentation impact:** Reconcile [Operations](OPERATIONS.md), [Security model](SECURITY_MODEL.md), and [Limitations](LIMITATIONS.md) only with verified outcomes; do not describe a hypothetical fix as implemented.
 
 ### V12-02 — Aggregate workflow semantic hardening
 

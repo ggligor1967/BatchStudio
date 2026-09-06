@@ -16,7 +16,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs twelve test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, and V11-08 to 422 on a supported graphical Windows session:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs thirteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, and V12-01 to 432 on a supported graphical Windows session:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -24,6 +24,7 @@ The first six run for pull requests and pushes to `main`; `dependency-review` is
 - `tests/test_aggregate_lifecycle.py`: empty input, output publication, event-controlled stop/pause boundaries, dry-run plans, partial-invalid-input policy, and success/failure/stop/success isolation.
 - `tests/test_e2e_release_blockers.py`: resize/convert chains, PDF merge and containment, dry run, malformed configuration, OCR dependency absence, pause, and cancellation.
 - `tests/test_output_ownership.py`: 53 focused V11-01 cases for all registered per-file writers, direct entrypoints, final-path collisions, deterministic counter interleaving, canonical reservation aliases, exclusive creation, aggregate ownership, intermediate cleanup, and normal probe ownership. Symlink cases skip explicitly if the OS does not permit link creation.
+- `tests/test_final_name_collision.py`: 10 V12-01 cases for occupied and collision-at-open reports, barrier-controlled concurrent report and independent-worker ownership, different initial names converging on one final class, sanitizer aliases, and Windows case aliases.
 
 - `tests/test_csv_contracts.py`: 43 V11-03 cases for generic required/non-empty and float parity, numeric boolean rejection, compiler/direct CSV rejection, missing concrete columns, normal matching/zero-row output, dry-run counts, and both numeric operators.
 - `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
@@ -67,6 +68,14 @@ pytest -q tests/test_output_ownership.py
 ```
 
 The initial 37-case pre-fix matrix produced 36 failures and one pass on the admitted source; the deterministic counter test re-enters worker B while worker A is paused at its operation call, without sleeps or probabilistic assertions. Collision tests use temporary sentinel files, including collisions injected immediately before the actual open. OCR text extraction is mocked; these are path-contract tests and require neither Tesseract nor Poppler. Additional cases verify successful outputs, partial-write cleanup, replaced intermediates, and exclusive probe creation. These tests do not qualify aggregate lifecycle changes or strict write-free dry runs.
+
+Run V12-01 independently:
+
+```powershell
+pytest -q tests/test_final_name_collision.py tests/test_output_ownership.py
+```
+
+The V12-01 cases use `threading.Barrier` at the exclusive-creation boundary rather than sleeps. Repetition is a regression-exposure check, not an automatic retry: every iteration must pass. Existing report destinations retain their exact bytes, concurrent contenders produce one success and one explicit failure, and successful operation results identify the actual winner.
 
 ## V11-02 aggregate regressions
 

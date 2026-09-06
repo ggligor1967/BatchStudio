@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional
 from core.operations import AggregateOperation, OperationRegistry
 from core.security import (
     OutputPathAllocator,
+    exclusive_output,
     output_identity,
     remove_owned_output,
     resolve_safe_output,
@@ -598,11 +599,12 @@ class BatchProcessor:
             lines.append(f"<tr><td>{file_value}</td><td>Failed</td><td>{details}</td></tr>")
 
         lines.append("</tbody></table></body></html>")
-        Path(output_path).write_text("\n".join(lines), encoding="utf-8")
+        with exclusive_output(Path(output_path), text=True) as handle:
+            handle.write("\n".join(lines))
         return True
 
     def _generate_csv_report(self, stats: ProcessingStats, output_path: str) -> bool:
-        with open(output_path, "w", newline="", encoding="utf-8") as handle:
+        with exclusive_output(Path(output_path), text=True, newline="") as handle:
             writer = csv.writer(handle)
             writer.writerow(["File", "Status", "Details", "Timestamp"])
             for result in stats.results:
