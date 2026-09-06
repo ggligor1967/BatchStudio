@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional
 from core.operations import AggregateOperation, OperationRegistry
 from core.security import (
     OutputPathAllocator,
+    exclusive_output,
     output_identity,
     remove_owned_output,
     resolve_safe_output,
@@ -287,6 +288,7 @@ class ProcessingStats:
         self.end_time = None
         self.errors: List[Dict[str, str]] = []
         self.results: List[Dict[str, Any]] = []
+        self.generated_report_paths: Dict[str, str] = {}
 
     @property
     def dry_run(self) -> bool:
@@ -569,12 +571,19 @@ class BatchProcessor:
     def generate_report(self, stats: ProcessingStats, output_path: str, format: str = "html") -> bool:
         if stats.dry_run:
             return False
+        stats.generated_report_paths.pop(format, None)
         try:
             if format == "html":
-                return self._generate_html_report(stats, output_path)
-            if format == "csv":
-                return self._generate_csv_report(stats, output_path)
-            return False
+                generated = self._generate_html_report(stats, output_path)
+            elif format == "csv":
+                generated = self._generate_csv_report(stats, output_path)
+            else:
+                return False
+            if generated:
+                stats.generated_report_paths[format] = str(
+                    Path(output_path).resolve(strict=False)
+                )
+            return generated
         except Exception:
             return False
 
@@ -598,11 +607,12 @@ class BatchProcessor:
             lines.append(f"<tr><td>{file_value}</td><td>Failed</td><td>{details}</td></tr>")
 
         lines.append("</tbody></table></body></html>")
-        Path(output_path).write_text("\n".join(lines), encoding="utf-8")
+        with exclusive_output(Path(output_path), text=True) as handle:
+            handle.write("\n".join(lines))
         return True
 
     def _generate_csv_report(self, stats: ProcessingStats, output_path: str) -> bool:
-        with open(output_path, "w", newline="", encoding="utf-8") as handle:
+        with exclusive_output(Path(output_path), text=True, newline="") as handle:
             writer = csv.writer(handle)
             writer.writerow(["File", "Status", "Details", "Timestamp"])
             for result in stats.results:

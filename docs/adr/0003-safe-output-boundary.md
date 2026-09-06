@@ -12,7 +12,7 @@ User naming patterns, source basenames, concurrent duplicate names, and operatio
 
 Resolve one canonical output root and compute each operation's final name/suffix before reservation. Sanitize generated names, reject resolved candidates outside that root and existing final symbolic links, and reserve canonical destinations through one lock-protected `OutputPathAllocator`. A reservation set prevents preferred-name aliases from returning the same path.
 
-Use the shared `exclusive_output` helper for every registered writer, including aggregate PDF finalization. Create the actual destination exclusively and write through that handle; never reopen it with a truncating mode. Direct entrypoints must use the same boundary even without a batch allocator. Failed writes attempt cleanup only for the file created by that call.
+Use the shared `exclusive_output` helper for every registered writer, including aggregate PDF finalization, and for normal processing-report writers. Create the actual destination exclusively and write through that handle; never reopen it with a truncating mode. Direct entrypoints must use the same boundary even without a batch allocator. Failed writes attempt cleanup only for the file created by that call. Reports fail rather than allocate an alternate name because their boolean result cannot identify a different destination.
 
 Copy operation configuration mappings so injected rename counters are execution-local. Record successful intermediate identities and check them before cleanup. Use an exclusively created temporary file for ordinary output-directory probes. Advertise an aggregate output only after successful finalization.
 
