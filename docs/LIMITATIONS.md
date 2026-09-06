@@ -39,8 +39,8 @@ This document records observed boundaries of the current implementation, includi
 - `file_rename` copies the file to a new name; it does not move or delete the source.
 - CSV filtering requires a non-empty string column configuration. A column missing from the concrete CSV is a runtime failure; a valid zero-row result is success. Numeric comparisons retain pandas behavior.
 - PDF watermark rendering uses a fixed letter-sized watermark canvas and fixed placement; page-specific layout is not calculated.
-- PDF merge must be the only enabled step. Disabled predecessors do not participate; enabled transformations before a merge are rejected rather than composed into the aggregate.
-- For a valid compiled workflow, empty aggregate input produces one controlled batch-level error before output preparation or `begin`. Successfully consumed inputs remain counted as processed on stop or finalization failure, but no completed common output is advertised.
+- PDF merge must be the only enabled step. Disabled predecessors do not participate; enabled transformations before or after a merge and multiple merges are rejected rather than composed. Aggregate execution consumes original batch inputs only; transformed intermediates and implicit conversions are unsupported.
+- For a valid compiled workflow, empty aggregate input and wrong/mixed registry input types are rejected before output preparation or `begin`. Correctly typed but unreadable PDFs retain the partial-invalid-input policy. Successfully consumed inputs remain counted as processed on stop or finalization failure, but no completed common output is advertised. Unexpected aggregate lifecycle exceptions become settled errors.
 
 ## Dry run and output safety
 

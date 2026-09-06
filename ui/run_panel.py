@@ -262,6 +262,16 @@ class RunPanel:
                 self.frame.after(0, self._processing_error, f"Invalid workflow: {error}")
                 return
             registry = InputCapabilityRegistry()
+            compilation = None
+            if any(
+                isinstance(step.operation_id, str)
+                and step.operation_id in registry.aggregate_operations
+                for step in workflow.get_enabled_steps()
+            ):
+                compilation = compile_workflow(workflow, registry)
+                if not compilation.valid:
+                    self.frame.after(0, self._processing_error, "\n".join(compilation.errors))
+                    return
             for file_path in files:
                 error = get_input_error(file_path, workflow, registry)
                 if error:
@@ -269,7 +279,7 @@ class RunPanel:
                         0, self._processing_error, f"{os.path.basename(file_path)}: {error}"
                     )
                     return
-            compilation = compile_workflow(workflow, registry)
+            compilation = compilation or compile_workflow(workflow, registry)
             if not compilation.valid:
                 self.frame.after(0, self._processing_error, "\n".join(compilation.errors))
                 return

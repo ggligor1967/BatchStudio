@@ -5,14 +5,13 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-V12-02
-→ V11-06
+V11-06
 → V12-03
 → V12-04
 → V12-PERF
 ```
 
-This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, and V12-01 final-name collision protection (issue #25) establish the remaining order but are no longer active or schedulable roadmap items. **V12-02 is the next admissible implementation unit**; no later unit starts automatically. V12-02 settles core workflow semantics after V12-01 settled final-output data safety. V11-06 can then qualify real OCR in a controlled environment. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
+This sequence constrains admission precedence only; it is not a release promise, assignment, or authorization to start work. The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), and V12-02 aggregate semantic hardening (issue #27) establish the remaining order but are no longer active or schedulable roadmap items. **V11-06 is the next admissible implementation unit**; it does not start automatically. V12-03 resolves product capability ambiguity before any new format work, V12-04 addresses page-aware rendering only after its contract and fixtures exist, and V12-PERF remains benchmark-gated. This order changes only when repository evidence proves a concrete dependency that requires it.
 
 ## Active deferred v1.1 unit
 
@@ -21,19 +20,6 @@ This unit carries an open issue and was explicitly **not** part of the 1.1.0 rel
 - **V11-06 — controlled real-OCR qualification** (issue #10, priority P1 conditional). Provision a reproducible Tesseract/Poppler/`eng` environment, freeze high-contrast image and image-only PDF fixtures with known text and hashes, assert normalized real tokens, and retain a native-text PDF case. This unit does not change OCR production behavior or claim cross-platform, multilingual, or accuracy-benchmark certification. The deterministic mocked V11-05 coverage remains the only OCR qualification shipped in 1.1.0; see [OCR](OCR.md).
 
 ## V12 backlog units
-
-### V12-02 — Aggregate workflow semantic hardening
-
-- **Problem:** Workflow compilation must describe behavior the aggregate runtime actually performs, including the disposition of preceding enabled steps and compatibility between aggregate input types and supplied inputs.
-- **Existing evidence:** `compile_workflow` currently requires an aggregate to be the only enabled step, while `BatchProcessor` has a dedicated `pdf_merge` path that consumes the original input list. Focused workflow and aggregate-lifecycle tests cover predecessor rejection, multiple aggregates, empty input, stop/finalize boundaries, and invalid PDFs. The compiler does not itself derive concrete input types because it receives a workflow rather than an input set.
-- **Risk:** P1 correctness. A compiler/runtime mismatch can accept a workflow whose preceding transformations never run or whose inputs are incompatible, producing misleading success or late failures.
-- **Priority:** P1 correctness.
-- **Scope:** Define the supported aggregate composition contract, then make compiler, preflight, and runtime agree. Either preserve aggregate-only execution with explicit input admissibility at the correct boundary, or separately authorize composed predecessors and implement their outputs as aggregate inputs.
-- **Explicit non-goals:** New aggregate operation types, implicit conversion, silent skipping of steps, broad workflow-engine redesign, or UI redesign unrelated to expressing the chosen contract.
-- **Dependencies:** The V11-02 aggregate lifecycle and V12-01 final-output ownership. It precedes V11-06 so later qualification runs use settled workflow semantics.
-- **Acceptance criteria:** Every workflow accepted by compilation has one unambiguous runtime meaning. Enabled predecessors are either rejected with actionable errors or demonstrably executed in order. Aggregate input incompatibility is rejected before finalization, disabled steps remain inert, and empty/stop/failure result accounting remains truthful.
-- **Test strategy:** Extend the compile matrix across disabled/enabled predecessors, compatible/incompatible types, multiple aggregates, and aggregate position. Pair each accepted shape with processor integration tests and preserve event-controlled lifecycle regressions without sleeps.
-- **Documentation impact:** Update [Workflows](WORKFLOWS.md), [Operations](OPERATIONS.md), [Security model](SECURITY_MODEL.md), and [Limitations](LIMITATIONS.md) to state only the selected, tested semantic contract.
 
 ### V12-03 — Excel / structured-text capability decision
 
