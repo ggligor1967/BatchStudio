@@ -1,67 +1,589 @@
 {
+  "captured_at_utc": "2026-09-07T02:02:41.115514+00:00",
   "conclusion": "NO_ACTIONABLE_BOTTLENECK_ESTABLISHED",
   "environment_id": "win11-i7-1260p-refs-balanced-py313-v1",
+  "extraction_contract": {
+    "B1": [
+      {
+        "component": "BatchProcessor.process_batch",
+        "function_name": "process_batch",
+        "source_file_suffix": "core/processor.py"
+      },
+      {
+        "component": "BatchProcessor.process_single_file",
+        "function_name": "process_single_file",
+        "source_file_suffix": "core/processor.py"
+      },
+      {
+        "component": "FileRenameOperation._execute",
+        "function_name": "_execute",
+        "source_file_suffix": "core/operations/file_ops.py"
+      },
+      {
+        "component": "shutil.copyfileobj",
+        "function_name": "copyfileobj",
+        "source_file_suffix": "/shutil.py"
+      }
+    ],
+    "B2": [
+      {
+        "component": "BatchProcessor.process_batch",
+        "function_name": "process_batch",
+        "source_file_suffix": "core/processor.py"
+      },
+      {
+        "component": "ImageResizeOperation._execute",
+        "function_name": "_execute",
+        "source_file_suffix": "core/operations/image_ops.py"
+      },
+      {
+        "component": "PIL.Image.resize",
+        "function_name": "resize",
+        "source_file_suffix": "PIL/Image.py"
+      },
+      {
+        "component": "PIL.Image.save",
+        "function_name": "save",
+        "source_file_suffix": "PIL/Image.py"
+      }
+    ],
+    "B3": [
+      {
+        "component": "BatchProcessor.process_batch",
+        "function_name": "process_batch",
+        "source_file_suffix": "core/processor.py"
+      },
+      {
+        "component": "PDFWatermarkOperation._execute",
+        "function_name": "_execute",
+        "source_file_suffix": "core/operations/pdf_ops.py"
+      },
+      {
+        "component": "PDFWatermarkOperation._create_watermark_page",
+        "function_name": "_create_watermark_page",
+        "source_file_suffix": "core/operations/pdf_ops.py"
+      },
+      {
+        "component": "pypdf.PdfReader.get_object",
+        "function_name": "get_object",
+        "source_file_suffix": "pypdf/_reader.py"
+      },
+      {
+        "component": "pypdf.PdfWriter.add_page",
+        "function_name": "add_page",
+        "source_file_suffix": "pypdf/_writer.py"
+      }
+    ],
+    "B4": [
+      {
+        "component": "BatchProcessor.process_batch",
+        "function_name": "process_batch",
+        "source_file_suffix": "core/processor.py"
+      },
+      {
+        "component": "PDFAggregateMergeOperation.consume",
+        "function_name": "consume",
+        "source_file_suffix": "core/operations/pdf_ops.py"
+      },
+      {
+        "component": "pypdf.PdfReader.get_object",
+        "function_name": "get_object",
+        "source_file_suffix": "pypdf/_reader.py"
+      },
+      {
+        "component": "pypdf.PdfWriter.add_page",
+        "function_name": "add_page",
+        "source_file_suffix": "pypdf/_writer.py"
+      },
+      {
+        "component": "PDFAggregateMergeOperation.finalize",
+        "function_name": "finalize",
+        "source_file_suffix": "core/operations/pdf_ops.py"
+      }
+    ],
+    "B5": [
+      {
+        "component": "BatchProcessor.process_batch",
+        "function_name": "process_batch",
+        "source_file_suffix": "core/processor.py"
+      },
+      {
+        "component": "ImageResizeOperation._execute",
+        "function_name": "_execute",
+        "source_file_suffix": "core/operations/image_ops.py"
+      },
+      {
+        "component": "PIL.Image.save",
+        "function_name": "save",
+        "source_file_suffix": "PIL/Image.py"
+      },
+      {
+        "component": "PIL.Image.resize",
+        "function_name": "resize",
+        "source_file_suffix": "PIL/Image.py"
+      }
+    ]
+  },
+  "fixture_manifest_sha256": "7e3c3df0a22d18cc20eb582fab34a0cd82209fa90ba3524bca6830ffb802243a",
   "limitations": [
     "cProfile perturbs execution and these observations are not baseline timings",
-    "each workload was profiled once with zero warmups",
-    "cumulative time across B5 worker threads is non-additive and can exceed parent wall time",
-    "module import and post-timing correctness validation are present in the profile but excluded from component rows"
+    "each workload is profiled once with zero warmups",
+    "cumulative time across B5 worker threads is non-additive",
+    "profile artifacts remain local; their hashes and exact invocations are recorded"
   ],
-  "method": "Python standard-library cProfile of one complete worker invocation per B1-B5 workload; component rows report cumulative profiler seconds",
-  "repository_sha": "05ad00dc8f5b29e5fb6a0f1dcfe7828c5a3c59d2",
+  "method": "Python standard-library cProfile of one complete worker invocation per B1-B5 workload; component rows are deterministically extracted from pstats",
+  "repository_sha": "1bfae7b091f9ce8dca64219792c3438604ea2ad5",
+  "repository_tree": "7b9c09eb2a5ae086aa138da369f54de4e00e005c",
+  "runner_invocation": [
+    "D:\\playground\\BatchStudio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "benchmarks.profile_baseline",
+    "--environment-id",
+    "win11-i7-1260p-refs-balanced-py313-v1",
+    "--workspace-root",
+    ".benchmarks/review-1bfa-profile",
+    "--expected-repository-sha",
+    "1bfae7b091f9ce8dca64219792c3438604ea2ad5",
+    "--output",
+    ".benchmarks/review-1bfa-profiling-summary.json",
+    "--timeout-seconds",
+    "120.0"
+  ],
   "schema_version": "batchstudio-bounded-profiling-summary/v1",
-  "workloads": {
-    "B1": {
-      "confidence": "MEDIUM",
-      "evidence": [
-        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.523738},
-        {"component": "BatchProcessor.process_single_file", "cumulative_seconds": 0.478154},
-        {"component": "FileRenameOperation._execute", "cumulative_seconds": 0.106680},
-        {"component": "shutil.copyfileobj", "cumulative_seconds": 0.031855}
+  "working_directory": "D:\\playground\\BatchStudio",
+  "workloads": [
+    {
+      "component_rows": [
+        {
+          "component": "BatchProcessor.process_batch",
+          "cumulative_seconds": 0.5260646,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/processor.py:515",
+          "total_calls": 1,
+          "total_seconds": 0.00010070000000000001
+        },
+        {
+          "component": "BatchProcessor.process_single_file",
+          "cumulative_seconds": 0.4782673,
+          "primitive_calls": 256,
+          "source": "D:/playground/BatchStudio/core/processor.py:241",
+          "total_calls": 256,
+          "total_seconds": 0.0056725000000000005
+        },
+        {
+          "component": "FileRenameOperation._execute",
+          "cumulative_seconds": 0.11044920000000001,
+          "primitive_calls": 256,
+          "source": "D:/playground/BatchStudio/core/operations/file_ops.py:33",
+          "total_calls": 256,
+          "total_seconds": 0.0032759
+        },
+        {
+          "component": "shutil.copyfileobj",
+          "cumulative_seconds": 0.0329252,
+          "primitive_calls": 256,
+          "source": "C:/Program Files/WindowsApps/PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0/Lib/shutil.py:196",
+          "total_calls": 256,
+          "total_seconds": 0.0007220000000000001
+        }
       ],
-      "interpretation": "Time is distributed across per-file orchestration, path/ownership checks, and file copying; no isolated actionable component is established."
-    },
-    "B2": {
       "confidence": "MEDIUM",
-      "evidence": [
-        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.249107},
-        {"component": "ImageResizeOperation._execute", "cumulative_seconds": 0.141325},
-        {"component": "PIL.Image.resize", "cumulative_seconds": 0.087655},
-        {"component": "PIL.Image.save", "cumulative_seconds": 0.006532}
+      "correctness": "PASS",
+      "interpretation": "Time is distributed across per-file orchestration, path/ownership checks, and file copying; no isolated actionable component is established.",
+      "profile_artifact": ".benchmarks/review-1bfa-profile/B1.pstats",
+      "profile_invocation": [
+        "D:\\playground\\BatchStudio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "cProfile",
+        "-o",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B1.pstats",
+        "-m",
+        "benchmarks.run_baseline",
+        "worker",
+        "--workload",
+        "B1",
+        "--manifest",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixture-manifest.json",
+        "--fixture-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixtures",
+        "--work-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\work-B1",
+        "--output",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B1-worker-result.json",
+        "--warmups",
+        "0",
+        "--repetitions",
+        "1"
       ],
-      "interpretation": "The image-operation and Pillow resampling path is the largest identified component, as expected for B2, but one perturbed sample does not establish an optimization target."
+      "profile_sha256": "611f6f3c5c9f80d9bc9e6b2f9fedd0d3ea916978c186840ff20cab9aa231bf59",
+      "raw_worker_sample": {
+        "correctness": "PASS",
+        "cpu_time_seconds": 0.5,
+        "files_processed": 256,
+        "iteration": 1,
+        "output_bytes": 16777216,
+        "output_sha256": {
+          "file_count": 256,
+          "manifest_sha256": "b8eddcb86a8b167e36f696de54d7b0c06eb262d6e9137c5de2e34cc3083e5074",
+          "unique_content_sha256": [
+            "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
+          ]
+        },
+        "wall_clock_seconds": 0.5264088
+      },
+      "worker_count": 1,
+      "workload_id": "B1"
     },
-    "B3": {
+    {
+      "component_rows": [
+        {
+          "component": "BatchProcessor.process_batch",
+          "cumulative_seconds": 0.26536390000000004,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/processor.py:515",
+          "total_calls": 1,
+          "total_seconds": 6.42e-05
+        },
+        {
+          "component": "ImageResizeOperation._execute",
+          "cumulative_seconds": 0.15692060000000002,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/operations/image_ops.py:19",
+          "total_calls": 1,
+          "total_seconds": 0.0040022
+        },
+        {
+          "component": "PIL.Image.resize",
+          "cumulative_seconds": 0.08533,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/PIL/Image.py:2201",
+          "total_calls": 1,
+          "total_seconds": 1.66e-05
+        },
+        {
+          "component": "PIL.Image.save",
+          "cumulative_seconds": 0.0228737,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/PIL/Image.py:2457",
+          "total_calls": 1,
+          "total_seconds": 3.88e-05
+        }
+      ],
       "confidence": "MEDIUM",
-      "evidence": [
-        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.377838},
-        {"component": "PDFWatermarkOperation._execute", "cumulative_seconds": 0.372511},
-        {"component": "PDFWatermarkOperation._create_watermark_page", "cumulative_seconds": 0.178196},
-        {"component": "pypdf.PdfReader.get_object", "cumulative_seconds": 0.138298},
-        {"component": "pypdf.PdfWriter.add_page", "cumulative_seconds": 0.014131}
+      "correctness": "PASS",
+      "interpretation": "The image-operation and Pillow resampling path is the largest identified component, but one perturbed sample does not establish an optimization target.",
+      "profile_artifact": ".benchmarks/review-1bfa-profile/B2.pstats",
+      "profile_invocation": [
+        "D:\\playground\\BatchStudio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "cProfile",
+        "-o",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B2.pstats",
+        "-m",
+        "benchmarks.run_baseline",
+        "worker",
+        "--workload",
+        "B2",
+        "--manifest",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixture-manifest.json",
+        "--fixture-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixtures",
+        "--work-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\work-B2",
+        "--output",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B2-worker-result.json",
+        "--warmups",
+        "0",
+        "--repetitions",
+        "1"
       ],
-      "interpretation": "Per-page watermark construction and PDF object parsing account for most identified operation time; no correctness-safe improvement requirement exists."
+      "profile_sha256": "7ff0e4c827c04455481472aef8e483e1903b289b49e56e3c2bb87e29617c802e",
+      "raw_worker_sample": {
+        "correctness": "PASS",
+        "cpu_time_seconds": 0.25,
+        "files_processed": 1,
+        "iteration": 1,
+        "output_bytes": 9437238,
+        "output_sha256": {
+          "file_count": 1,
+          "manifest_sha256": "5c7a0937dc6bae9a43d17397cab4ea6fab2584de403c3a351ba593ec76fd2c22",
+          "unique_content_sha256": [
+            "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
+          ]
+        },
+        "wall_clock_seconds": 0.2655079
+      },
+      "worker_count": 1,
+      "workload_id": "B2"
     },
-    "B4": {
+    {
+      "component_rows": [
+        {
+          "component": "BatchProcessor.process_batch",
+          "cumulative_seconds": 0.37780230000000004,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/processor.py:515",
+          "total_calls": 1,
+          "total_seconds": 4.91e-05
+        },
+        {
+          "component": "PDFWatermarkOperation._execute",
+          "cumulative_seconds": 0.37206910000000004,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/operations/pdf_ops.py:37",
+          "total_calls": 1,
+          "total_seconds": 0.0007728
+        },
+        {
+          "component": "PDFWatermarkOperation._create_watermark_page",
+          "cumulative_seconds": 0.1773202,
+          "primitive_calls": 64,
+          "source": "D:/playground/BatchStudio/core/operations/pdf_ops.py:117",
+          "total_calls": 64,
+          "total_seconds": 0.0008767
+        },
+        {
+          "component": "pypdf.PdfReader.get_object",
+          "cumulative_seconds": 0.1401834,
+          "primitive_calls": 1679,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/pypdf/_reader.py:454",
+          "total_calls": 1679,
+          "total_seconds": 0.0038879
+        },
+        {
+          "component": "pypdf.PdfWriter.add_page",
+          "cumulative_seconds": 0.0136743,
+          "primitive_calls": 64,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/pypdf/_writer.py:614",
+          "total_calls": 64,
+          "total_seconds": 9.28e-05
+        }
+      ],
       "confidence": "MEDIUM",
-      "evidence": [
-        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.242113},
-        {"component": "PDFAggregateMergeOperation.consume", "cumulative_seconds": 0.206723},
-        {"component": "pypdf.PdfReader.get_object", "cumulative_seconds": 0.155937},
-        {"component": "pypdf.PdfWriter.add_page", "cumulative_seconds": 0.052993},
-        {"component": "PDFAggregateMergeOperation.finalize", "cumulative_seconds": 0.021548}
+      "correctness": "PASS",
+      "interpretation": "Per-page watermark construction and PDF object parsing account for most identified operation time; no correctness-safe improvement requirement exists.",
+      "profile_artifact": ".benchmarks/review-1bfa-profile/B3.pstats",
+      "profile_invocation": [
+        "D:\\playground\\BatchStudio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "cProfile",
+        "-o",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B3.pstats",
+        "-m",
+        "benchmarks.run_baseline",
+        "worker",
+        "--workload",
+        "B3",
+        "--manifest",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixture-manifest.json",
+        "--fixture-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixtures",
+        "--work-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\work-B3",
+        "--output",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B3-worker-result.json",
+        "--warmups",
+        "0",
+        "--repetitions",
+        "1"
       ],
-      "interpretation": "PDF parsing and page addition dominate the identified aggregate-operation work; the evidence establishes a workload class, not an actionable optimization."
+      "profile_sha256": "ebf2fb70d0a378814e2f278b9faf71318b6eca9068cfbe1e91ad0d2875ee6577",
+      "raw_worker_sample": {
+        "correctness": "PASS",
+        "cpu_time_seconds": 0.390625,
+        "files_processed": 1,
+        "iteration": 1,
+        "output_bytes": 50922,
+        "output_sha256": {
+          "file_count": 1,
+          "manifest_sha256": "7334c0bdd921cf34cea9f4521f050d228c1ed6b0767cfb961bd4d814fdd42347",
+          "unique_content_sha256": [
+            "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
+          ]
+        },
+        "wall_clock_seconds": 0.3779207
+      },
+      "worker_count": 1,
+      "workload_id": "B3"
     },
-    "B5": {
+    {
+      "component_rows": [
+        {
+          "component": "BatchProcessor.process_batch",
+          "cumulative_seconds": 0.2429765,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/processor.py:515",
+          "total_calls": 1,
+          "total_seconds": 5.5100000000000004e-05
+        },
+        {
+          "component": "PDFAggregateMergeOperation.consume",
+          "cumulative_seconds": 0.2077324,
+          "primitive_calls": 64,
+          "source": "D:/playground/BatchStudio/core/operations/pdf_ops.py:183",
+          "total_calls": 64,
+          "total_seconds": 0.0007080000000000001
+        },
+        {
+          "component": "pypdf.PdfReader.get_object",
+          "cumulative_seconds": 0.156915,
+          "primitive_calls": 3397,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/pypdf/_reader.py:454",
+          "total_calls": 3397,
+          "total_seconds": 0.0052989000000000005
+        },
+        {
+          "component": "pypdf.PdfWriter.add_page",
+          "cumulative_seconds": 0.0528206,
+          "primitive_calls": 384,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/pypdf/_writer.py:614",
+          "total_calls": 384,
+          "total_seconds": 0.00034510000000000004
+        },
+        {
+          "component": "PDFAggregateMergeOperation.finalize",
+          "cumulative_seconds": 0.0215195,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/operations/pdf_ops.py:200",
+          "total_calls": 1,
+          "total_seconds": 2e-05
+        }
+      ],
+      "confidence": "MEDIUM",
+      "correctness": "PASS",
+      "interpretation": "PDF parsing and page addition dominate the identified aggregate-operation work; the evidence establishes a workload class, not an actionable optimization.",
+      "profile_artifact": ".benchmarks/review-1bfa-profile/B4.pstats",
+      "profile_invocation": [
+        "D:\\playground\\BatchStudio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "cProfile",
+        "-o",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B4.pstats",
+        "-m",
+        "benchmarks.run_baseline",
+        "worker",
+        "--workload",
+        "B4",
+        "--manifest",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixture-manifest.json",
+        "--fixture-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixtures",
+        "--work-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\work-B4",
+        "--output",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B4-worker-result.json",
+        "--warmups",
+        "0",
+        "--repetitions",
+        "1"
+      ],
+      "profile_sha256": "19a970dbe2a47c30521a53ed3dd1f6c55bafe84303a8ceb31e8574189fcb857a",
+      "raw_worker_sample": {
+        "correctness": "PASS",
+        "cpu_time_seconds": 0.234375,
+        "files_processed": 64,
+        "iteration": 1,
+        "output_bytes": 47731,
+        "output_sha256": {
+          "file_count": 1,
+          "manifest_sha256": "ccd5976a4adf716e4670a98d1ba15ebfad1d101abb040d9ed596b0ed2a146563",
+          "unique_content_sha256": [
+            "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
+          ]
+        },
+        "wall_clock_seconds": 0.2432835
+      },
+      "worker_count": 1,
+      "workload_id": "B4"
+    },
+    {
+      "component_rows": [
+        {
+          "component": "BatchProcessor.process_batch",
+          "cumulative_seconds": 0.7878173,
+          "primitive_calls": 1,
+          "source": "D:/playground/BatchStudio/core/processor.py:515",
+          "total_calls": 1,
+          "total_seconds": 6.81e-05
+        },
+        {
+          "component": "ImageResizeOperation._execute",
+          "cumulative_seconds": 0.8814106,
+          "primitive_calls": 8,
+          "source": "D:/playground/BatchStudio/core/operations/image_ops.py:19",
+          "total_calls": 32,
+          "total_seconds": 0.0071085
+        },
+        {
+          "component": "PIL.Image.save",
+          "cumulative_seconds": 0.8620843,
+          "primitive_calls": 12,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/PIL/Image.py:2457",
+          "total_calls": 32,
+          "total_seconds": 0.005743900000000001
+        },
+        {
+          "component": "PIL.Image.resize",
+          "cumulative_seconds": 0.007622800000000001,
+          "primitive_calls": 8,
+          "source": "D:/playground/BatchStudio/.venv/Lib/site-packages/PIL/Image.py:2201",
+          "total_calls": 32,
+          "total_seconds": 0.00046780000000000004
+        }
+      ],
       "confidence": "LOW",
-      "evidence": [
-        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.800657},
-        {"component": "ImageResizeOperation._execute", "cumulative_seconds": 0.378872},
-        {"component": "PIL.Image.save", "cumulative_seconds": 0.170931},
-        {"component": "PIL.Image.resize", "cumulative_seconds": 0.007108}
+      "correctness": "PASS",
+      "interpretation": "Concurrent cumulative time identifies image transformation and output activity, but the values are non-additive and cannot establish a wall-time contribution.",
+      "profile_artifact": ".benchmarks/review-1bfa-profile/B5.pstats",
+      "profile_invocation": [
+        "D:\\playground\\BatchStudio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "cProfile",
+        "-o",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B5.pstats",
+        "-m",
+        "benchmarks.run_baseline",
+        "worker",
+        "--workload",
+        "B5",
+        "--manifest",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixture-manifest.json",
+        "--fixture-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\fixtures",
+        "--work-root",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\work-B5",
+        "--output",
+        "D:\\playground\\BatchStudio\\.benchmarks\\review-1bfa-profile\\B5-worker-result.json",
+        "--warmups",
+        "0",
+        "--repetitions",
+        "1"
       ],
-      "interpretation": "Concurrent cumulative time points to BMP encoding/output as the dominant worker activity, but the values are non-additive and B5 has the widest repeatability envelope."
+      "profile_sha256": "1a97d93141cb0578d51e8658e97ce4e03a1ad438ca70cdb65336b0ea37dc19c1",
+      "raw_worker_sample": {
+        "correctness": "PASS",
+        "cpu_time_seconds": 2.109375,
+        "files_processed": 32,
+        "iteration": 1,
+        "output_bytes": 75499200,
+        "output_sha256": {
+          "file_count": 32,
+          "manifest_sha256": "34fd920b28bde5f4c9feb42e06fd74fed29b6d93ecf231452631803c92467111",
+          "unique_content_sha256": [
+            "0eb79caf1a7f01952ad97240a8d19f024f61934e3d623826d6729a27e4438ce6",
+            "311defb776c34d6299966e0cef6ba5ad3cc7b397d0936f93000ac87f6329e5ed",
+            "3903209fd5018eb64b53733b600e68eb17a43e9b4dee5f60c0b905ff0b8c48d9",
+            "6f67323c32ec414a9566dac137f3ea3be2771647f09ba367912a3cd2337d3a59",
+            "710f90b198504879737c1f9380f5b40486703347018bf898c6a4004044cfbfaf",
+            "79991b149afe5988cb86b288243a2f9ea7f8f50a6adb7a7b1605aedc0f09ef2f",
+            "d095466ee48f01bdd0970adaeafa3e11ddf6c9c370e794c186915885bc04564f",
+            "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
+          ]
+        },
+        "wall_clock_seconds": 0.7881074
+      },
+      "worker_count": 4,
+      "workload_id": "B5"
     }
-  }
+  ]
 }

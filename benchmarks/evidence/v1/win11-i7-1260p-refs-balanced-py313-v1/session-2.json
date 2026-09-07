@@ -1,5 +1,5 @@
 {
-  "captured_at_utc": "2026-09-07T01:46:17.937234+00:00",
+  "captured_at_utc": "2026-09-07T02:02:14.332438+00:00",
   "configuration": {
     "order_seed": 12161538042298647496,
     "outlier_rule": "retain every completed measured sample",
@@ -204,7 +204,7 @@
       "constraints_sha256": "eab659e1fc6dc7eb752bb9047b40c4c3e54c07aa98d000b49112f40b7520cdb4",
       "pip_freeze_all": [
         "ast_serialize==0.9.0",
-        "-e git+https://github.com/ggligor1967/BatchStudio@05ad00dc8f5b29e5fb6a0f1dcfe7828c5a3c59d2#egg=batchstudio",
+        "-e git+https://github.com/ggligor1967/BatchStudio@1bfae7b091f9ce8dca64219792c3438604ea2ad5#egg=batchstudio",
         "black==26.5.1",
         "build==1.6.0",
         "charset-normalizer==3.4.4",
@@ -554,8 +554,8 @@
   },
   "fixture_manifest_sha256": "7e3c3df0a22d18cc20eb582fab34a0cd82209fa90ba3524bca6830ffb802243a",
   "profile": "canonical",
-  "repository_sha": "05ad00dc8f5b29e5fb6a0f1dcfe7828c5a3c59d2",
-  "repository_tree": "4a2bdf8b2672e0f03948491ddd49184caa91d1c9",
+  "repository_sha": "1bfae7b091f9ce8dca64219792c3438604ea2ad5",
+  "repository_tree": "7b9c09eb2a5ae086aa138da369f54de4e00e005c",
   "schema_version": "batchstudio-performance-baseline/v1",
   "session_id": "baseline-v1-session-2",
   "status": "PASS",
@@ -582,11 +582,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1524017
+          "wall_clock_seconds": 0.1504587
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.125,
+          "cpu_time_seconds": 0.109375,
           "files_processed": 1,
           "iteration": 2,
           "output_bytes": 50922,
@@ -597,7 +597,7 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.115778
+          "wall_clock_seconds": 0.1133281
         },
         {
           "correctness": "PASS",
@@ -612,11 +612,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1149365
+          "wall_clock_seconds": 0.1142678
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.125,
+          "cpu_time_seconds": 0.109375,
           "files_processed": 1,
           "iteration": 4,
           "output_bytes": 50922,
@@ -627,7 +627,7 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1144523
+          "wall_clock_seconds": 0.1145067
         },
         {
           "correctness": "PASS",
@@ -642,11 +642,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1190326
+          "wall_clock_seconds": 0.1181837
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.109375,
+          "cpu_time_seconds": 0.125,
           "files_processed": 1,
           "iteration": 6,
           "output_bytes": 50922,
@@ -657,7 +657,7 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.117983
+          "wall_clock_seconds": 0.1131012
         },
         {
           "correctness": "PASS",
@@ -672,7 +672,7 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1158574
+          "wall_clock_seconds": 0.1138066
         },
         {
           "correctness": "PASS",
@@ -687,11 +687,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1162402
+          "wall_clock_seconds": 0.1138074
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.125,
+          "cpu_time_seconds": 0.109375,
           "files_processed": 1,
           "iteration": 9,
           "output_bytes": 50922,
@@ -702,7 +702,7 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1193146
+          "wall_clock_seconds": 0.1184951
         },
         {
           "correctness": "PASS",
@@ -717,11 +717,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1197631
+          "wall_clock_seconds": 0.1158295
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.109375,
+          "cpu_time_seconds": 0.125,
           "files_processed": 1,
           "iteration": 11,
           "output_bytes": 50922,
@@ -732,11 +732,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.1146719
+          "wall_clock_seconds": 0.1157539
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.28125,
+          "cpu_time_seconds": 0.171875,
           "files_processed": 1,
           "iteration": 12,
           "output_bytes": 50922,
@@ -747,11 +747,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.3079671
+          "wall_clock_seconds": 0.1828077
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.25,
+          "cpu_time_seconds": 0.203125,
           "files_processed": 1,
           "iteration": 13,
           "output_bytes": 50922,
@@ -762,11 +762,11 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.2564139
+          "wall_clock_seconds": 0.2236188
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.265625,
+          "cpu_time_seconds": 0.25,
           "files_processed": 1,
           "iteration": 14,
           "output_bytes": 50922,
@@ -777,7 +777,7 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.255437
+          "wall_clock_seconds": 0.2548284
         },
         {
           "correctness": "PASS",
@@ -792,23 +792,23 @@
               "aecc3803161a2387f621a590f88c6b7ab6596d7a462cc74386c9aad96792a8f3"
             ]
           },
-          "wall_clock_seconds": 0.2716641
+          "wall_clock_seconds": 0.2697982
         }
       ],
       "summary": {
         "cpu_time_median_seconds": 0.125,
-        "latency_per_file_seconds": 0.1190326,
-        "maximum_seconds": 0.3079671,
-        "mean_seconds": 0.16079422666666668,
-        "median_seconds": 0.1190326,
-        "minimum_seconds": 0.1144523,
+        "latency_per_file_seconds": 0.1158295,
+        "maximum_seconds": 0.2697982,
+        "mean_seconds": 0.14883945333333332,
+        "median_seconds": 0.1158295,
+        "minimum_seconds": 0.1131012,
         "n": 15,
-        "p95_seconds": 0.3079671,
+        "p95_seconds": 0.2697982,
         "p95_unavailable_reason": null,
         "peak_memory_mb": null,
         "peak_memory_unavailable_reason": "No dependency-free per-workload process peak with a trustworthy cross-platform boundary",
-        "standard_deviation_seconds": 0.07147045165402739,
-        "throughput_files_per_second": 8.401059877714172
+        "standard_deviation_seconds": 0.05607693515926983,
+        "throughput_files_per_second": 8.633379234132928
       },
       "warmups": 5,
       "worker_count": 1,
@@ -824,7 +824,7 @@
       "raw_samples": [
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.203125,
+          "cpu_time_seconds": 1.25,
           "files_processed": 256,
           "iteration": 1,
           "output_bytes": 16777216,
@@ -835,11 +835,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.1920704
+          "wall_clock_seconds": 1.2546968
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.15625,
+          "cpu_time_seconds": 1.0625,
           "files_processed": 256,
           "iteration": 2,
           "output_bytes": 16777216,
@@ -850,11 +850,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2185098
+          "wall_clock_seconds": 1.1158593
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.234375,
+          "cpu_time_seconds": 1.25,
           "files_processed": 256,
           "iteration": 3,
           "output_bytes": 16777216,
@@ -865,11 +865,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2489438
+          "wall_clock_seconds": 1.246378
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.203125,
+          "cpu_time_seconds": 1.09375,
           "files_processed": 256,
           "iteration": 4,
           "output_bytes": 16777216,
@@ -880,7 +880,7 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2471373
+          "wall_clock_seconds": 1.1133825
         },
         {
           "correctness": "PASS",
@@ -895,11 +895,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2015735
+          "wall_clock_seconds": 1.2565639
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.078125,
+          "cpu_time_seconds": 1.21875,
           "files_processed": 256,
           "iteration": 6,
           "output_bytes": 16777216,
@@ -910,11 +910,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.0757984
+          "wall_clock_seconds": 1.2349092
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.203125,
+          "cpu_time_seconds": 1.15625,
           "files_processed": 256,
           "iteration": 7,
           "output_bytes": 16777216,
@@ -925,11 +925,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2511687
+          "wall_clock_seconds": 1.1886243
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.234375,
+          "cpu_time_seconds": 1.15625,
           "files_processed": 256,
           "iteration": 8,
           "output_bytes": 16777216,
@@ -940,11 +940,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2354503
+          "wall_clock_seconds": 1.1678819
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.234375,
+          "cpu_time_seconds": 1.078125,
           "files_processed": 256,
           "iteration": 9,
           "output_bytes": 16777216,
@@ -955,11 +955,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2661546
+          "wall_clock_seconds": 1.129814
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.078125,
+          "cpu_time_seconds": 1.234375,
           "files_processed": 256,
           "iteration": 10,
           "output_bytes": 16777216,
@@ -970,11 +970,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.1050757
+          "wall_clock_seconds": 1.2414023
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.09375,
+          "cpu_time_seconds": 1.203125,
           "files_processed": 256,
           "iteration": 11,
           "output_bytes": 16777216,
@@ -985,11 +985,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.1560508
+          "wall_clock_seconds": 1.2522343
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.1875,
+          "cpu_time_seconds": 1.21875,
           "files_processed": 256,
           "iteration": 12,
           "output_bytes": 16777216,
@@ -1000,7 +1000,7 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2446748
+          "wall_clock_seconds": 1.2633611
         },
         {
           "correctness": "PASS",
@@ -1015,11 +1015,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.229923
+          "wall_clock_seconds": 1.1989206
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.234375,
+          "cpu_time_seconds": 1.140625,
           "files_processed": 256,
           "iteration": 14,
           "output_bytes": 16777216,
@@ -1030,11 +1030,11 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2882967
+          "wall_clock_seconds": 1.1628351
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 1.171875,
+          "cpu_time_seconds": 1.140625,
           "files_processed": 256,
           "iteration": 15,
           "output_bytes": 16777216,
@@ -1045,23 +1045,23 @@
               "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219"
             ]
           },
-          "wall_clock_seconds": 1.2462602
+          "wall_clock_seconds": 1.1571533
         }
       ],
       "summary": {
         "cpu_time_median_seconds": 1.1875,
-        "latency_per_file_seconds": 0.004825977734375,
-        "maximum_seconds": 1.2882967,
-        "mean_seconds": 1.2138058666666667,
-        "median_seconds": 1.2354503,
-        "minimum_seconds": 1.0757984,
+        "latency_per_file_seconds": 0.00468328359375,
+        "maximum_seconds": 1.2633611,
+        "mean_seconds": 1.19893444,
+        "median_seconds": 1.1989206,
+        "minimum_seconds": 1.1133825,
         "n": 15,
-        "p95_seconds": 1.2882967,
+        "p95_seconds": 1.2633611,
         "p95_unavailable_reason": null,
         "peak_memory_mb": null,
         "peak_memory_unavailable_reason": "No dependency-free per-workload process peak with a trustworthy cross-platform boundary",
-        "standard_deviation_seconds": 0.05952999157178393,
-        "throughput_files_per_second": 207.21189674728316
+        "standard_deviation_seconds": 0.0546994991485793,
+        "throughput_files_per_second": 213.52539943012076
       },
       "warmups": 5,
       "worker_count": 1,
@@ -1077,7 +1077,7 @@
       "raw_samples": [
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.484375,
+          "cpu_time_seconds": 4.6875,
           "files_processed": 32,
           "iteration": 1,
           "output_bytes": 75499200,
@@ -1095,11 +1095,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.5996075
+          "wall_clock_seconds": 1.6718809
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 3.890625,
+          "cpu_time_seconds": 4.578125,
           "files_processed": 32,
           "iteration": 2,
           "output_bytes": 75499200,
@@ -1117,11 +1117,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.3214752
+          "wall_clock_seconds": 1.5523284
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.296875,
+          "cpu_time_seconds": 4.078125,
           "files_processed": 32,
           "iteration": 3,
           "output_bytes": 75499200,
@@ -1139,11 +1139,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.5579645
+          "wall_clock_seconds": 1.4007344
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 3.640625,
+          "cpu_time_seconds": 4.359375,
           "files_processed": 32,
           "iteration": 4,
           "output_bytes": 75499200,
@@ -1161,11 +1161,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.1609735
+          "wall_clock_seconds": 1.4149169
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 3.796875,
+          "cpu_time_seconds": 4.359375,
           "files_processed": 32,
           "iteration": 5,
           "output_bytes": 75499200,
@@ -1183,11 +1183,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.1097852
+          "wall_clock_seconds": 1.4373099
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 3.921875,
+          "cpu_time_seconds": 4.1875,
           "files_processed": 32,
           "iteration": 6,
           "output_bytes": 75499200,
@@ -1205,11 +1205,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.2758564
+          "wall_clock_seconds": 1.4026248
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.671875,
+          "cpu_time_seconds": 4.59375,
           "files_processed": 32,
           "iteration": 7,
           "output_bytes": 75499200,
@@ -1227,11 +1227,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.6376776
+          "wall_clock_seconds": 1.6073375
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.71875,
+          "cpu_time_seconds": 4.328125,
           "files_processed": 32,
           "iteration": 8,
           "output_bytes": 75499200,
@@ -1249,11 +1249,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.6742533
+          "wall_clock_seconds": 1.4257388
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 3.875,
+          "cpu_time_seconds": 4.390625,
           "files_processed": 32,
           "iteration": 9,
           "output_bytes": 75499200,
@@ -1271,11 +1271,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.2550749
+          "wall_clock_seconds": 1.5357938
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.390625,
+          "cpu_time_seconds": 3.984375,
           "files_processed": 32,
           "iteration": 10,
           "output_bytes": 75499200,
@@ -1293,11 +1293,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.4484374
+          "wall_clock_seconds": 1.3956429
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.375,
+          "cpu_time_seconds": 4.046875,
           "files_processed": 32,
           "iteration": 11,
           "output_bytes": 75499200,
@@ -1315,11 +1315,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.6110735
+          "wall_clock_seconds": 1.3769832
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.96875,
+          "cpu_time_seconds": 4.421875,
           "files_processed": 32,
           "iteration": 12,
           "output_bytes": 75499200,
@@ -1337,11 +1337,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.8476888
+          "wall_clock_seconds": 1.6778922
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.125,
+          "cpu_time_seconds": 4.578125,
           "files_processed": 32,
           "iteration": 13,
           "output_bytes": 75499200,
@@ -1359,11 +1359,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.4880786
+          "wall_clock_seconds": 1.5323341
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.34375,
+          "cpu_time_seconds": 5.015625,
           "files_processed": 32,
           "iteration": 14,
           "output_bytes": 75499200,
@@ -1381,11 +1381,11 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.4951134
+          "wall_clock_seconds": 1.8530799
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 4.65625,
+          "cpu_time_seconds": 4.8125,
           "files_processed": 32,
           "iteration": 15,
           "output_bytes": 75499200,
@@ -1403,23 +1403,23 @@
               "d146fa1d6e1351b5f0a68d29e18955ab24f9bee7097c43862d9e215e780cc362"
             ]
           },
-          "wall_clock_seconds": 1.5871104
+          "wall_clock_seconds": 1.671561
         }
       ],
       "summary": {
-        "cpu_time_median_seconds": 4.34375,
-        "latency_per_file_seconds": 0.04672229375,
-        "maximum_seconds": 1.8476888,
-        "mean_seconds": 1.47134468,
-        "median_seconds": 1.4951134,
-        "minimum_seconds": 1.1097852,
+        "cpu_time_median_seconds": 4.390625,
+        "latency_per_file_seconds": 0.047885440625,
+        "maximum_seconds": 1.8530799,
+        "mean_seconds": 1.53041058,
+        "median_seconds": 1.5323341,
+        "minimum_seconds": 1.3769832,
         "n": 15,
-        "p95_seconds": 1.8476888,
+        "p95_seconds": 1.8530799,
         "p95_unavailable_reason": null,
         "peak_memory_mb": null,
         "peak_memory_unavailable_reason": "No dependency-free per-workload process peak with a trustworthy cross-platform boundary",
-        "standard_deviation_seconds": 0.20757580839539838,
-        "throughput_files_per_second": 21.40305879139335
+        "standard_deviation_seconds": 0.14143260526680546,
+        "throughput_files_per_second": 20.883174237263272
       },
       "warmups": 8,
       "worker_count": 4,
@@ -1446,7 +1446,7 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.2044702
+          "wall_clock_seconds": 0.2007189
         },
         {
           "correctness": "PASS",
@@ -1461,11 +1461,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.2067079
+          "wall_clock_seconds": 0.2045791
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.390625,
+          "cpu_time_seconds": 0.34375,
           "files_processed": 1,
           "iteration": 3,
           "output_bytes": 9437238,
@@ -1476,7 +1476,7 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3904688
+          "wall_clock_seconds": 0.3491411
         },
         {
           "correctness": "PASS",
@@ -1491,11 +1491,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3957459
+          "wall_clock_seconds": 0.3678468
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.390625,
+          "cpu_time_seconds": 0.359375,
           "files_processed": 1,
           "iteration": 5,
           "output_bytes": 9437238,
@@ -1506,11 +1506,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3892666
+          "wall_clock_seconds": 0.3789962
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.40625,
+          "cpu_time_seconds": 0.390625,
           "files_processed": 1,
           "iteration": 6,
           "output_bytes": 9437238,
@@ -1521,7 +1521,7 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.4011051
+          "wall_clock_seconds": 0.3863198
         },
         {
           "correctness": "PASS",
@@ -1536,11 +1536,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3856898
+          "wall_clock_seconds": 0.381026
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.375,
+          "cpu_time_seconds": 0.359375,
           "files_processed": 1,
           "iteration": 8,
           "output_bytes": 9437238,
@@ -1551,11 +1551,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3889208
+          "wall_clock_seconds": 0.3764191
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.375,
+          "cpu_time_seconds": 0.359375,
           "files_processed": 1,
           "iteration": 9,
           "output_bytes": 9437238,
@@ -1566,7 +1566,7 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3749162
+          "wall_clock_seconds": 0.3644981
         },
         {
           "correctness": "PASS",
@@ -1581,11 +1581,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3894782
+          "wall_clock_seconds": 0.3712072
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.375,
+          "cpu_time_seconds": 0.359375,
           "files_processed": 1,
           "iteration": 11,
           "output_bytes": 9437238,
@@ -1596,11 +1596,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3892703
+          "wall_clock_seconds": 0.3848759
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.390625,
+          "cpu_time_seconds": 0.359375,
           "files_processed": 1,
           "iteration": 12,
           "output_bytes": 9437238,
@@ -1611,11 +1611,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3855355
+          "wall_clock_seconds": 0.3688971
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.359375,
+          "cpu_time_seconds": 0.390625,
           "files_processed": 1,
           "iteration": 13,
           "output_bytes": 9437238,
@@ -1626,7 +1626,7 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3834103
+          "wall_clock_seconds": 0.387236
         },
         {
           "correctness": "PASS",
@@ -1641,11 +1641,11 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3968052
+          "wall_clock_seconds": 0.3764849
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.375,
+          "cpu_time_seconds": 0.34375,
           "files_processed": 1,
           "iteration": 15,
           "output_bytes": 9437238,
@@ -1656,23 +1656,23 @@
               "b348da3708b65dbe7782dbdd4a59e2db7f3697f6b4d13edc479386f0f721d943"
             ]
           },
-          "wall_clock_seconds": 0.3851484
+          "wall_clock_seconds": 0.3842174
         }
       ],
       "summary": {
-        "cpu_time_median_seconds": 0.375,
-        "latency_per_file_seconds": 0.3889208,
-        "maximum_seconds": 0.4011051,
-        "mean_seconds": 0.3644626133333333,
-        "median_seconds": 0.3889208,
-        "minimum_seconds": 0.2044702,
+        "cpu_time_median_seconds": 0.359375,
+        "latency_per_file_seconds": 0.3764191,
+        "maximum_seconds": 0.387236,
+        "mean_seconds": 0.35216423999999996,
+        "median_seconds": 0.3764191,
+        "minimum_seconds": 0.2007189,
         "n": 15,
-        "p95_seconds": 0.4011051,
+        "p95_seconds": 0.387236,
         "p95_unavailable_reason": null,
         "peak_memory_mb": null,
         "peak_memory_unavailable_reason": "No dependency-free per-workload process peak with a trustworthy cross-platform boundary",
-        "standard_deviation_seconds": 0.06479269030543125,
-        "throughput_files_per_second": 2.57121758465991
+        "standard_deviation_seconds": 0.06152451895123717,
+        "throughput_files_per_second": 2.6566133333829236
       },
       "warmups": 8,
       "worker_count": 1,
@@ -1688,7 +1688,7 @@
       "raw_samples": [
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.09375,
+          "cpu_time_seconds": 0.109375,
           "files_processed": 64,
           "iteration": 1,
           "output_bytes": 47731,
@@ -1699,11 +1699,11 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.1050023
+          "wall_clock_seconds": 0.1040081
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.0625,
+          "cpu_time_seconds": 0.078125,
           "files_processed": 64,
           "iteration": 2,
           "output_bytes": 47731,
@@ -1714,11 +1714,11 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0743673
+          "wall_clock_seconds": 0.0735706
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.046875,
+          "cpu_time_seconds": 0.078125,
           "files_processed": 64,
           "iteration": 3,
           "output_bytes": 47731,
@@ -1729,7 +1729,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0722814
+          "wall_clock_seconds": 0.0746982
         },
         {
           "correctness": "PASS",
@@ -1744,11 +1744,11 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0724489
+          "wall_clock_seconds": 0.0734576
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.078125,
+          "cpu_time_seconds": 0.0625,
           "files_processed": 64,
           "iteration": 5,
           "output_bytes": 47731,
@@ -1759,7 +1759,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0755607
+          "wall_clock_seconds": 0.0721389
         },
         {
           "correctness": "PASS",
@@ -1774,11 +1774,11 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0738817
+          "wall_clock_seconds": 0.0734661
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.0625,
+          "cpu_time_seconds": 0.078125,
           "files_processed": 64,
           "iteration": 7,
           "output_bytes": 47731,
@@ -1789,11 +1789,11 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0743133
+          "wall_clock_seconds": 0.0742606
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.0625,
+          "cpu_time_seconds": 0.078125,
           "files_processed": 64,
           "iteration": 8,
           "output_bytes": 47731,
@@ -1804,7 +1804,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0736633
+          "wall_clock_seconds": 0.0746778
         },
         {
           "correctness": "PASS",
@@ -1819,7 +1819,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0751457
+          "wall_clock_seconds": 0.0748939
         },
         {
           "correctness": "PASS",
@@ -1834,7 +1834,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0738533
+          "wall_clock_seconds": 0.0739905
         },
         {
           "correctness": "PASS",
@@ -1849,7 +1849,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.1205452
+          "wall_clock_seconds": 0.1291345
         },
         {
           "correctness": "PASS",
@@ -1864,7 +1864,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0732754
+          "wall_clock_seconds": 0.0736204
         },
         {
           "correctness": "PASS",
@@ -1879,7 +1879,7 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0736643
+          "wall_clock_seconds": 0.0737415
         },
         {
           "correctness": "PASS",
@@ -1894,11 +1894,11 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0749528
+          "wall_clock_seconds": 0.0735031
         },
         {
           "correctness": "PASS",
-          "cpu_time_seconds": 0.0625,
+          "cpu_time_seconds": 0.078125,
           "files_processed": 64,
           "iteration": 15,
           "output_bytes": 47731,
@@ -1909,23 +1909,23 @@
               "53a7ba0c4a4018d55c77b32547aa69fa732622a02d2cb3762fc5a29b4c137061"
             ]
           },
-          "wall_clock_seconds": 0.0738056
+          "wall_clock_seconds": 0.0739939
         }
       ],
       "summary": {
         "cpu_time_median_seconds": 0.078125,
-        "latency_per_file_seconds": 0.0011544015625,
-        "maximum_seconds": 0.1205452,
-        "mean_seconds": 0.07911741333333334,
-        "median_seconds": 0.0738817,
-        "minimum_seconds": 0.0722814,
+        "latency_per_file_seconds": 0.0011561015625,
+        "maximum_seconds": 0.1291345,
+        "mean_seconds": 0.07954371333333335,
+        "median_seconds": 0.0739905,
+        "minimum_seconds": 0.0721389,
         "n": 15,
-        "p95_seconds": 0.1205452,
+        "p95_seconds": 0.1291345,
         "p95_unavailable_reason": null,
         "peak_memory_mb": null,
         "peak_memory_unavailable_reason": "No dependency-free per-workload process peak with a trustworthy cross-platform boundary",
-        "standard_deviation_seconds": 0.01400472542143578,
-        "throughput_files_per_second": 866.2496937671982
+        "standard_deviation_seconds": 0.01577929687619041,
+        "throughput_files_per_second": 864.9759090694075
       },
       "warmups": 5,
       "worker_count": 1,

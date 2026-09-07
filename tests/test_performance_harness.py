@@ -19,7 +19,11 @@ from benchmarks.fixtures import (
     verify_fixture_files,
     verify_manifest,
 )
-from benchmarks.profile_baseline import extract_component_rows
+from benchmarks.profile_baseline import (
+    COMPONENT_CONTRACT,
+    PROFILE_SCHEMA_VERSION,
+    extract_component_rows,
+)
 from benchmarks.run_baseline import (
     BenchmarkConfigurationError,
     calculate_summary,
@@ -447,8 +451,41 @@ def test_committed_canonical_evidence_recomputes_exactly():
 
     assert recomputed == recorded
     assert recorded["status"] == "PASS"
-    assert recorded["repository_sha"] == "05ad00dc8f5b29e5fb6a0f1dcfe7828c5a3c59d2"
+    assert recorded["repository_sha"] == "1bfae7b091f9ce8dca64219792c3438604ea2ad5"
     assert all(item["repeatability"] == "PASS" for item in recorded["workloads"])
+
+
+def test_committed_profiling_evidence_retains_reproduction_contract():
+    evidence_path = (
+        REPOSITORY_ROOT
+        / "benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1"
+        / "profiling-summary.json"
+    )
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    expected_contract = {
+        workload_id: [
+            {
+                "component": component,
+                "source_file_suffix": source_file_suffix,
+                "function_name": function_name,
+            }
+            for component, source_file_suffix, function_name in contract
+        ]
+        for workload_id, contract in COMPONENT_CONTRACT.items()
+    }
+
+    assert evidence["schema_version"] == PROFILE_SCHEMA_VERSION
+    assert evidence["repository_sha"] == "1bfae7b091f9ce8dca64219792c3438604ea2ad5"
+    assert evidence["conclusion"] == "NO_ACTIONABLE_BOTTLENECK_ESTABLISHED"
+    assert evidence["extraction_contract"] == expected_contract
+    assert {workload["workload_id"] for workload in evidence["workloads"]} == set(
+        WORKLOAD_DEFINITIONS
+    )
+    for workload in evidence["workloads"]:
+        assert workload["correctness"] == "PASS"
+        assert workload["component_rows"]
+        assert len(workload["profile_sha256"]) == 64
+        assert workload["profile_invocation"][1:4] == ["-m", "cProfile", "-o"]
 
 
 def test_evidence_writer_refuses_overwrite(tmp_path: Path):
