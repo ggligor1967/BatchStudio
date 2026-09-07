@@ -346,6 +346,24 @@ def test_session_comparison_rejects_identity_drift_and_preserves_raw_sessions(
         compare_sessions(first_path, second_path, thresholds_path)
 
 
+def test_committed_canonical_evidence_recomputes_exactly():
+    evidence_root = Path(
+        "benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1"
+    )
+    first_path = evidence_root / "session-1.json"
+    second_path = evidence_root / "session-2.json"
+    comparison_path = evidence_root / "comparison.json"
+    thresholds_path = Path("benchmarks/repeatability_thresholds_v1.json")
+
+    recorded = json.loads(comparison_path.read_text(encoding="utf-8"))
+    recomputed = compare_sessions(first_path, second_path, thresholds_path)
+
+    assert recomputed == recorded
+    assert recorded["status"] == "PASS"
+    assert recorded["repository_sha"] == "6058e88dd2af69731fc0de17f5b25f007d91a4b7"
+    assert all(item["repeatability"] == "PASS" for item in recorded["workloads"])
+
+
 def test_evidence_writer_refuses_overwrite(tmp_path: Path):
     evidence_path = tmp_path / "evidence.json"
     write_new_json(evidence_path, {"status": "PASS"})

@@ -53,5 +53,6 @@ This document records observed boundaries of the current implementation, includi
 ## Scale and coverage
 
 - No maximum batch size, throughput, memory ceiling, or performance percentage is guaranteed.
+- V12-PERF numbers are comparable only within their exact committed fixture, repository, dependency, worker, storage, power, and hardware identity. The four-worker B5 workload has a 22.5% repeatability envelope, peak memory is unavailable, controlled OCR is excluded, and shared-runner timings are validity-only; see [Reproducible performance baseline](PERFORMANCE_BASELINE.md).
 - Individual inputs above 500 MiB are rejected, but total memory and decompressed document/image size are not bounded.
 - On 2026-09-04 at the documentation baseline, `python -m coverage run --source=core,ui,main -m pytest -q` followed by `python -m coverage report --skip-covered` reported 31% production-code coverage across 2,470 statements. All 24 discovered tests passed, while UI modules were at 0% and `main` was not imported. This is a measurement of that exact command and environment, not a quality guarantee.

@@ -148,7 +148,7 @@ def test_ocr_docs_distinguish_mocked_and_controlled_real_qualification():
     assert "#10" in ocr
 
 
-def test_roadmap_marks_v12_04_complete_and_v12_perf_next():
+def test_roadmap_marks_v12_perf_complete_without_admitting_optimization():
     text = _read_text("docs/ROADMAP.md")
     lowered = text.lower()
     assert "v11-08" in lowered
@@ -162,7 +162,11 @@ def test_roadmap_marks_v12_04_complete_and_v12_perf_next():
     assert "#33" in text
     assert "v12-04 page-aware pdf watermark placement" in lowered
     assert "#35" in text
-    assert "**v12-perf is the next admissible implementation unit**" in lowered
+    assert "v12-perf reproducible performance baseline" in lowered
+    assert "#37" in text
+    assert "no implementation unit is currently admitted" in lowered
+    assert "no optimization unit is admitted" in lowered
+    assert "### v12-perf" not in lowered
     assert "### v12-04" not in lowered
     assert "### v12-03" not in lowered
     assert "- **v12-01" not in lowered

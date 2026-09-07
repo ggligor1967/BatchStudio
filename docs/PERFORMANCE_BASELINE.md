@@ -123,4 +123,46 @@ Compare medians only within an identical declared environment. Results from anot
 
 ## Canonical v1 evidence
 
-The authoritative session results, repeatability comparison, bounded profiling evidence, and optimization-admission conclusion are added only after both clean sessions pass this frozen methodology. No performance number is canonical merely because it appeared in a pilot or terminal log.
+The authoritative measurements execute commit `6058e88dd2af69731fc0de17f5b25f007d91a4b7`, tree `9f27c7510b7a6f09ef9edfb4608bf49256ed0bbd`, in environment `win11-i7-1260p-refs-balanced-py313-v1`. The complete raw samples, metadata, output fingerprints, and summaries are retained in `benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1/session-1.json` and `session-2.json`.
+
+Session 1 results, in seconds:
+
+| Workload | N | Min | Max | Median | Mean | Sample stdev | P95 | Correctness |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| B1 | 15 | 1.056223 | 1.292929 | 1.225035 | 1.213768 | 0.061589 | 1.292929 | PASS |
+| B2 | 15 | 0.202238 | 0.397464 | 0.378591 | 0.355538 | 0.061830 | 0.397464 | PASS |
+| B3 | 15 | 0.113694 | 0.272202 | 0.116488 | 0.150968 | 0.057552 | 0.272202 | PASS |
+| B4 | 15 | 0.071812 | 0.122466 | 0.074001 | 0.078666 | 0.014176 | 0.122466 | PASS |
+| B5 | 15 | 1.439666 | 1.909635 | 1.650845 | 1.670729 | 0.142370 | 1.909635 | PASS |
+
+Session 2 results, in seconds:
+
+| Workload | N | Min | Max | Median | Mean | Sample stdev | P95 | Correctness |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| B1 | 15 | 1.103151 | 1.271972 | 1.215769 | 1.210584 | 0.050970 | 1.271972 | PASS |
+| B2 | 15 | 0.187649 | 0.408863 | 0.379495 | 0.360859 | 0.067915 | 0.408863 | PASS |
+| B3 | 15 | 0.113257 | 0.258979 | 0.116680 | 0.149588 | 0.055117 | 0.258979 | PASS |
+| B4 | 15 | 0.071231 | 0.119398 | 0.073816 | 0.078565 | 0.013686 | 0.119398 | PASS |
+| B5 | 15 | 1.370602 | 1.758098 | 1.557335 | 1.568370 | 0.134378 | 1.758098 | PASS |
+
+The machine-readable comparison is `benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1/comparison.json`:
+
+| Workload | Session 1 median | Session 2 median | Delta | Threshold | Repeatability | Max regression | Minimum future improvement |
+| --- | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| B1 | 1.225035 s | 1.215769 s | 0.76% | 10.0% | PASS | 10.0% | 20.0% |
+| B2 | 0.378591 s | 0.379495 s | 0.24% | 6.5% | PASS | 6.5% | 13.0% |
+| B3 | 0.116488 s | 0.116680 s | 0.16% | 6.0% | PASS | 6.0% | 12.0% |
+| B4 | 0.074001 s | 0.073816 s | 0.25% | 5.0% | PASS | 5.0% | 10.0% |
+| B5 | 1.650845 s | 1.557335 s | 5.66% | 22.5% | PASS | 22.5% | 45.0% |
+
+## Bounded bottleneck evidence and admission result
+
+One zero-warmup iteration per workload was inspected with standard-library `cProfile`. These diagnostic runs include profiler overhead; cumulative time from concurrent B5 worker threads is non-additive. The retained `profiling-summary.json` reports the exact observations.
+
+- B1 distributed time across processor/per-file orchestration, ownership/path work, and copying; no isolated dominant component was established.
+- B2 attributed 0.134 seconds cumulative to `ImageResizeOperation._execute` within 0.247 seconds for `BatchProcessor.process_batch`, including 0.081 seconds in Pillow resize.
+- B3 attributed 0.367 of 0.373 cumulative seconds to `PDFWatermarkOperation._execute`, including 0.175 seconds in per-page watermark creation and 0.138 seconds in PDF object access.
+- B4 attributed 0.208 of 0.245 cumulative seconds to aggregate consume, including 0.156 seconds in PDF object access and 0.054 seconds in page addition.
+- B5 points to image output encoding as the dominant concurrent worker activity, but its cumulative thread time cannot be converted into a wall-time contribution and its repeatability envelope is widest.
+
+The evidence identifies workload classes, not a correctness-safe optimization with a user or product target. Therefore `NO_ACTIONABLE_BOTTLENECK_ESTABLISHED` and `NO_OPTIMIZATION_UNIT_ADMITTED`. A future unit requires separate approval and must prospectively name its target workload, median improvement at or above the table's minimum, correctness guardrails, and unrelated-workload regression budgets.

@@ -1,0 +1,67 @@
+{
+  "conclusion": "NO_ACTIONABLE_BOTTLENECK_ESTABLISHED",
+  "environment_id": "win11-i7-1260p-refs-balanced-py313-v1",
+  "limitations": [
+    "cProfile perturbs execution and these observations are not baseline timings",
+    "each workload was profiled once with zero warmups",
+    "cumulative time across B5 worker threads is non-additive and can exceed parent wall time",
+    "module import and post-timing correctness validation are present in the profile but excluded from component rows"
+  ],
+  "method": "Python standard-library cProfile of one complete worker invocation per B1-B5 workload; component rows report cumulative profiler seconds",
+  "repository_sha": "6058e88dd2af69731fc0de17f5b25f007d91a4b7",
+  "schema_version": "batchstudio-bounded-profiling-summary/v1",
+  "workloads": {
+    "B1": {
+      "confidence": "MEDIUM",
+      "evidence": [
+        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.517312},
+        {"component": "BatchProcessor.process_single_file", "cumulative_seconds": 0.472373},
+        {"component": "FileRenameOperation._execute", "cumulative_seconds": 0.104036},
+        {"component": "shutil.copyfileobj", "cumulative_seconds": 0.030785}
+      ],
+      "interpretation": "Time is distributed across per-file orchestration, path/ownership checks, and file copying; no isolated actionable component is established."
+    },
+    "B2": {
+      "confidence": "MEDIUM",
+      "evidence": [
+        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.247492},
+        {"component": "ImageResizeOperation._execute", "cumulative_seconds": 0.134155},
+        {"component": "PIL.Image.resize", "cumulative_seconds": 0.080803},
+        {"component": "PIL.Image.save", "cumulative_seconds": 0.006660}
+      ],
+      "interpretation": "The image-operation and Pillow resampling path is the largest identified component, as expected for B2, but one perturbed sample does not establish an optimization target."
+    },
+    "B3": {
+      "confidence": "MEDIUM",
+      "evidence": [
+        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.372618},
+        {"component": "PDFWatermarkOperation._execute", "cumulative_seconds": 0.367038},
+        {"component": "PDFWatermarkOperation._create_watermark_page", "cumulative_seconds": 0.175406},
+        {"component": "pypdf.PdfReader.get_object", "cumulative_seconds": 0.137579},
+        {"component": "pypdf.PdfWriter.add_page", "cumulative_seconds": 0.013558}
+      ],
+      "interpretation": "Per-page watermark construction and PDF object parsing account for most identified operation time; no correctness-safe improvement requirement exists."
+    },
+    "B4": {
+      "confidence": "MEDIUM",
+      "evidence": [
+        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.245031},
+        {"component": "PDFAggregateMergeOperation.consume", "cumulative_seconds": 0.208469},
+        {"component": "pypdf.PdfReader.get_object", "cumulative_seconds": 0.156444},
+        {"component": "pypdf.PdfWriter.add_page", "cumulative_seconds": 0.053522},
+        {"component": "PDFAggregateMergeOperation.finalize", "cumulative_seconds": 0.022383}
+      ],
+      "interpretation": "PDF parsing and page addition dominate the identified aggregate-operation work; the evidence establishes a workload class, not an actionable optimization."
+    },
+    "B5": {
+      "confidence": "LOW",
+      "evidence": [
+        {"component": "BatchProcessor.process_batch", "cumulative_seconds": 0.833352},
+        {"component": "ImageResizeOperation._execute", "cumulative_seconds": 0.761910},
+        {"component": "PIL.Image.save", "cumulative_seconds": 0.835736},
+        {"component": "PIL.Image.resize", "cumulative_seconds": 0.006289}
+      ],
+      "interpretation": "Concurrent cumulative time points to BMP encoding/output as the dominant worker activity, but the values are non-additive and B5 has the widest repeatability envelope."
+    }
+  }
+}
