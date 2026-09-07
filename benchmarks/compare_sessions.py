@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from benchmarks.fixtures import sha256_file
+from benchmarks.fixtures import sha256_json_file
 from benchmarks.run_baseline import (
     SESSION_SCHEMA_VERSION,
     THRESHOLD_SCHEMA_VERSION,
@@ -192,7 +192,7 @@ def compare_sessions(
         "repository_tree": first["repository_tree"],
         "environment_id": first["environment"]["environment_id"],
         "fixture_manifest_sha256": first["fixture_manifest_sha256"],
-        "threshold_manifest_sha256": sha256_file(thresholds_path),
+        "threshold_manifest_sha256": sha256_json_file(thresholds_path),
         "repeatability_rule": REPEATABILITY_RULE,
         "regression_budget_rule": REGRESSION_RULE,
         "target_improvement_rule": TARGET_RULE,

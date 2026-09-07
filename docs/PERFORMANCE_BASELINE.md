@@ -16,7 +16,7 @@ Authoritative v1 evidence is retained under `benchmarks/evidence/v1/<environment
 | B4 | `pdf_merge` | 16 six-page PDFs repeated four times, 64 inputs and 384 output pages | aggregate, one worker | ordered PDF parse and write |
 | B5 | `image_resize` | eight 2048 x 1536 RGB BMPs repeated four times, 32 batch entries | four workers | multi-file image throughput and scheduling |
 
-`benchmarks/fixtures.py` generates every input without downloads, random state, fonts, or current timestamps. `benchmarks/fixture_manifest_v1.json` records every file size, SHA-256, dimension/page contract, generator, and expected output class. Its SHA-256 is `4bf99714cd2d50fd8da48e86d94ee026c06ca17e6f393f8ec0e85f9a1b196e24`.
+`benchmarks/fixtures.py` generates every input without downloads, random state, fonts, or current timestamps. `benchmarks/fixture_manifest_v1.json` records every file size, SHA-256, dimension/page contract, generator, and expected output class. Its canonical semantic JSON SHA-256 is `7e3c3df0a22d18cc20eb582fab34a0cd82209fa90ba3524bca6830ffb802243a`; whitespace and checkout line endings do not alter this identity.
 
 The fixture groups have these fixed identities:
 

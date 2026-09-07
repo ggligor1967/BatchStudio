@@ -23,7 +23,8 @@ from typing import Any
 
 from benchmarks.fixtures import (
     generate_fixtures,
-    sha256_file,
+    sha256_json_file,
+    sha256_normalized_text_file,
     verify_fixture_files,
     verify_manifest,
 )
@@ -227,7 +228,7 @@ def _dependency_identity() -> dict[str, Any]:
     )
     return {
         "constraints_path": "benchmarks/constraints.txt",
-        "constraints_sha256": sha256_file(CONSTRAINTS_PATH),
+        "constraints_sha256": sha256_normalized_text_file(CONSTRAINTS_PATH),
         "versions": versions,
         "pip_freeze_all": freeze.stdout.splitlines(),
     }
@@ -482,7 +483,7 @@ def run_session(arguments: argparse.Namespace) -> dict[str, Any]:
             arguments.power_mode,
         ),
         "fixture_manifest": fixture_manifest,
-        "fixture_manifest_sha256": sha256_file(
+        "fixture_manifest_sha256": sha256_json_file(
             Path(__file__).with_name("fixture_manifest_v1.json")
         ),
         "configuration": {

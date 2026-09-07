@@ -33,6 +33,26 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_json_payload(payload: Any) -> str:
+    canonical_bytes = json.dumps(
+        payload,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical_bytes).hexdigest()
+
+
+def sha256_json_file(path: Path) -> str:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return sha256_json_payload(payload)
+
+
+def sha256_normalized_text_file(path: Path) -> str:
+    normalized = "\n".join(path.read_text(encoding="utf-8").splitlines()) + "\n"
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 def _write_small_text(path: Path) -> None:
     pattern = b"BatchStudio V12-PERF deterministic fixture v1\r\n"
     size = 64 * 1024

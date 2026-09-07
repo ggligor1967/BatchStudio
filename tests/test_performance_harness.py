@@ -14,6 +14,8 @@ from benchmarks.fixtures import (
     generate_fixtures,
     load_expected_manifest,
     sha256_file,
+    sha256_json_file,
+    sha256_normalized_text_file,
     verify_fixture_files,
     verify_manifest,
 )
@@ -297,7 +299,7 @@ def test_committed_threshold_manifest_matches_frozen_workloads():
 
     assert thresholds["schema_version"] == "batchstudio-repeatability-thresholds/v1"
     assert set(thresholds["workloads"]) == set(WORKLOAD_DEFINITIONS)
-    assert thresholds["source_fixture_manifest_sha256"] == sha256_file(
+    assert thresholds["source_fixture_manifest_sha256"] == sha256_json_file(
         Path("benchmarks/fixture_manifest_v1.json")
     )
     assert all(
@@ -372,6 +374,22 @@ def test_evidence_writer_refuses_overwrite(tmp_path: Path):
         write_new_json(evidence_path, {"status": "PASS"})
 
     assert json.loads(evidence_path.read_text(encoding="utf-8")) == {"status": "PASS"}
+
+
+def test_metadata_hashes_ignore_checkout_line_endings(tmp_path: Path):
+    json_lf = tmp_path / "json-lf.json"
+    json_crlf = tmp_path / "json-crlf.json"
+    text_lf = tmp_path / "text-lf.txt"
+    text_crlf = tmp_path / "text-crlf.txt"
+    json_lf.write_bytes(b'{"a": 1, "b": [2, 3]}\n')
+    json_crlf.write_bytes(b'{\r\n  "b": [2, 3],\r\n  "a": 1\r\n}\r\n')
+    text_lf.write_bytes(b"alpha\nbeta\n")
+    text_crlf.write_bytes(b"alpha\r\nbeta\r\n")
+
+    assert sha256_json_file(json_lf) == sha256_json_file(json_crlf)
+    assert sha256_normalized_text_file(text_lf) == sha256_normalized_text_file(
+        text_crlf
+    )
 
 
 def test_evidence_writer_preserves_preexisting_temporary_path(tmp_path: Path):

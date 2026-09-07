@@ -1,6 +1,6 @@
 {
   "environment_id": "win11-i7-1260p-refs-balanced-py313-v1",
-  "fixture_manifest_sha256": "4bf99714cd2d50fd8da48e86d94ee026c06ca17e6f393f8ec0e85f9a1b196e24",
+  "fixture_manifest_sha256": "7e3c3df0a22d18cc20eb582fab34a0cd82209fa90ba3524bca6830ffb802243a",
   "regression_budget_rule": "ceil_to_0.5(max(repeatability_threshold, 2 * session_delta_percent))",
   "repeatability_rule": "ceil_to_0.5(max(5.0, 3 * pilot_relative_MAD_percent))",
   "repository_sha": "6058e88dd2af69731fc0de17f5b25f007d91a4b7",
@@ -10,7 +10,7 @@
   "session_2": "baseline-v1-session-2",
   "status": "PASS",
   "target_improvement_rule": "minimum targeted improvement = 2 * max_allowed_regression",
-  "threshold_manifest_sha256": "487722d98ab8f11da25325092284b3f217f16e31d66f255e51fd27f2d71551ce",
+  "threshold_manifest_sha256": "3248edc982947d87fba32bc93a693bb65bb9b7beaf0e110034a4e7f089e4cc7e",
   "workloads": [
     {
       "delta_percent": 0.7563703496423024,
