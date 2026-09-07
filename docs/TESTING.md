@@ -18,7 +18,7 @@ V11-06 additionally requires the separately readable `real-ocr-qualification` jo
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs seventeen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, V12-02 to 462, V12-03 to 506, V12-04 to 533, and V12-PERF to 558 on a supported graphical Windows session:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eighteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, V12-02 to 462, V12-03 to 506, V12-04 to 533, V12-PERF to 558, and PRODUCT-D1-I1 to 633 on a supported graphical Windows session:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -129,6 +129,16 @@ pytest -q tests/test_dry_run_contracts.py
 Before production changes, the initial CSV matrix produced 21 failures and 16 passes; the initial dry-run matrix produced 43 failures and one pass. Additional cases check dry-run CSV counts, normal manual reports, and interceptor calibration. The existing V11-01 CSV writer fixture now supplies valid required configuration so ownership assertions still reach the writer. The V11-02 dry-run assertion now requires the missing output directory to remain absent; lifecycle assertions are preserved.
 
 The dry-run suite intercepts attempted output-scoped directory creation, writable opens, temporary files, exclusive writers, copying/renaming, cleanup, aggregate/PDF writes, and report writers; it also compares directory contents and bytes before/after. It covers all nine registered per-file operations plus aggregate merge, including both batch OCR delegates, with existing and missing output directories. OCR capability/extraction boundaries are mocked without invoking real OCR or rasterization. UI tests run real worker threads with thread-checking variable doubles and queued completion callbacks; they exercise option/checkbox mutation without requiring a graphical display. These are focused route tests, not an interactive GUI qualification. See the [precise dry-run boundary](SECURITY_MODEL.md#dry-run-output-suppression).
+
+## PRODUCT-D1-I1 planning regressions
+
+The single canonical [AC-01–AC-15 matrix](adr/0005-multistep-dry-run-planning.md#acceptance-criteria) maps the accepted contract to regressions. `tests/test_planning_contracts.py` covers symbolic chains, conservative CSV facts, immutable context and isolated reuse, naming and foreign destination content, staged OCR readiness, cancellation/incomplete assessment, truthful UI results and normal-run revalidation. The existing multi-step dry-run regression now expects conditional planning success and retains its write-attempt and filesystem-state assertions. No real OCR qualification is substituted for planning.
+
+```powershell
+python -m pytest -q tests/test_planning_contracts.py tests/test_dry_run_contracts.py tests/test_csv_contracts.py tests/test_aggregate_semantics.py tests/test_aggregate_lifecycle.py tests/test_output_ownership.py tests/test_final_name_collision.py tests/test_input_capabilities.py tests/test_ocr_contracts.py tests/test_format_capability_decisions.py tests/test_tkinter_behavioral_flow.py
+```
+
+The full discovered suite, root checks, syntax compilation, repository verifier and required GitHub checks remain required.
 
 ## Root checks
 

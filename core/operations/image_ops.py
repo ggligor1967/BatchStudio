@@ -4,12 +4,20 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance, ImageFilter
 
-from core.contracts import OperationResult
+from core.contracts import OperationResult, PlanFact
 from core.operations.base import Operation
 from core.security import exclusive_output
 
 
 class ImageResizeOperation(Operation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        facts = tuple(PlanFact(key, self.config.get(key, default), "CONFIGURATION_INTENT")
+                      for key, default in (("width", 800), ("height", 600), ("maintain_aspect", True)))
+        return self._plan_standard(artifact, step_index, facts=facts, logical_format=artifact.logical_format,
+                                   unknown_properties=("dimensions", "mode", "encoder_feasibility"))
+
     id = "image_resize"
     name = "Image Resize"
     description = "Resize images to specified width and height"
@@ -63,6 +71,16 @@ class ImageResizeOperation(Operation):
 
 
 class ImageConvertOperation(Operation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        format_to = self.config.get("format", "PNG")
+        return self._plan_standard(
+            artifact, step_index, logical_format=format_to, suffix="." + format_to.lower(),
+            facts=(PlanFact("format", format_to, "CONFIGURATION_INTENT"),),
+            unknown_properties=("dimensions", "mode", "encoder_feasibility"),
+        )
+
     id = "image_convert"
     name = "Image Convert"
     description = "Convert images to different formats"
@@ -110,6 +128,15 @@ class ImageConvertOperation(Operation):
 
 
 class ImageFilterOperation(Operation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        return self._plan_standard(
+            artifact, step_index, logical_format=artifact.logical_format,
+            facts=(PlanFact("filter", self.config.get("filter", "SHARPEN"), "CONFIGURATION_INTENT"),),
+            unknown_properties=("dimensions", "mode", "filter_feasibility"),
+        )
+
     id = "image_filter"
     name = "Image Filter"
     description = "Apply various filters to images"

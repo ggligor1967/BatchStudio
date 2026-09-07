@@ -21,3 +21,25 @@ V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY` for XLS, XLSX, T
 V12-04 (issue #35) replaced the fixed Letter watermark overlay with a per-page CropBox and rotation contract. Its byte-deterministic F1-F11 fixtures cover A4, Letter, small and large custom pages, mixed page sizes, rotations 90/180/270, and non-default CropBoxes. Structural tests assert exact visible-coordinate placement, shrink-only containment, page geometry, source content, style, page count, and output ownership without raster comparison or dependency changes; see [Operations](OPERATIONS.md#pdf-watermark-geometry-contract).
 
 V12-PERF (issue #37) established deterministic F1-F5 fixtures and hashes, frozen B1-B5 workloads, exact environment and dependency identity, warm measurement and variance policies, fail-closed correctness guardrails, retained raw samples, two-session repeatability evidence, and noise-derived regression budgets. Both sessions passed at source commit `1bfae7b091f9ce8dca64219792c3438604ea2ad5`; bounded profiling established no actionable bottleneck, so no optimization unit is admitted. The unit changed no production runtime behavior; see [Reproducible performance baseline](PERFORMANCE_BASELINE.md).
+
+## PRODUCT-D1-I1 — Multi-step dry-run planning
+
+Implementation completed in [PR #41](https://github.com/ggligor1967/BatchStudio/pull/41)
+for issue [#40](https://github.com/ggligor1967/BatchStudio/issues/40).
+This unit is no longer scheduled for implementation. See PR #41 for integration
+status and issue #40 for closure evidence; this entry does not assert that merge
+or post-merge CI has occurred. Implementation completion is distinct from release
+publication and does not establish inclusion in a published release.
+
+The implementation follows [ADR-0005](adr/0005-multistep-dry-run-planning.md):
+all nine per-file planners, real-source validation and justified metadata, explicit
+deferred checks, run-local naming/state, results/statistics, Run/Logs consumers,
+write-free reporting and coordinated documentation. Acceptance remains exclusively
+[AC-01–AC-15](adr/0005-multistep-dry-run-planning.md#acceptance-criteria).
+
+No materialized intermediates, aggregate composition, format expansion, real-OCR
+requalification, dependencies, workflow migration, new export or performance work
+were admitted. The implementation mission ended at a final-head verified PR ready
+for review; protected integration requires separate maintainer authorization.
+Integration does not authorize a tag, release, version change or package publication.
+No new implementation unit is admitted by this completion record.

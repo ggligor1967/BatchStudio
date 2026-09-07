@@ -20,6 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from core.contracts import PlanDiagnostic, CheckOutcome
 from core.operations import AggregateOperation, OperationRegistry
 from core.security import (
     OutputPathAllocator,
@@ -61,6 +62,7 @@ class WorkflowCompilation:
     enabled_operation_ids: tuple[str, ...] = ()
     aggregate_input_source: Optional[str] = None
     accepted_input_types: frozenset[str] = frozenset()
+    diagnostics: tuple[PlanDiagnostic, ...] = ()
 
 
 def validate_file_path(file_path: str, base_dir: Optional[str] = None) -> tuple[bool, str]:
@@ -116,36 +118,45 @@ def validate_output_directory(output_dir: str, dry_run: bool = False) -> tuple[b
         return False, str(exc)
 
 
-def compile_workflow(workflow: Workflow, registry: OperationRegistry) -> WorkflowCompilation:
+def compile_workflow(workflow: Workflow, registry: OperationRegistry, *, check_capabilities: bool = True) -> WorkflowCompilation:
     errors: List[str] = []
+    diagnostics = []
+    current_step, operation_id = 0, "workflow"
+
+    def record_error(message):
+        errors.append(message)
+        diagnostics.append(PlanDiagnostic(current_step, operation_id, "compilation", "structure",
+                                          CheckOutcome.FAILED, message))
     enabled_steps = workflow.get_enabled_steps()
+    enabled_indices = [index for index, step in enumerate(workflow.steps, 1) if step.enabled]
     if not enabled_steps:
-        errors.append("Workflow must contain at least one enabled step")
-        return WorkflowCompilation(valid=False, errors=errors)
+        record_error("Workflow must contain at least one enabled step")
+        return WorkflowCompilation(valid=False, errors=errors, diagnostics=tuple(diagnostics))
 
     current_type = "any"
     aggregate_id: Optional[str] = None
     aggregate_input_types: frozenset[str] = frozenset()
 
     for index, step in enumerate(enabled_steps):
+        current_step, operation_id = enabled_indices[index], step.operation_id
         op = registry.get_operation(step.operation_id, step.config)
         agg = registry.get_aggregate_operation(step.operation_id, step.config)
 
         if op is None and agg is None:
-            errors.append(f"Unknown operation at step {index + 1}: {step.operation_id}")
+            record_error(f"Unknown operation at step {current_step}: {step.operation_id}")
             continue
 
         if agg is not None:
             config_ok, config_error = agg.validate_config()
             if not config_ok:
-                errors.append(f"Invalid config at step {index + 1} ({step.operation_id}): {config_error}")
+                record_error(f"Invalid config at step {current_step} ({step.operation_id}): {config_error}")
             if len(enabled_steps) != 1:
-                errors.append(
+                record_error(
                     "Aggregate operations must be the only enabled step. "
                     "Disable or remove the other enabled steps."
                 )
             if index != len(enabled_steps) - 1:
-                errors.append("Aggregate operations must be the last enabled workflow step")
+                record_error("Aggregate operations must be the last enabled workflow step")
             aggregate_id = step.operation_id
             aggregate_input_types = frozenset(agg.accepted_types)
             continue
@@ -153,23 +164,23 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry) -> Workflo
         assert op is not None
         config_ok, config_error = op.validate_config()
         if not config_ok:
-            errors.append(f"Invalid config at step {index + 1} ({step.operation_id}): {config_error}")
+            record_error(f"Invalid config at step {current_step} ({step.operation_id}): {config_error}")
 
-        capability_error = op.get_capability_error()
+        capability_error = op.get_capability_error() if check_capabilities else None
         if capability_error:
-            errors.append(f"Missing capability at step {index + 1} ({step.operation_id}): {capability_error}")
+            record_error(f"Missing capability at step {current_step} ({step.operation_id}): {capability_error}")
 
         accepted = getattr(op, "accepted_types", {"any"})
         if "any" not in accepted and current_type not in accepted and current_type != "any":
-            errors.append(
-                f"Type incompatibility at step {index + 1}: expected {accepted}, got {current_type}"
+            record_error(
+                f"Type incompatibility at step {current_step}: expected {accepted}, got {current_type}"
             )
 
         if getattr(op, "output_type", "any") != "same":
             current_type = getattr(op, "output_type", current_type)
 
     if errors:
-        return WorkflowCompilation(valid=False, errors=errors)
+        return WorkflowCompilation(valid=False, errors=errors, diagnostics=tuple(diagnostics))
 
     enabled_operation_ids = tuple(step.operation_id for step in enabled_steps)
     if aggregate_id is not None:
@@ -248,6 +259,23 @@ def process_single_file(
     allocator: Optional[OutputPathAllocator] = None,
 ) -> Dict[str, Any]:
     registry = OperationRegistry()
+    if dry_run:
+        from core.contracts import PlanningContext, PlanResult
+        from core.planning import PlanningSession, plan_file, planning_preflight
+        try:
+            context = PlanningContext.capture([file_path], workflow_dict, naming_pattern, output_dir)
+            session = PlanningSession(context, allocator=allocator)
+            checks = planning_preflight(context, registry)
+            return plan_file(session, file_path, index, registry, preflight=checks).to_dict()
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            diagnostic = PlanDiagnostic(0, "workflow", "structure", "structure", CheckOutcome.FAILED,
+                                        f"Invalid planning input: {exc}")
+            return PlanResult((index, str(file_path)), "COMPLETE", "REJECTED", (diagnostic,)).to_dict()
+        except Exception as exc:
+            diagnostic = PlanDiagnostic(0, "planner", "assessment_exception", "assessment", CheckOutcome.BLOCKED,
+                                        f"Assessment interrupted: {exc}")
+            return PlanResult((index, str(file_path)), "NOT_STARTED", "UNASSESSED", (diagnostic,),
+                              interrupted=True).to_dict()
 
     try:
         valid, error = validate_file_path(file_path)
@@ -367,6 +395,49 @@ class ProcessingStats:
         self.errors: List[Dict[str, str]] = []
         self.results: List[Dict[str, Any]] = []
         self.generated_report_paths: Dict[str, str] = {}
+        self._planning_context = None
+        self.plan_results = []
+        self.planning_errors = []
+        self.execution_state = "RUNNING"
+
+    @property
+    def planning_context(self):
+        return self._planning_context
+
+    @property
+    def assessed_plans(self):
+        return sum(result["assessment_state"] == "COMPLETE" for result in self.plan_results)
+
+    @property
+    def planning_summary(self):
+        counts = {verdict: 0 for verdict in ("CHECKED", "CONDITIONAL", "REJECTED", "UNSUPPORTED", "UNASSESSED")}
+        for result in self.plan_results:
+            counts[result["planning_verdict"]] += 1
+        counts["UNASSESSED"] += max(0, self.total_files - len(self.plan_results))
+        if self.planning_errors or counts["REJECTED"]:
+            verdict = "REJECTED"
+        elif counts["UNSUPPORTED"]:
+            verdict = "UNSUPPORTED"
+        elif counts["UNASSESSED"] or self.execution_state in {"CANCELLED", "INCOMPLETE"}:
+            verdict = "UNASSESSED"
+        elif not self.total_files:
+            verdict = "EMPTY"
+        elif counts["CONDITIONAL"]:
+            verdict = "CONDITIONAL"
+        else:
+            verdict = "CHECKED"
+        return {**counts, "batch_errors": len(self.planning_errors), "verdict": verdict}
+
+    def add_plan(self, result):
+        data = result.to_dict()
+        self.plan_results.append(data)
+        if data["success"]:
+            self.add_result(data["file"], data)
+        elif data["planning_verdict"] in {"REJECTED", "UNSUPPORTED"}:
+            self.add_error(data["file"], data.get("error", "Planning rejected"))
+        else:
+            self.skipped_files += 1
+
 
     @property
     def dry_run(self) -> bool:
@@ -396,6 +467,10 @@ class ProcessingStats:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "dry_run": self.dry_run,
+            **({"planning_context": self.planning_context.to_dict() if self.planning_context else None,
+                "plan_results": self.plan_results, "planning_summary": self.planning_summary,
+                "planning_errors": self.planning_errors, "execution_state": self.execution_state}
+               if self.dry_run else {}),
             "total_files": self.total_files,
             "processed_files": self.processed_files,
             "failed_files": self.failed_files,
@@ -513,6 +588,15 @@ class BatchProcessor:
             self._update_progress(len(file_list), len(file_list), finalize.message)
 
     def process_batch(
+        self, file_list, workflow, output_dir, naming_pattern="{original}_processed", dry_run=False,
+        *, planning_context=None,
+    ):
+        if dry_run:
+            from core.planning import run_planning_batch
+            return run_planning_batch(self, file_list, workflow, output_dir, naming_pattern, planning_context)
+        return self._process_batch(file_list, workflow, output_dir, naming_pattern, dry_run=False)
+
+    def _process_batch(
         self,
         file_list: List[str],
         workflow: Workflow,

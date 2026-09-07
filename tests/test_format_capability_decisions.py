@@ -242,6 +242,7 @@ def test_canonical_docs_record_every_v12_03_decision_and_boundary():
     assert "not user data inputs" in operations
     assert "does not parse or transform a TXT input" in operations
     assert "V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY`" in roadmap
-    assert "No implementation unit is currently admitted." in roadmap
+    assert "PRODUCT-D1-I1" in roadmap and "#40" in roadmap
+    assert "adr/0005-multistep-dry-run-planning.md#acceptance-criteria" in roadmap
     assert "V12-PERF (issue #37) established" in roadmap
     assert "previews admitted images, PDF metadata, and CSV rows" in user_guide

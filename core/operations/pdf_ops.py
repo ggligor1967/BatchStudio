@@ -28,6 +28,12 @@ class _PageWatermarkGeometry:
 
 
 class PDFWatermarkOperation(Operation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        return self._plan_standard(artifact, step_index, logical_format="PDF",
+                                   unknown_properties=("page_structure", "page_geometry", "merge_feasibility"))
+
     id = "pdf_watermark"
     name = "PDF Watermark"
     description = "Add text watermark to PDF documents"
