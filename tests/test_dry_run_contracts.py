@@ -229,8 +229,17 @@ def test_multistep_dry_run_never_creates_intermediates(tmp_path, forbid_output_w
     attempts = forbid_output_writes(tmp_path / "out")
     stats = BatchProcessor(1).process_batch([str(source)], workflow, str(tmp_path / "out"), dry_run=True)
     assert attempts == [] and filesystem_snapshot(tmp_path) == before
-    # No fabricated intermediate exists for the next validator to read.
-    assert stats.failed_files == 1 and "cannot process" in stats.errors[0]["error"]
+    # The validator receives a descriptor, while the intermediate remains absent.
+    assert stats.failed_files == 0 and stats.processed_files == 1
+    result = stats.results[0]["result"]
+    assert result["planning_verdict"] == "CONDITIONAL"
+    assert result["success"] and result["success_scope"] == "planning"
+    assert stats.results[0]["output"] == result["output"] == ""
+    assert Path(result["planned_output"]).name == "input_processed_001.jpeg"
+    assert result["artifacts"][1]["state"] == "PLANNED"
+    assert any(check["check_id"] == "intermediate_content" and check["outcome"] == "DEFERRED"
+               for check in result["diagnostics"])
+    assert not (tmp_path / "out").exists()
 
 
 @pytest.mark.parametrize("suffix", ["", "/child"])
@@ -415,7 +424,13 @@ def test_run_panel_snapshots_options_and_reports_from_provenance(
     worker.start()
     worker.join(timeout=10)
     assert not worker.is_alive()
-    assert calls[0][1] == {"naming_pattern": "initial-pattern", "dry_run": dry_run}
+    options = dict(calls[0][1])
+    if dry_run:
+        context = options.pop("planning_context")
+        assert context.naming_pattern == "initial-pattern"
+        assert context.workflow_dict()["steps"][0]["config"]["pattern"] == "original"
+        assert panel.current_stats is None
+    assert options == {"naming_pattern": "initial-pattern", "dry_run": dry_run}
     assert calls[0][0][2] == str(out)
     assert calls[0][0][1].steps[0].config["pattern"] == "original"
     # Execute the queued completion on the Tk thread, after widget values changed.

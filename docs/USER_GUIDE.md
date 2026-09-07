@@ -24,7 +24,7 @@ Workflow steps are not reordered by drag-and-drop. Compilation checks registered
 
 Choose an output directory, a naming pattern, a worker count from 1 to 16, dry-run mode, and report generation. Naming patterns recognize `{original}`, `{timestamp}`, and `{counter}`. Unsafe path characters and traversal fragments are sanitized, and duplicate initial allocations receive a numeric suffix. Operation-specific suffix or name changes have the collision limitation described in [Limitations](LIMITATIONS.md).
 
-Use **Dry Run** first. It creates no output directory, probe, temporary file, operation output, or report. It checks path feasibility without physically verifying future write permission. Options are captured when the run starts; changing the checkbox afterward cannot change that run's identity. Dry run may read/parse inputs, and unsupported dry-run operations are rejected before execution. See the precise [application-write boundary](SECURITY_MODEL.md#dry-run-output-suppression) and [multi-step limitation](LIMITATIONS.md#dry-run-and-output-safety).
+Use **Dry Run** first. It creates no output directory, probe, temporary file, operation output, or report. It checks path feasibility without physically verifying future write permission. Options are captured when the run starts; changing the checkbox afterward cannot change that run's identity. Dry run may read/parse inputs, and unsupported dry-run operations are rejected before execution. See the precise [application-write boundary](SECURITY_MODEL.md#dry-run-output-suppression) and [planning limitations](LIMITATIONS.md#dry-run-and-output-safety).
 
 **Start Processing** first checks input eligibility and compiles the workflow in a worker. Start, Pause, and Stop remain disabled during this check. A refusal shows the backend reason before batch processing or output preparation; successful checks enable the processing controls. This recheck also covers inputs selected before a workflow or a runtime prerequisite changed.
 
@@ -32,7 +32,7 @@ Use **Dry Run** first. It creates no output directory, probe, temporary file, op
 
 ## Logs
 
-The Logs tab displays successful items, failures, and a summary. For normal-run results it can export a CSV report or create/open an HTML report. Reports are unavailable for dry-run results, even after unchecking Dry Run; an older HTML report is not opened as their report. Report generation escapes HTML fields and neutralizes leading spreadsheet formula characters in CSV cells.
+The Logs tab displays normal successful items, failures, and a summary. Dry-run results instead show assessed plans, their conditional/rejected/unsupported/unassessed verdicts, and deferred checks. Planned artifacts cannot be opened as generated files. Multi-step planning never creates an intermediate; a conditional plan still requires normal execution and fresh validation. For normal-run results it can export a CSV report or create/open an HTML report. Reports are unavailable for dry-run results, even after unchecking Dry Run; an older HTML report is not opened as their report. Report generation escapes HTML fields and neutralizes leading spreadsheet formula characters in CSV cells.
 
 ## Output behavior
 

@@ -12,6 +12,7 @@
 - `core/security.py` sanitizes names, contains paths, neutralizes spreadsheet formulas, and allocates unique destinations.
 - `core/workflow.py` defines workflow/step persistence and built-in templates.
 - `core/processor.py` validates, compiles, schedules, executes, cleans intermediate outputs, records statistics, and renders reports.
+- `core/planning.py` performs write-free sequential per-file assessment using immutable `PlanningContext` and typed artifacts from `core/contracts.py`; a fresh `PlanningSession` isolates mutable name reservations and observations for each invocation.
 - `core/operations/registry.py` is the operation catalog and extension classifier.
 - `core/operations/ocr_ops.py` owns OCR-specific legacy-key validation and independent image/native-PDF/PDF-OCR readiness. The registry exposes these reasons to the workflow UI; compiler and runtime use the same readiness functions. Executable/language/rasterizer state is refreshed, not cached at import. Batch delegates checks by concrete input; auto PDF checks OCR fallback only when needed. The generic operation validator remains compatible with unrelated unknown keys.
 - `core/operations/base.py` defines per-file and aggregate interfaces.
@@ -43,7 +44,7 @@ The UI owns user interaction; the core has no dependency on Tkinter. The workflo
 
 ## Per-file execution
 
-The compiler validates the enabled chain, then `BatchProcessor` uses `ThreadPoolExecutor`. The default core worker count is `min(8, os.cpu_count() or 4)`; the UI defaults to four and restricts selection to 1-16. Each input proceeds through every enabled non-aggregate step. Calling the per-file worker with an aggregate step fails explicitly; it never skips the declaration or reports the source as an output. Operation instances copy the flat configuration mapping, so worker rename counters never mutate the caller's workflow dictionary. Serialization remains unchanged; nested values are not modified.
+For normal execution, the compiler validates the enabled chain, then `BatchProcessor` uses `ThreadPoolExecutor`. The default core worker count is `min(8, os.cpu_count() or 4)`; the UI defaults to four and restricts selection to 1-16. Each input proceeds through every enabled non-aggregate step. Calling the per-file worker with an aggregate step fails explicitly; it never skips the declaration or reports the source as an output. Operation instances copy the flat configuration mapping, so worker rename counters never mutate the caller's workflow dictionary. Serialization remains unchanged; nested values are not modified.
 
 A later successful step replaces the current input. After a successful chain, earlier exclusively created outputs are removed only if their recorded filesystem identities still match. Unrelated occupied destinations are never recorded as owned intermediates. A failed chain can retain prior owned intermediates; the exclusive-write helper attempts to remove its own partial output on a write failure.
 
@@ -80,3 +81,9 @@ The processor resolves the output root. `_render_name` and operation-specific na
 ## Persistence
 
 Workflows are UTF-8 JSON. User settings are JSON under `~/.batchstudio/settings.json`. These are local files and are not synchronized or executed as plugins.
+
+## Typed dry-run planning
+
+Per-file dry runs assess inputs sequentially in captured order on the background worker, independently of the normal execution worker count. This bounded exception to threaded execution makes counters and in-memory name allocation deterministic for a fixed planning context and filesystem observations. Existing validators inspect actual sources; planned destinations are never opened as generated inputs. Operation-specific `plan` methods declare facts and deferred conditions. The complete contract is [ADR-0005](adr/0005-multistep-dry-run-planning.md).
+
+Dry-run statistics add `planning_context`, `plan_results`, `planning_summary`, `planning_errors`, and `execution_state` to `to_dict()`. Per-file processed counts represent completely assessed checked/conditional plans; rejected/unsupported plans count as failures, and unassessed plans as skipped. Aggregate consumption counters retain their existing meaning. Legacy success records explicitly carry `success_scope=planning`, an empty `output`, a verdict and, only after complete assessment, `planned_output`. Logs and completion messages report uncertainty and lifecycle separately, never a transformation success rate. Report and generated-file opening controls remain blocked by immutable dry-run provenance.

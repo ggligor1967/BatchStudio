@@ -5,7 +5,7 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-No implementation unit is currently admitted.
+PRODUCT-D1-I1 — Multi-step dry-run planning (issue #40): ADMITTED; implementation/review in progress.
 ```
 
 The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), V12-03 format-capability decision (issue #33), V12-04 page-aware PDF watermark placement (issue #35), and V12-PERF reproducible performance baseline (issue #37) are no longer active or schedulable roadmap items. A new candidate requires evidence, an approved tracking issue, and explicit admission; completion of V12-PERF is not authorization to optimize production code.
@@ -21,3 +21,18 @@ V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY` for XLS, XLSX, T
 V12-04 (issue #35) replaced the fixed Letter watermark overlay with a per-page CropBox and rotation contract. Its byte-deterministic F1-F11 fixtures cover A4, Letter, small and large custom pages, mixed page sizes, rotations 90/180/270, and non-default CropBoxes. Structural tests assert exact visible-coordinate placement, shrink-only containment, page geometry, source content, style, page count, and output ownership without raster comparison or dependency changes; see [Operations](OPERATIONS.md#pdf-watermark-geometry-contract).
 
 V12-PERF (issue #37) established deterministic F1-F5 fixtures and hashes, frozen B1-B5 workloads, exact environment and dependency identity, warm measurement and variance policies, fail-closed correctness guardrails, retained raw samples, two-session repeatability evidence, and noise-derived regression budgets. Both sessions passed at source commit `1bfae7b091f9ce8dca64219792c3438604ea2ad5`; bounded profiling established no actionable bottleneck, so no optimization unit is admitted. The unit changed no production runtime behavior; see [Reproducible performance baseline](PERFORMANCE_BASELINE.md).
+
+## PRODUCT-D1-I1 — Multi-step dry-run planning
+
+Status: **ADMITTED** by the maintainer; issue [#40](https://github.com/ggligor1967/BatchStudio/issues/40).
+
+Implement [ADR-0005](adr/0005-multistep-dry-run-planning.md) as one coherent unit:
+all nine per-file planners, real-source validation and justified metadata, explicit
+deferred checks, run-local naming/state, results/statistics, Run/Logs consumers,
+write-free reporting and coordinated documentation. Acceptance is exclusively
+[AC-01–AC-15](adr/0005-multistep-dry-run-planning.md#acceptance-criteria).
+
+No materialized intermediates, aggregate composition, format expansion, real-OCR
+requalification, dependencies, workflow migration, new export or performance work.
+Stop at a final-head verified PR ready for review. Merge, auto-merge, tags, releases,
+version changes and package publication are not authorized.

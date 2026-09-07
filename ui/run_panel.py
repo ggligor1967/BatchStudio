@@ -10,6 +10,7 @@ import threading
 from copy import deepcopy
 from datetime import datetime
 
+from core.contracts import PlanningContext
 from core import BatchProcessor
 from core.processor import compile_workflow
 from ui.input_support import InputCapabilityRegistry, get_input_error
@@ -221,6 +222,8 @@ class RunPanel:
         generate_report = self.generate_report_var.get()
         files = list(files)
         workflow = deepcopy(workflow)
+        planning_context = (PlanningContext.capture(files, workflow.to_dict(), naming_pattern, output_dir)
+                            if dry_run else None)
 
         # Clear log
         self.log_text.delete(1.0, tk.END)
@@ -250,11 +253,11 @@ class RunPanel:
         
         # Start processing in separate thread
         thread = threading.Thread(target=self._run_batch,
-                                 args=(files, workflow, output_dir, naming_pattern, dry_run, generate_report))
+                                 args=(files, workflow, output_dir, naming_pattern, dry_run, generate_report, planning_context))
         thread.daemon = True
         thread.start()
     
-    def _run_batch(self, files, workflow, output_dir, naming_pattern, dry_run, generate_report):
+    def _run_batch(self, files, workflow, output_dir, naming_pattern, dry_run, generate_report, planning_context=None):
         """Run batch processing (in separate thread)."""
         try:
             valid, error = workflow.validate()
@@ -285,7 +288,8 @@ class RunPanel:
                 return
             self.frame.after(0, self._processing_started)
             stats = self.processor.process_batch(
-                files, workflow, output_dir, naming_pattern=naming_pattern, dry_run=dry_run
+                files, workflow, output_dir, naming_pattern=naming_pattern, dry_run=dry_run,
+                **({"planning_context": planning_context} if planning_context is not None else {}),
             )
 
             # Update UI from main thread
@@ -324,6 +328,11 @@ class RunPanel:
                 completion_summary = "Dry run stopped before completion."
                 completion_status = "⚠️ Dry run stopped before completion."
                 completion_tag = 'warning'
+            elif stats.execution_state == "INCOMPLETE":
+                completion_title = "Dry Run Incomplete"
+                completion_summary = "Dry run assessment interrupted; not all inputs were assessed."
+                completion_status = completion_summary
+                completion_tag = 'warning'
             elif stats.failed_files > 0:
                 completion_title = "Dry Run Complete"
                 completion_summary = "Dry run completed with errors."
@@ -341,8 +350,12 @@ class RunPanel:
                 completion_tag = 'warning'
             else:
                 completion_title = "Dry Run Complete"
-                completion_summary = "Dry run complete; no files were written."
-                completion_status = "🔍 Dry run complete; no files were written."
+                conditional = stats.planning_summary["CONDITIONAL"]
+                completion_summary = (
+                    f"Dry run complete: {conditional} conditional plans; execution checks remain deferred. "
+                    "No files were generated."
+                )
+                completion_status = completion_summary
                 completion_tag = 'info'
         elif stats.stopped:
             completion_title = "Processing Stopped"
@@ -384,7 +397,11 @@ class RunPanel:
         self._log("="*60, 'info')
         self._log(completion_summary, completion_tag)
         if stats.dry_run:
-            self._log(f"🔍 Planned: {stats.processed_files}", 'info')
+            self._log(f"Assessed plans: {stats.processed_files}; conditional: {stats.planning_summary['CONDITIONAL']}; "
+                      f"unassessed: {stats.planning_summary['UNASSESSED']}", 'info')
+            for plan in stats.plan_results:
+                for check in plan.get("deferred_checks", []):
+                    self._log(f"Step {check['step_index']} deferred: {check['reason']}", 'info')
         elif is_full_success:
             self._log(f"✅ Processed: {stats.processed_files}", 'success')
         else:

@@ -164,7 +164,9 @@ def test_roadmap_marks_v12_perf_complete_without_admitting_optimization():
     assert "#35" in text
     assert "v12-perf reproducible performance baseline" in lowered
     assert "#37" in text
-    assert "no implementation unit is currently admitted" in lowered
+    assert "product-d1-i1" in lowered and "admitted" in lowered
+    assert "#40" in text
+    assert "0005-multistep-dry-run-planning.md#acceptance-criteria" in text
     assert "no optimization unit is admitted" in lowered
     assert "### v12-perf" not in lowered
     assert "### v12-04" not in lowered

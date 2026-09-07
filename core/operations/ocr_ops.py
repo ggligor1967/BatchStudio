@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 import shutil
 import subprocess
@@ -9,7 +9,7 @@ import subprocess
 from PIL import Image
 from pypdf import PdfReader
 
-from core.contracts import OperationResult
+from core.contracts import OperationResult, PlanFact, PlanDiagnostic, CheckOutcome
 from core.operations.base import Operation, validate_schema_config
 from core.security import exclusive_output
 
@@ -107,12 +107,36 @@ class OCROperation(Operation):
             return OperationResult(success=False, error=capability_error)
         return super().execute(file_path, output_path, dry_run)
 
+    def _plan_ocr(self, artifact, step_index):
+        plan = self._plan_standard(
+            artifact, step_index, logical_format="UTF-8", suffix=".txt",
+            facts=(PlanFact("encoding", "UTF-8", "CONFIGURATION_INTENT"),),
+            unknown_properties=("text", "word_count", "recognition_accuracy"),
+        )
+        if any(check.outcome == CheckOutcome.FAILED for check in plan.diagnostics):
+            return plan
+        error = self.get_capability_error()
+        checks = list(plan.diagnostics)
+        checks.append(PlanDiagnostic(step_index, self.id, "capability", "capability",
+                                     CheckOutcome.FAILED if error else CheckOutcome.CHECKED,
+                                     error or "Unconditional capability prerequisites available at planning time"))
+        if self.id == "ocr_pdf" and self.config.get("mode", "auto") == "auto":
+            checks.append(PlanDiagnostic(step_index, self.id, "auto_fallback", "generated_content",
+                                         CheckOutcome.DEFERRED,
+                                         "Auto fallback need and readiness are unresolved; no native text was extracted"))
+        return replace(plan, diagnostics=tuple(checks))
+
     @abstractmethod
     def get_capability_error(self, file_path: Path | None = None) -> str | None:
         raise NotImplementedError
 
 
 class OCRImageOperation(OCROperation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        return self._plan_ocr(artifact, step_index)
+
     id = "ocr_image"
     name = "OCR Image to Text"
     description = "Extract text from images using Tesseract OCR"
@@ -155,6 +179,11 @@ class OCRImageOperation(OCROperation):
 
 
 class OCRPDFOperation(OCROperation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        return self._plan_ocr(artifact, step_index)
+
     id = "ocr_pdf"
     name = "PDF to Text"
     description = "Extract text from PDFs (native/OCR)"
@@ -212,6 +241,20 @@ class OCRPDFOperation(OCROperation):
 
 
 class OCRBatchOperation(OCROperation):
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        if artifact.logical_type in {"pdf", "image"}:
+            delegate = OCRPDFOperation(self.config) if artifact.logical_type == "pdf" else OCRImageOperation(self.config)
+            plan = delegate.plan(artifact, step_index)
+            return replace(plan, diagnostics=tuple(replace(check, operation_id=self.id)
+                                                   for check in plan.diagnostics))
+        return self._plan_standard(
+            artifact, step_index, accepted_types={"pdf", "image"}, logical_format="UTF-8", suffix=".txt",
+            facts=(PlanFact("encoding", "UTF-8", "CONFIGURATION_INTENT"),),
+            unknown_properties=("concrete_branch", "branch_capabilities", "text", "recognition_accuracy"),
+        )
+
     unsupported_config_keys = OCROperation.unsupported_config_keys | {
         "combine_output", "combined_filename",
     }

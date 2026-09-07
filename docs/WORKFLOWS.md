@@ -41,7 +41,7 @@ Pause delays consumption and finalization. Stop is checked after pause handling 
 
 ## Dry-run execution identity
 
-Run options are captured on the Tk thread before worker startup. `ProcessingStats.dry_run` records that invocation and is read-only through its public property; `to_dict()` includes it. Later checkbox changes cannot alter the run or its report eligibility. Unsupported dry-run operations are rejected before execution. All dry-run execution and report paths follow the [write-free boundary](SECURITY_MODEL.md#dry-run-output-suppression).
+Run options are captured on the Tk thread before worker startup. `ProcessingStats.dry_run` records that invocation and is read-only through its public property; `to_dict()` includes it. Later checkbox changes cannot alter the run or its report eligibility. Per-file dry runs also capture an immutable run ID, timestamp, ordered input list and serialized configuration. Each invocation owns fresh mutable reservations and observations, including on processor reuse. Workflow serialization on disk is unchanged. Unsupported dry-run/planning operations are rejected before execution. Typed intermediates carry justified facts and explicit unknowns; downstream content-dependent checks are deferred under [ADR-0005](adr/0005-multistep-dry-run-planning.md). All dry-run execution and report paths follow the [write-free boundary](SECURITY_MODEL.md#dry-run-output-suppression).
 
 ## JSON persistence
 

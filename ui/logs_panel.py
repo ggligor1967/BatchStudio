@@ -181,6 +181,28 @@ class LogsPanel:
         self.errors_tree.delete(*self.errors_tree.get_children())
         self.summary_text.delete(1.0, tk.END)
         
+        self.notebook.tab(0, text="Plans" if stats.dry_run else "✅ Successful")
+        for label in self.success_card.winfo_children():
+            if isinstance(label, ttk.Label) and not hasattr(label, 'value'):
+                label.config(text="Assessed plans" if stats.dry_run else "Processed")
+        if stats.dry_run:
+            for plan in stats.plan_results:
+                filename = os.path.basename(plan.get('planned_output') or plan['file'])
+                verdict = plan['planning_verdict']
+                status = {"CONDITIONAL": "Conditional plan", "REJECTED": "Rejected plan",
+                          "UNSUPPORTED": "Unsupported planning", "UNASSESSED": "Not fully assessed",
+                          "CHECKED": "Checked plan"}[verdict]
+                details = "; ".join(
+                    f"Step {check['step_index']} {check['outcome'].lower()}: {check['reason']}"
+                    for check in plan.get('diagnostics', [])
+                    if check['outcome'] != 'CHECKED'
+                ) or plan.get('message', 'No files were generated.')
+                self.results_tree.insert('', tk.END, values=(filename, status, details))
+            for error in stats.errors:
+                self.errors_tree.insert('', tk.END, values=(os.path.basename(error['file']), error['error']))
+            self._generate_summary(stats)
+            return
+
         # Populate results
         for result in stats.results:
             filename = os.path.basename(result.get('output', result['file']))
@@ -211,6 +233,14 @@ class LogsPanel:
     
     def _generate_summary(self, stats: ProcessingStats):
         """Generate summary report."""
+        if stats.dry_run:
+            summary = stats.planning_summary
+            self.summary_text.insert(tk.END, "Dry-run planning summary\n\n", 'title')
+            self.summary_text.insert(tk.END, f"Lifecycle: {stats.execution_state}; verdict: {summary['verdict']}\n")
+            for key in ("CHECKED", "CONDITIONAL", "REJECTED", "UNSUPPORTED", "UNASSESSED", "batch_errors"):
+                self.summary_text.insert(tk.END, f"{key}: {summary[key]}\n")
+            self.summary_text.insert(tk.END, "No files were generated. Deferred checks require normal execution.\n")
+            return
         self.summary_text.insert(tk.END, "📊 Batch Processing Summary\n\n", 'title')
         
         self.summary_text.insert(tk.END, "Overview\n", 'heading')
@@ -348,6 +378,9 @@ class LogsPanel:
     
     def _open_selected_file(self):
         """Open the selected output file."""
+        if self.current_stats and self.current_stats.dry_run:
+            self.main_window.set_status("Planned artifacts are not generated files.")
+            return
         output_path = self._get_selected_output_path()
         
         if not output_path:
@@ -366,8 +399,12 @@ class LogsPanel:
         else:
             self.main_window.set_status("File not found", 'warning')
     
+
     def _open_containing_folder(self):
         """Open the folder containing the selected file."""
+        if self.current_stats and self.current_stats.dry_run:
+            self.main_window.set_status("Planned artifacts are not generated files.")
+            return
         output_path = self._get_selected_output_path()
         
         if not output_path:
@@ -382,8 +419,12 @@ class LogsPanel:
             else:
                 self.main_window.set_status("Folder not found", 'warning')
     
+
     def _copy_file_path(self):
         """Copy the file path to clipboard."""
+        if self.current_stats and self.current_stats.dry_run:
+            self.main_window.set_status("Planned artifacts are not generated files.")
+            return
         output_path = self._get_selected_output_path()
         
         if output_path:
@@ -391,6 +432,7 @@ class LogsPanel:
             self.frame.clipboard_append(output_path)
             self.main_window.set_status(f"Copied: {output_path}")
     
+
     def _open_file(self, filepath):
         """Open a file with the default application."""
         try:

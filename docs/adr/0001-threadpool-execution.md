@@ -15,3 +15,7 @@ Use `ThreadPoolExecutor` for non-aggregate per-file workflows. Keep worker count
 ## Consequences
 
 Threads have low coordination overhead and share workflow/result state conveniently. They can overlap I/O and native-library work that releases the GIL. They cannot hard-terminate a running call and do not guarantee CPU-bound Python speedup because of the GIL. A future `ProcessPoolExecutor` would be justified only by a reproducible CPU-bound benchmark and a design for serializable tasks, cancellation, process startup, and intermediate-file ownership.
+
+## Scoped planning exception
+
+[ADR-0005](0005-multistep-dry-run-planning.md) uses sequential per-file dry-run assessment on the background worker in immutable input order. Normal execution retains this ThreadPoolExecutor decision.

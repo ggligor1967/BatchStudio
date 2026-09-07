@@ -41,6 +41,10 @@ Workflow and settings files use JSON as a control-plane persistence format. They
 | `ocr_batch` | `OCRBatchOperation` | Declared `any`; runtime delegates PDF or image | One UTF-8 TXT per input | `language:str=eng` | File | Delegates to concrete image/PDF dry run; no text output | Concrete branch dependencies; native PDF needs no OCR tools | Legacy config, non-image/non-PDF input, missing OCR tool, delegated extraction failure |
 | `pdf_merge` | `PDFAggregateMergeOperation` | `pdf` | One PDF | `output_filename:str=merged_output.pdf` | Aggregate | Initializes no writer, validates/queues inputs, and reports `result.planned_output` without a completed output | pypdf | Invalid/encrypted PDF, no valid PDFs, not initialized, final write error |
 
+## Processor planning contract
+
+All nine per-file operations explicitly support symbolic planning independently of the legacy `supports_dry_run` flag. The table above describes direct legacy operation dry-run branches; processor dry runs use `plan` and retain actual-source validators. Images expose transformation intent, not demonstrated dimensions or successful encoding; PDF watermark defers geometry and merge feasibility. CSV evaluates real source predicates (including zero rows), propagates only justified simple headers, and defers intermediate values, dtypes and row counts. Rename preserves justified facts under its byte-copy semantics. OCR checks unconditional readiness without extraction and explicitly defers unresolved auto fallback. Planned output paths never identify generated files. See the canonical [operation coverage and staged contract](adr/0005-multistep-dry-run-planning.md).
+
 ## PDF watermark geometry contract
 
 `pdf_watermark` uses the page `CropBox` as its effective visible box; pypdf supplies the

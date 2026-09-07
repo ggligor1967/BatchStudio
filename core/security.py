@@ -96,3 +96,11 @@ class OutputPathAllocator:
                     self._reserved.add(candidate)
                     return candidate
                 index += 1
+
+
+def render_filename(pattern: str, original: str, counter: int, timestamp: str) -> str:
+    return sanitize_filename(
+        pattern.replace("{original}", original)
+        .replace("{counter}", f"{counter:03d}")
+        .replace("{timestamp}", timestamp)
+    )

@@ -5,9 +5,9 @@ from pathlib import Path
 
 import shutil
 
-from core.contracts import OperationResult
+from core.contracts import OperationResult, PlanFact
 from core.operations.base import Operation
-from core.security import exclusive_output, sanitize_filename
+from core.security import exclusive_output, render_filename
 
 
 class FileRenameOperation(Operation):
@@ -22,13 +22,23 @@ class FileRenameOperation(Operation):
         counter = self.config.get("counter", 1)
         original_stem = file_path.stem
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        new_stem = (
-            str(pattern)
-            .replace("{original}", original_stem)
-            .replace("{counter}", f"{int(counter):03d}")
-            .replace("{timestamp}", timestamp)
-        )
-        return output_path.with_name(sanitize_filename(new_stem) + output_path.suffix)
+        new_stem = render_filename(str(pattern), original_stem, int(counter), timestamp)
+        return output_path.with_name(new_stem + output_path.suffix)
+
+    supports_planning = True
+
+    def plan(self, artifact, step_index):
+        facts = tuple(PlanFact(fact.name, fact.value, "DERIVED_CONTRACT",
+                               fact.dependencies + (f"step:{step_index}:success", f"step:{step_index}:byte_copy"))
+                      for fact in artifact.facts if fact.name != "source_identity")
+        return self._plan_standard(artifact, step_index, facts=facts,
+                                   logical_format=artifact.logical_format,
+                                   unknown_properties=artifact.unknown_properties)
+
+    def plan_output_path(self, artifact, candidate, context, counter):
+        stem = render_filename(self.config.get("pattern", "{original}_{counter}"),
+                               Path(artifact.name).stem, counter, context.timestamp)
+        return candidate.with_name(stem + candidate.suffix)
 
     def _execute(self, file_path: Path, output_path: Path, dry_run: bool = False) -> OperationResult:
         target = output_path
