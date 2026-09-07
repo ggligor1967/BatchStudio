@@ -5,7 +5,7 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-PRODUCT-D1-I1 — Multi-step dry-run planning (issue #40): ADMITTED; implementation/review in progress.
+No implementation unit is currently admitted.
 ```
 
 The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), V12-03 format-capability decision (issue #33), V12-04 page-aware PDF watermark placement (issue #35), and V12-PERF reproducible performance baseline (issue #37) are no longer active or schedulable roadmap items. A new candidate requires evidence, an approved tracking issue, and explicit admission; completion of V12-PERF is not authorization to optimize production code.
@@ -24,15 +24,22 @@ V12-PERF (issue #37) established deterministic F1-F5 fixtures and hashes, frozen
 
 ## PRODUCT-D1-I1 — Multi-step dry-run planning
 
-Status: **ADMITTED** by the maintainer; issue [#40](https://github.com/ggligor1967/BatchStudio/issues/40).
+Implementation completed in [PR #41](https://github.com/ggligor1967/BatchStudio/pull/41)
+for issue [#40](https://github.com/ggligor1967/BatchStudio/issues/40).
+This unit is no longer scheduled for implementation. See PR #41 for integration
+status and issue #40 for closure evidence; this entry does not assert that merge
+or post-merge CI has occurred. Implementation completion is distinct from release
+publication and does not establish inclusion in a published release.
 
-Implement [ADR-0005](adr/0005-multistep-dry-run-planning.md) as one coherent unit:
+The implementation follows [ADR-0005](adr/0005-multistep-dry-run-planning.md):
 all nine per-file planners, real-source validation and justified metadata, explicit
 deferred checks, run-local naming/state, results/statistics, Run/Logs consumers,
-write-free reporting and coordinated documentation. Acceptance is exclusively
+write-free reporting and coordinated documentation. Acceptance remains exclusively
 [AC-01–AC-15](adr/0005-multistep-dry-run-planning.md#acceptance-criteria).
 
 No materialized intermediates, aggregate composition, format expansion, real-OCR
-requalification, dependencies, workflow migration, new export or performance work.
-Stop at a final-head verified PR ready for review. Merge, auto-merge, tags, releases,
-version changes and package publication are not authorized.
+requalification, dependencies, workflow migration, new export or performance work
+were admitted. The implementation mission ended at a final-head verified PR ready
+for review; protected integration requires separate maintainer authorization.
+Integration does not authorize a tag, release, version change or package publication.
+No new implementation unit is admitted by this completion record.

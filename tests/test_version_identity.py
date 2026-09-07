@@ -164,7 +164,24 @@ def test_roadmap_marks_v12_perf_complete_without_admitting_optimization():
     assert "#35" in text
     assert "v12-perf reproducible performance baseline" in lowered
     assert "#37" in text
-    assert "product-d1-i1" in lowered and "admitted" in lowered
+    assert "product-d1-i1" in lowered
+    execution_order = text.split("## Canonical post-v1.1 execution order", 1)[1].split("```text", 1)[1].split("```", 1)[0]
+    assert execution_order.strip() == "No implementation unit is currently admitted."
+    completion = text.split("## PRODUCT-D1-I1", 1)[1]
+    assert "Implementation completed in [PR #41]" in completion
+    assert "https://github.com/ggligor1967/BatchStudio/pull/41" in completion
+    assert "https://github.com/ggligor1967/BatchStudio/issues/40" in completion
+    assert "no longer scheduled for implementation" in completion
+    assert "See PR #41 for integration" in completion
+    assert "does not assert that merge" in completion
+    assert "or post-merge CI has occurred" in completion
+    assert "distinct from release" in completion
+    assert "does not establish inclusion in a published release" in completion
+    assert "implementation mission ended at a final-head verified PR" in completion
+    assert "protected integration requires separate maintainer authorization" in completion
+    assert "No new implementation unit is admitted" in completion
+    assert "implementation/review in progress" not in completion
+    assert "Status: **ADMITTED**" not in completion
     assert "#40" in text
     assert "0005-multistep-dry-run-planning.md#acceptance-criteria" in text
     assert "no optimization unit is admitted" in lowered
