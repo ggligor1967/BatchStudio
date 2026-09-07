@@ -123,46 +123,46 @@ Compare medians only within an identical declared environment. Results from anot
 
 ## Canonical v1 evidence
 
-The authoritative measurements execute commit `6058e88dd2af69731fc0de17f5b25f007d91a4b7`, tree `9f27c7510b7a6f09ef9edfb4608bf49256ed0bbd`, in environment `win11-i7-1260p-refs-balanced-py313-v1`. The complete raw samples, metadata, output fingerprints, and summaries are retained in `benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1/session-1.json` and `session-2.json`.
+The authoritative measurements execute commit `05ad00dc8f5b29e5fb6a0f1dcfe7828c5a3c59d2`, tree `4a2bdf8b2672e0f03948491ddd49184caa91d1c9`, in environment `win11-i7-1260p-refs-balanced-py313-v1`. The complete raw samples, metadata, output fingerprints, and summaries are retained in `benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1/session-1.json` and `session-2.json`.
 
 Session 1 results, in seconds:
 
 | Workload | N | Min | Max | Median | Mean | Sample stdev | P95 | Correctness |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| B1 | 15 | 1.056223 | 1.292929 | 1.225035 | 1.213768 | 0.061589 | 1.292929 | PASS |
-| B2 | 15 | 0.202238 | 0.397464 | 0.378591 | 0.355538 | 0.061830 | 0.397464 | PASS |
-| B3 | 15 | 0.113694 | 0.272202 | 0.116488 | 0.150968 | 0.057552 | 0.272202 | PASS |
-| B4 | 15 | 0.071812 | 0.122466 | 0.074001 | 0.078666 | 0.014176 | 0.122466 | PASS |
-| B5 | 15 | 1.439666 | 1.909635 | 1.650845 | 1.670729 | 0.142370 | 1.909635 | PASS |
+| B1 | 15 | 1.120554 | 1.306642 | 1.212839 | 1.213768 | 0.051666 | 1.306642 | PASS |
+| B2 | 15 | 0.205597 | 0.398473 | 0.388493 | 0.363942 | 0.062683 | 0.398473 | PASS |
+| B3 | 15 | 0.113166 | 0.266068 | 0.114973 | 0.146593 | 0.054580 | 0.266068 | PASS |
+| B4 | 15 | 0.070978 | 0.118408 | 0.074026 | 0.078318 | 0.013345 | 0.118408 | PASS |
+| B5 | 15 | 1.132470 | 1.832076 | 1.520430 | 1.531751 | 0.188275 | 1.832076 | PASS |
 
 Session 2 results, in seconds:
 
 | Workload | N | Min | Max | Median | Mean | Sample stdev | P95 | Correctness |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| B1 | 15 | 1.103151 | 1.271972 | 1.215769 | 1.210584 | 0.050970 | 1.271972 | PASS |
-| B2 | 15 | 0.187649 | 0.408863 | 0.379495 | 0.360859 | 0.067915 | 0.408863 | PASS |
-| B3 | 15 | 0.113257 | 0.258979 | 0.116680 | 0.149588 | 0.055117 | 0.258979 | PASS |
-| B4 | 15 | 0.071231 | 0.119398 | 0.073816 | 0.078565 | 0.013686 | 0.119398 | PASS |
-| B5 | 15 | 1.370602 | 1.758098 | 1.557335 | 1.568370 | 0.134378 | 1.758098 | PASS |
+| B1 | 15 | 1.075798 | 1.288297 | 1.235450 | 1.213806 | 0.059530 | 1.288297 | PASS |
+| B2 | 15 | 0.204470 | 0.401105 | 0.388921 | 0.364463 | 0.064793 | 0.401105 | PASS |
+| B3 | 15 | 0.114452 | 0.307967 | 0.119033 | 0.160794 | 0.071470 | 0.307967 | PASS |
+| B4 | 15 | 0.072281 | 0.120545 | 0.073882 | 0.079117 | 0.014005 | 0.120545 | PASS |
+| B5 | 15 | 1.109785 | 1.847689 | 1.495113 | 1.471345 | 0.207576 | 1.847689 | PASS |
 
 The machine-readable comparison is `benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1/comparison.json`:
 
 | Workload | Session 1 median | Session 2 median | Delta | Threshold | Repeatability | Max regression | Minimum future improvement |
 | --- | ---: | ---: | ---: | ---: | --- | ---: | ---: |
-| B1 | 1.225035 s | 1.215769 s | 0.76% | 10.0% | PASS | 10.0% | 20.0% |
-| B2 | 0.378591 s | 0.379495 s | 0.24% | 6.5% | PASS | 6.5% | 13.0% |
-| B3 | 0.116488 s | 0.116680 s | 0.16% | 6.0% | PASS | 6.0% | 12.0% |
-| B4 | 0.074001 s | 0.073816 s | 0.25% | 5.0% | PASS | 5.0% | 10.0% |
-| B5 | 1.650845 s | 1.557335 s | 5.66% | 22.5% | PASS | 22.5% | 45.0% |
+| B1 | 1.212839 s | 1.235450 s | 1.86% | 10.0% | PASS | 10.0% | 20.0% |
+| B2 | 0.388493 s | 0.388921 s | 0.11% | 6.5% | PASS | 6.5% | 13.0% |
+| B3 | 0.114973 s | 0.119033 s | 3.53% | 6.0% | PASS | 7.5% | 15.0% |
+| B4 | 0.074026 s | 0.073882 s | 0.20% | 5.0% | PASS | 5.0% | 10.0% |
+| B5 | 1.520430 s | 1.495113 s | 1.67% | 22.5% | PASS | 22.5% | 45.0% |
 
 ## Bounded bottleneck evidence and admission result
 
 One zero-warmup iteration per workload was inspected with standard-library `cProfile`. These diagnostic runs include profiler overhead; cumulative time from concurrent B5 worker threads is non-additive. The retained `profiling-summary.json` reports the exact observations.
 
 - B1 distributed time across processor/per-file orchestration, ownership/path work, and copying; no isolated dominant component was established.
-- B2 attributed 0.134 seconds cumulative to `ImageResizeOperation._execute` within 0.247 seconds for `BatchProcessor.process_batch`, including 0.081 seconds in Pillow resize.
-- B3 attributed 0.367 of 0.373 cumulative seconds to `PDFWatermarkOperation._execute`, including 0.175 seconds in per-page watermark creation and 0.138 seconds in PDF object access.
-- B4 attributed 0.208 of 0.245 cumulative seconds to aggregate consume, including 0.156 seconds in PDF object access and 0.054 seconds in page addition.
+- B2 attributed 0.141 seconds cumulative to `ImageResizeOperation._execute` within 0.249 seconds for `BatchProcessor.process_batch`, including 0.088 seconds in Pillow resize.
+- B3 attributed 0.373 of 0.378 cumulative seconds to `PDFWatermarkOperation._execute`, including 0.178 seconds in per-page watermark creation and 0.138 seconds in PDF object access.
+- B4 attributed 0.207 of 0.242 cumulative seconds to aggregate consume, including 0.156 seconds in PDF object access and 0.053 seconds in page addition.
 - B5 points to image output encoding as the dominant concurrent worker activity, but its cumulative thread time cannot be converted into a wall-time contribution and its repeatability envelope is widest.
 
 The evidence identifies workload classes, not a correctness-safe optimization with a user or product target. Therefore `NO_ACTIONABLE_BOTTLENECK_ESTABLISHED` and `NO_OPTIMIZATION_UNIT_ADMITTED`. A future unit requires separate approval and must prospectively name its target workload, median improvement at or above the table's minimum, correctness guardrails, and unrelated-workload regression budgets.

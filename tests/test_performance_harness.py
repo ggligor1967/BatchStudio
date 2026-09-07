@@ -362,7 +362,7 @@ def test_committed_canonical_evidence_recomputes_exactly():
 
     assert recomputed == recorded
     assert recorded["status"] == "PASS"
-    assert recorded["repository_sha"] == "6058e88dd2af69731fc0de17f5b25f007d91a4b7"
+    assert recorded["repository_sha"] == "05ad00dc8f5b29e5fb6a0f1dcfe7828c5a3c59d2"
     assert all(item["repeatability"] == "PASS" for item in recorded["workloads"])
 
 
