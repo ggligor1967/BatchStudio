@@ -84,7 +84,7 @@ This release establishes a single canonical application version source and recon
 - Verified the full automated suite, critical end-to-end cases, PDF merge regressions, package build, isolated installation, entrypoint loading, artifact contents, and Git provenance.
 - Verified the OCR missing-capability path; a real OCR success path was not verified on the release machine.
 
-[1.1.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.1.0...v1.1.1
+[1.1.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.1.0...main
 [1.1.0]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.0
