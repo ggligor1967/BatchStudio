@@ -397,7 +397,8 @@ class RunPanel:
         self._log("="*60, 'info')
         self._log(completion_summary, completion_tag)
         if stats.dry_run:
-            self._log(f"Assessed plans: {stats.processed_files}; conditional: {stats.planning_summary['CONDITIONAL']}; "
+            self._log(f"Assessed plans: {stats.assessed_plans}; conditional: {stats.planning_summary['CONDITIONAL']}; "
+                      f"rejected: {stats.planning_summary['REJECTED']}; unsupported: {stats.planning_summary['UNSUPPORTED']}; "
                       f"unassessed: {stats.planning_summary['UNASSESSED']}", 'info')
             for plan in stats.plan_results:
                 for check in plan.get("deferred_checks", []):
@@ -427,10 +428,11 @@ class RunPanel:
         
         self.status_label.config(text=completion_status)
         
-        count_label = "Planned" if stats.dry_run else "Processed"
+        count_label = "Assessed plans" if stats.dry_run else "Processed"
+        displayed_count = stats.assessed_plans if stats.dry_run else stats.processed_files
         messagebox.showinfo(completion_title,
                           f"{completion_summary}\n\n"
-                          f"{count_label}: {stats.processed_files}\n"
+                          f"{count_label}: {displayed_count}\n"
                           f"Failed: {stats.failed_files}\n"
                           f"Duration: {stats.get_duration():.1f}s")
     

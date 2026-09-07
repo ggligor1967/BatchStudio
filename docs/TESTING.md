@@ -18,7 +18,7 @@ V11-06 additionally requires the separately readable `real-ocr-qualification` jo
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eighteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, V12-02 to 462, V12-03 to 506, V12-04 to 533, V12-PERF to 558, and PRODUCT-D1-I1 to 626 on a supported graphical Windows session:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eighteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, V12-02 to 462, V12-03 to 506, V12-04 to 533, V12-PERF to 558, and PRODUCT-D1-I1 to 633 on a supported graphical Windows session:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.

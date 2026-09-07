@@ -19,9 +19,10 @@ class PlanningSession:
     allocator: OutputPathAllocator | None = None
     observations: list[tuple] = field(default_factory=list)
 
-    def __post_init__(self):
+    def allocate(self, preferred_name, suffix):
         if self.allocator is None:
             self.allocator = OutputPathAllocator(Path(self.context.output_root))
+        return self.allocator.allocate(preferred_name, suffix)
 
 
 def planning_preflight(context, registry):
@@ -142,7 +143,7 @@ def plan_file(session, file_path, counter, registry, *, preflight=(), continue_a
             try:
                 intended = operation.plan_output_path(current, candidate, context, counter)
                 destination = resolve_safe_output(Path(context.output_root), intended.name)
-                destination = session.allocator.allocate(destination.stem, destination.suffix)
+                destination = session.allocate(destination.stem, destination.suffix)
                 session.observations.append(("allocated_destination", step_index, str(destination)))
             except (OSError, ValueError) as exc:
                 checks.append(PlanDiagnostic(step_index, step.operation_id, "destination", "naming",

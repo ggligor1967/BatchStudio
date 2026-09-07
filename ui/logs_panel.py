@@ -172,7 +172,7 @@ class LogsPanel:
         
         # Update stat cards
         self._update_stat_card(self.total_card, str(stats.total_files))
-        self._update_stat_card(self.success_card, str(stats.processed_files))
+        self._update_stat_card(self.success_card, str(stats.assessed_plans if stats.dry_run else stats.processed_files))
         self._update_stat_card(self.failed_card, str(stats.failed_files))
         self._update_stat_card(self.duration_card, f"{stats.get_duration():.1f}s")
         

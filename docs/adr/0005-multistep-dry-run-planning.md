@@ -246,6 +246,10 @@ prioritizes failed checks/batch errors, unsupported work, unassessed inputs, the
 conditional inputs. Empty valid per-file input is `EMPTY`, not transformation
 success; empty aggregate retains its existing one batch-level error.
 
+The UI assessed count includes all complete assessments, including rejected and
+unsupported plans; it excludes partial/unstarted plans. It is distinct from the
+legacy accepted-plan/aggregate-consumption counter.
+
 Run/Logs show conditional/rejected/unsupported/not-fully-assessed plans, assessed
 counts and deferred reasons. Never label them successfully transformed, show an
 execution success rate or celebrate. Planned paths do not enter the generated-file

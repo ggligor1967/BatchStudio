@@ -143,13 +143,13 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry, *, check_c
         agg = registry.get_aggregate_operation(step.operation_id, step.config)
 
         if op is None and agg is None:
-            record_error(f"Unknown operation at step {index + 1}: {step.operation_id}")
+            record_error(f"Unknown operation at step {current_step}: {step.operation_id}")
             continue
 
         if agg is not None:
             config_ok, config_error = agg.validate_config()
             if not config_ok:
-                record_error(f"Invalid config at step {index + 1} ({step.operation_id}): {config_error}")
+                record_error(f"Invalid config at step {current_step} ({step.operation_id}): {config_error}")
             if len(enabled_steps) != 1:
                 record_error(
                     "Aggregate operations must be the only enabled step. "
@@ -164,16 +164,16 @@ def compile_workflow(workflow: Workflow, registry: OperationRegistry, *, check_c
         assert op is not None
         config_ok, config_error = op.validate_config()
         if not config_ok:
-            record_error(f"Invalid config at step {index + 1} ({step.operation_id}): {config_error}")
+            record_error(f"Invalid config at step {current_step} ({step.operation_id}): {config_error}")
 
         capability_error = op.get_capability_error() if check_capabilities else None
         if capability_error:
-            record_error(f"Missing capability at step {index + 1} ({step.operation_id}): {capability_error}")
+            record_error(f"Missing capability at step {current_step} ({step.operation_id}): {capability_error}")
 
         accepted = getattr(op, "accepted_types", {"any"})
         if "any" not in accepted and current_type not in accepted and current_type != "any":
             record_error(
-                f"Type incompatibility at step {index + 1}: expected {accepted}, got {current_type}"
+                f"Type incompatibility at step {current_step}: expected {accepted}, got {current_type}"
             )
 
         if getattr(op, "output_type", "any") != "same":
@@ -260,12 +260,22 @@ def process_single_file(
 ) -> Dict[str, Any]:
     registry = OperationRegistry()
     if dry_run:
-        from core.contracts import PlanningContext
+        from core.contracts import PlanningContext, PlanResult
         from core.planning import PlanningSession, plan_file, planning_preflight
-        context = PlanningContext.capture([file_path], workflow_dict, naming_pattern, output_dir)
-        session = PlanningSession(context, allocator=allocator)
-        checks = planning_preflight(context, registry)
-        return plan_file(session, file_path, index, registry, preflight=checks).to_dict()
+        try:
+            context = PlanningContext.capture([file_path], workflow_dict, naming_pattern, output_dir)
+            session = PlanningSession(context, allocator=allocator)
+            checks = planning_preflight(context, registry)
+            return plan_file(session, file_path, index, registry, preflight=checks).to_dict()
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            diagnostic = PlanDiagnostic(0, "workflow", "structure", "structure", CheckOutcome.FAILED,
+                                        f"Invalid planning input: {exc}")
+            return PlanResult((index, str(file_path)), "COMPLETE", "REJECTED", (diagnostic,)).to_dict()
+        except Exception as exc:
+            diagnostic = PlanDiagnostic(0, "planner", "assessment_exception", "assessment", CheckOutcome.BLOCKED,
+                                        f"Assessment interrupted: {exc}")
+            return PlanResult((index, str(file_path)), "NOT_STARTED", "UNASSESSED", (diagnostic,),
+                              interrupted=True).to_dict()
 
     try:
         valid, error = validate_file_path(file_path)
@@ -393,6 +403,10 @@ class ProcessingStats:
     @property
     def planning_context(self):
         return self._planning_context
+
+    @property
+    def assessed_plans(self):
+        return sum(result["assessment_state"] == "COMPLETE" for result in self.plan_results)
 
     @property
     def planning_summary(self):

@@ -584,3 +584,64 @@ def test_equal_invalid_steps_keep_original_diagnostic_indices(tmp_path):
     stats = run_plan(source, steps, tmp_path / 'out')
     assert [item['step_index'] for item in stats.planning_errors] == [1, 2]
     assert stats.planning_summary['verdict'] == 'REJECTED'
+
+
+@pytest.mark.parametrize('entrypoint', ['batch', 'single'])
+def test_invalid_destination_never_constructs_allocator(tmp_path, monkeypatch, entrypoint):
+    source = make_source(tmp_path / 'input.png')
+    steps = workflow(('file_rename', {}))
+    constructor = Mock(side_effect=AssertionError('Allocator must follow valid preflight'))
+    monkeypatch.setattr('core.planning.OutputPathAllocator', constructor)
+    if entrypoint == 'batch':
+        stats = run_plan(source, steps, 'nul\x00path')
+        assert stats.planning_summary['verdict'] == 'REJECTED'
+        assert stats.execution_state == 'COMPLETED'
+    else:
+        result = process_single_file(str(source), steps.to_dict(), 'nul\x00path', '{original}', dry_run=True)
+        assert result['planning_verdict'] == 'REJECTED'
+    constructor.assert_not_called()
+
+
+@pytest.mark.parametrize('malformed', [{}, {'name': 'bad', 'steps': [None]}, {'name': 'bad', 'steps': [], 'metadata': {'value': object()}}])
+def test_direct_dry_run_malformed_workflow_returns_structured_failure(tmp_path, malformed, forbid_output_writes):
+    source = make_source(tmp_path / 'input.png')
+    before = filesystem_snapshot(tmp_path)
+    attempts = forbid_output_writes(tmp_path / 'out')
+    result = process_single_file(str(source), malformed, str(tmp_path / 'out'), '{original}', dry_run=True)
+    assert not result['success'] and result['planning_verdict'] == 'REJECTED'
+    assert result['output'] == '' and 'planned_output' not in result
+    assert diagnostic(result, 'structure', 'FAILED')
+    assert attempts == [] and filesystem_snapshot(tmp_path) == before
+
+
+def test_disabled_steps_preserve_human_and_structured_error_indices(tmp_path):
+    source = make_source(tmp_path / 'input.png')
+    steps = workflow(('file_rename', {}), ('image_resize', {'width': 'invalid'}))
+    steps.steps[0].enabled = False
+    stats = run_plan(source, steps, tmp_path / 'out')
+    assert stats.planning_errors[0]['step_index'] == 2
+    assert 'step 2' in stats.planning_errors[0]['reason']
+
+
+def test_rejected_plans_count_as_assessed_in_both_ui_consumers(tmp_path, monkeypatch):
+    source = tmp_path / 'bad.png'
+    source.write_bytes(b'not an image')
+    stats = run_plan(source, workflow(('image_convert', {})), tmp_path / 'out')
+    assert stats.processed_files == 0 and stats.assessed_plans == 1
+    panel = logs_panel()
+    panel._update_stat_card = Mock()
+    panel.show_stats(stats)
+    panel._update_stat_card.assert_any_call(panel.success_card, '1')
+    run = RunPanel.__new__(RunPanel)
+    for name in ('start_button', 'pause_button', 'stop_button', 'status_label', 'progress_bar', 'processor'):
+        setattr(run, name, Mock())
+    run._log = Mock()
+    run._show_confetti = Mock()
+    run.main_window = Mock()
+    show = Mock()
+    monkeypatch.setattr(run_panel.messagebox, 'showinfo', show)
+    run._processing_complete(stats, False, str(tmp_path / 'out'))
+    assert any('Assessed plans: 1' in call.args[0] and 'rejected: 1' in call.args[0]
+               for call in run._log.call_args_list)
+    assert 'Assessed plans: 1' in show.call_args.args[1]
+    run._show_confetti.assert_not_called()
