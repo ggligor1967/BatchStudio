@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = "1.1.0"
+CANONICAL = "1.1.1"
 
 
 def _read_text(relative: str) -> str:
@@ -100,7 +100,7 @@ def test_repository_verifier_flags_a_diverging_package_workflow(monkeypatch):
     def patched(path):
         text = original(path)
         if path.as_posix() == ".github/workflows/package.yml":
-            return text.replace("--expected-version 1.1.0", "--expected-version 9.9.9")
+            return text.replace("--expected-version 1.1.1", "--expected-version 9.9.9")
         return text
 
     monkeypatch.setattr(verifier, "read_repository_text", patched)

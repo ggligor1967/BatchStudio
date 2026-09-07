@@ -10,4 +10,4 @@ Keep this module free of imports so setuptools can read ``__version__``
 statically at build time without importing the ``core`` package.
 """
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
