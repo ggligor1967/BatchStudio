@@ -1,0 +1,85 @@
+{
+  "evidence_class": "noncanonical pilot calibration; not a product performance claim",
+  "rule": "ceil_to_0.5(max(5.0, 3 * pilot_relative_MAD_percent))",
+  "schema_version": "batchstudio-repeatability-thresholds/v1",
+  "source_fixture_manifest_sha256": "7e3c3df0a22d18cc20eb582fab34a0cd82209fa90ba3524bca6830ffb802243a",
+  "source_pilot_session_id": "pilot-v5-clean",
+  "source_repository_sha": "1d9d6dd29c91eafdd9b1d9b93dac48afcc743c7a",
+  "workloads": {
+    "B1": {
+      "pilot_mad_seconds": 0.03796080000000002,
+      "pilot_mean_seconds": 1.18043312,
+      "pilot_median_seconds": 1.1967281,
+      "pilot_n": 15,
+      "pilot_raw_wall_clock_seconds": [
+        1.2362943, 1.2121216, 1.2029864, 1.1728249, 1.0418627,
+        1.1587673, 1.2252075, 1.1967281, 1.081799, 1.3259421,
+        1.2280401, 1.0957267, 1.0697741, 1.1860545, 1.2723675
+      ],
+      "pilot_relative_mad_percent": 3.172048855542041,
+      "pilot_rsd_percent": 6.705112315242542,
+      "pilot_standard_deviation_seconds": 0.07914936650232178,
+      "repeatability_threshold_percent": 10.0
+    },
+    "B2": {
+      "pilot_mad_seconds": 0.007889300000000044,
+      "pilot_mean_seconds": 0.35994999333333333,
+      "pilot_median_seconds": 0.375862,
+      "pilot_n": 15,
+      "pilot_raw_wall_clock_seconds": [
+        0.2071793, 0.1965065, 0.3723719, 0.3877783, 0.3837513,
+        0.3961885, 0.375862, 0.3786875, 0.3740086, 0.3703206,
+        0.3987188, 0.426025, 0.3685461, 0.3717024, 0.3916031
+      ],
+      "pilot_relative_mad_percent": 2.098988458530004,
+      "pilot_rsd_percent": 18.316243525105925,
+      "pilot_standard_deviation_seconds": 0.06592931734753588,
+      "repeatability_threshold_percent": 6.5
+    },
+    "B3": {
+      "pilot_mad_seconds": 0.0021444000000000046,
+      "pilot_mean_seconds": 0.1498622,
+      "pilot_median_seconds": 0.1158043,
+      "pilot_n": 15,
+      "pilot_raw_wall_clock_seconds": [
+        0.1519318, 0.1158043, 0.1158891, 0.1138037, 0.1136285,
+        0.1142784, 0.115531, 0.1136599, 0.1147623, 0.1200544,
+        0.114416, 0.180556, 0.2494515, 0.2550737, 0.2590924
+      ],
+      "pilot_relative_mad_percent": 1.8517447106886398,
+      "pilot_rsd_percent": 38.217924487603874,
+      "pilot_standard_deviation_seconds": 0.05727422243146189,
+      "repeatability_threshold_percent": 6.0
+    },
+    "B4": {
+      "pilot_mad_seconds": 0.0010151000000000049,
+      "pilot_mean_seconds": 0.07942094000000001,
+      "pilot_median_seconds": 0.0743746,
+      "pilot_n": 15,
+      "pilot_raw_wall_clock_seconds": [
+        0.1052981, 0.0743746, 0.0715942, 0.0725612, 0.071604,
+        0.0733595, 0.0754791, 0.0748859, 0.074416, 0.075677,
+        0.1264015, 0.0738274, 0.0744974, 0.073903, 0.0734352
+      ],
+      "pilot_relative_mad_percent": 1.3648476764917121,
+      "pilot_rsd_percent": 19.346977444732385,
+      "pilot_standard_deviation_seconds": 0.015365551348194442,
+      "repeatability_threshold_percent": 5.0
+    },
+    "B5": {
+      "pilot_mad_seconds": 0.11492100000000005,
+      "pilot_mean_seconds": 1.5285110666666666,
+      "pilot_median_seconds": 1.5571922,
+      "pilot_n": 15,
+      "pilot_raw_wall_clock_seconds": [
+        1.6435241, 1.4659901, 1.6055188, 1.5422089, 1.5571922,
+        1.2424496, 1.4224017, 1.6281936, 1.3237651, 1.6721132,
+        1.7898023, 1.5832635, 1.7237675, 1.2991651, 1.4283103
+      ],
+      "pilot_relative_mad_percent": 7.380013848001554,
+      "pilot_rsd_percent": 10.51552982465255,
+      "pilot_standard_deviation_seconds": 0.16073103708844816,
+      "repeatability_threshold_percent": 22.5
+    }
+  }
+}

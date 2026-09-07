@@ -1,0 +1,66 @@
+{
+  "environment_id": "win11-i7-1260p-refs-balanced-py313-v1",
+  "fixture_manifest_sha256": "7e3c3df0a22d18cc20eb582fab34a0cd82209fa90ba3524bca6830ffb802243a",
+  "regression_budget_rule": "ceil_to_0.5(max(repeatability_threshold, 2 * session_delta_percent))",
+  "repeatability_rule": "ceil_to_0.5(max(5.0, 3 * pilot_relative_MAD_percent))",
+  "repository_sha": "1bfae7b091f9ce8dca64219792c3438604ea2ad5",
+  "repository_tree": "7b9c09eb2a5ae086aa138da369f54de4e00e005c",
+  "schema_version": "batchstudio-repeatability-comparison/v1",
+  "session_1": "baseline-v1-session-1",
+  "session_2": "baseline-v1-session-2",
+  "status": "PASS",
+  "target_improvement_rule": "minimum targeted improvement = 2 * max_allowed_regression",
+  "threshold_manifest_sha256": "3248edc982947d87fba32bc93a693bb65bb9b7beaf0e110034a4e7f089e4cc7e",
+  "workloads": [
+    {
+      "delta_percent": 0.7290104311419799,
+      "max_allowed_regression_percent": 10.0,
+      "minimum_targeted_improvement_percent": 20.0,
+      "repeatability": "PASS",
+      "repeatability_threshold_percent": 10.0,
+      "session_1_median_seconds": 1.1902436,
+      "session_2_median_seconds": 1.1989206,
+      "workload_id": "B1"
+    },
+    {
+      "delta_percent": 2.3990617924679953,
+      "max_allowed_regression_percent": 6.5,
+      "minimum_targeted_improvement_percent": 13.0,
+      "repeatability": "PASS",
+      "repeatability_threshold_percent": 6.5,
+      "session_1_median_seconds": 0.3856716,
+      "session_2_median_seconds": 0.3764191,
+      "workload_id": "B2"
+    },
+    {
+      "delta_percent": 1.5544988249892675,
+      "max_allowed_regression_percent": 6.0,
+      "minimum_targeted_improvement_percent": 12.0,
+      "repeatability": "PASS",
+      "repeatability_threshold_percent": 6.0,
+      "session_1_median_seconds": 0.1176585,
+      "session_2_median_seconds": 0.1158295,
+      "workload_id": "B3"
+    },
+    {
+      "delta_percent": 0.23784194836240055,
+      "max_allowed_regression_percent": 5.0,
+      "minimum_targeted_improvement_percent": 10.0,
+      "repeatability": "PASS",
+      "repeatability_threshold_percent": 5.0,
+      "session_1_median_seconds": 0.0741669,
+      "session_2_median_seconds": 0.0739905,
+      "workload_id": "B4"
+    },
+    {
+      "delta_percent": 2.5503412983391605,
+      "max_allowed_regression_percent": 22.5,
+      "minimum_targeted_improvement_percent": 45.0,
+      "repeatability": "PASS",
+      "repeatability_threshold_percent": 22.5,
+      "session_1_median_seconds": 1.5724366,
+      "session_2_median_seconds": 1.5323341,
+      "workload_id": "B5"
+    }
+  ]
+}

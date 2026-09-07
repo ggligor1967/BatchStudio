@@ -52,3 +52,4 @@ report*.json
 # Test and coverage artifacts
 .coverage
 .pytest_cache/
+.benchmarks/
