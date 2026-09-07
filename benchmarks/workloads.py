@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import shutil
 import time
 from dataclasses import dataclass
@@ -314,13 +316,22 @@ def execute_iteration(
     output_hashes = {
         path.relative_to(output_root).as_posix(): sha256_file(path) for path in unique_outputs
     }
+    output_hash_manifest = json.dumps(
+        output_hashes,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
     return {
         "iteration": iteration_number,
         "wall_clock_seconds": (wall_end - wall_start) / 1_000_000_000,
         "cpu_time_seconds": (cpu_end - cpu_start) / 1_000_000_000,
         "files_processed": definition.input_count,
         "output_bytes": sum(path.stat().st_size for path in unique_outputs),
-        "output_sha256": output_hashes,
+        "output_sha256": {
+            "file_count": len(output_hashes),
+            "manifest_sha256": hashlib.sha256(output_hash_manifest).hexdigest(),
+            "unique_content_sha256": sorted(set(output_hashes.values())),
+        },
         "correctness": "PASS",
     }
 

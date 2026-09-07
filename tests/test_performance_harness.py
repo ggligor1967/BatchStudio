@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from benchmarks.compare_sessions import derive_thresholds
+from benchmarks.compare_sessions import compare_sessions, derive_thresholds
 from benchmarks.fixtures import (
     FixtureVerificationError,
     generate_fixtures,
@@ -62,7 +62,11 @@ def _valid_session_record(profile: str = "pilot") -> dict:
         "cpu_time_seconds": 0.5,
         "files_processed": 1,
         "output_bytes": 10,
-        "output_sha256": {"output.txt": "0" * 64},
+        "output_sha256": {
+            "file_count": 1,
+            "manifest_sha256": "0" * 64,
+            "unique_content_sha256": ["0" * 64],
+        },
         "correctness": "PASS",
     }
     results = []
@@ -257,6 +261,61 @@ def test_pilot_thresholds_retain_raw_calibration_samples(tmp_path: Path):
     assert set(thresholds["workloads"]) == set(WORKLOAD_DEFINITIONS)
     assert thresholds["workloads"]["B1"]["pilot_raw_wall_clock_seconds"] == [1.0, 1.0]
     assert thresholds["workloads"]["B1"]["repeatability_threshold_percent"] == 5.0
+
+
+def test_committed_threshold_manifest_matches_frozen_workloads():
+    threshold_path = Path("benchmarks/repeatability_thresholds_v1.json")
+    thresholds = json.loads(threshold_path.read_text(encoding="utf-8"))
+
+    assert thresholds["schema_version"] == "batchstudio-repeatability-thresholds/v1"
+    assert set(thresholds["workloads"]) == set(WORKLOAD_DEFINITIONS)
+    assert thresholds["source_fixture_manifest_sha256"] == sha256_file(
+        Path("benchmarks/fixture_manifest_v1.json")
+    )
+    assert all(
+        workload["pilot_n"] == len(workload["pilot_raw_wall_clock_seconds"])
+        for workload in thresholds["workloads"].values()
+    )
+
+
+def test_session_comparison_rejects_identity_drift_and_preserves_raw_sessions(
+    tmp_path: Path,
+):
+    thresholds = {
+        "schema_version": "batchstudio-repeatability-thresholds/v1",
+        "workloads": {
+            workload_id: {"repeatability_threshold_percent": 5.0}
+            for workload_id in WORKLOAD_DEFINITIONS
+        },
+    }
+    first = _valid_session_record(profile="canonical")
+    second = copy.deepcopy(first)
+    second["session_id"] = "test-session-2"
+    controlled_configuration = {
+        "workloads": {workload_id: {} for workload_id in WORKLOAD_DEFINITIONS},
+        "timeout_seconds_per_workload": 120.0,
+        "outlier_rule": "retain all",
+        "validation_boundary": "after timed region",
+        "threshold_manifest": thresholds,
+    }
+    first["configuration"] = copy.deepcopy(controlled_configuration)
+    second["configuration"] = copy.deepcopy(controlled_configuration)
+    first_path = tmp_path / "first.json"
+    second_path = tmp_path / "second.json"
+    thresholds_path = tmp_path / "thresholds.json"
+    first_path.write_text(json.dumps(first), encoding="utf-8")
+    second_path.write_text(json.dumps(second), encoding="utf-8")
+    thresholds_path.write_text(json.dumps(thresholds), encoding="utf-8")
+
+    comparison = compare_sessions(first_path, second_path, thresholds_path)
+
+    assert comparison["status"] == "PASS"
+    assert all(item["repeatability"] == "PASS" for item in comparison["workloads"])
+    assert json.loads(first_path.read_text(encoding="utf-8")) == first
+    second["environment"]["cpu"] = "different"
+    second_path.write_text(json.dumps(second), encoding="utf-8")
+    with pytest.raises(BenchmarkConfigurationError, match="environment"):
+        compare_sessions(first_path, second_path, thresholds_path)
 
 
 def test_evidence_writer_refuses_overwrite(tmp_path: Path):
