@@ -1,0 +1,132 @@
+{
+  "fixtures": [
+    {
+      "dimensions_or_pages": {"bytes": 65536},
+      "expected_output_class": "byte-identical TXT copy",
+      "file_count": 1,
+      "files": [
+        {
+          "path": "f1/small.txt",
+          "sha256": "1e6c59b77930b21ef2bdfa5234083d0673cfcf769b5656094c381ae775bc7219",
+          "size_bytes": 65536
+        }
+      ],
+      "fixture_id": "F1",
+      "generator": "deterministic repeated ASCII bytes",
+      "input_type": "text"
+    },
+    {
+      "dimensions_or_pages": {"height": 3072, "mode": "RGB", "width": 4096},
+      "expected_output_class": "2048x1536 RGB BMP",
+      "file_count": 1,
+      "files": [
+        {
+          "path": "f2/single.bmp",
+          "sha256": "40e121aec0158a0a2117a019ebed6299c54e2d60b57e2c5577091d0040751a5b",
+          "size_bytes": 37748790
+        }
+      ],
+      "fixture_id": "F2",
+      "generator": "standard-library 24-bit BMP arithmetic pixel pattern",
+      "input_type": "image/bmp"
+    },
+    {
+      "dimensions_or_pages": {
+        "base_pages": [
+          {"height": 842, "rotation": 0, "width": 595},
+          {"height": 792, "rotation": 90, "width": 612},
+          {"height": 612, "rotation": 180, "width": 792},
+          {"height": 420, "rotation": 270, "width": 420},
+          {
+            "cropbox": [40, 25, 960, 475],
+            "height": 500,
+            "rotation": 0,
+            "width": 1000
+          },
+          {
+            "cropbox": [25, 40, 475, 960],
+            "height": 1000,
+            "rotation": 90,
+            "width": 500
+          },
+          {
+            "cropbox": [12, 18, 348, 222],
+            "height": 240,
+            "rotation": 180,
+            "width": 360
+          },
+          {
+            "cropbox": [18, 12, 222, 348],
+            "height": 360,
+            "rotation": 270,
+            "width": 240
+          }
+        ],
+        "repetitions": 8,
+        "total_pages": 64
+      },
+      "expected_output_class": "readable 64-page watermarked PDF preserving repeated geometry",
+      "file_count": 1,
+      "files": [
+        {
+          "path": "f3/mixed_geometry.pdf",
+          "sha256": "c51ee84ad8e47039ee47ac8508dde8555b840434301911f8376430eb552a4708",
+          "size_bytes": 9614
+        }
+      ],
+      "fixture_id": "F3",
+      "generator": "pypdf blank pages with fixed boxes and rotations",
+      "input_type": "application/pdf"
+    },
+    {
+      "dimensions_or_pages": {
+        "dimension_formula": "width=500+3*file_index+page_index; height=700+5*page_index",
+        "pages_per_file": 6,
+        "total_pages": 96
+      },
+      "expected_output_class": "ordered 96-page source sequence; B4 repeats it to 384 pages",
+      "file_count": 16,
+      "files": [
+        {"path": "f4/merge_00.pdf", "sha256": "1640bb7e63fdbb89b7cd10634d1846daac8f25f7b40de255db958dce1ddee9b1", "size_bytes": 1105},
+        {"path": "f4/merge_01.pdf", "sha256": "1f834932687d9357cb550b6a7193418a418f29872b0210fd54990e923c91ed3e", "size_bytes": 1105},
+        {"path": "f4/merge_02.pdf", "sha256": "8ef9a9730b173ef1998effb186802b50dab5324783116c3bf2ce28fc99a019a3", "size_bytes": 1105},
+        {"path": "f4/merge_03.pdf", "sha256": "491e5af6fc5624922677079afc139261e29e58e894a06605bb0012cfd66999ef", "size_bytes": 1105},
+        {"path": "f4/merge_04.pdf", "sha256": "eea7f2127181e691df111e28539705dc33b74056b2a5b57ab53447eee38dbe34", "size_bytes": 1105},
+        {"path": "f4/merge_05.pdf", "sha256": "e4dfd2d04dc14c4f0c295590d810db6216c5228b9cdf1210d2dfdd6150d7f47a", "size_bytes": 1105},
+        {"path": "f4/merge_06.pdf", "sha256": "d2ab5bd9e0a25ee5382049bd759a7ce4f13f81ef0fecd8f3c6d73308504ceff1", "size_bytes": 1105},
+        {"path": "f4/merge_07.pdf", "sha256": "0a09b5aad3c3999d716530e4fc00a8ab4a85208dbe060c59789b36497d06604d", "size_bytes": 1105},
+        {"path": "f4/merge_08.pdf", "sha256": "2e8e4578f3d170dd08ef23cea2c89fbf50d9a5bf6abbcccff1c7db7b7a29efb6", "size_bytes": 1105},
+        {"path": "f4/merge_09.pdf", "sha256": "e3a9ce9a9e485f27b10b4f391e0292c1cd0313f9c54c29cd698c9c707aa76a4f", "size_bytes": 1105},
+        {"path": "f4/merge_10.pdf", "sha256": "af2ecc5dec42cbe542bfffa38842ee9ccdd223f07a16aa17e93f061fc207e785", "size_bytes": 1105},
+        {"path": "f4/merge_11.pdf", "sha256": "2c6f1c06bb506f627f31f95b8506d2b108cf368b95f86a29f69eaab567250a2d", "size_bytes": 1105},
+        {"path": "f4/merge_12.pdf", "sha256": "d9cd0eadd2aae5cc60812c202717b691329e3ae5a02f9c3a099371ad594556b2", "size_bytes": 1105},
+        {"path": "f4/merge_13.pdf", "sha256": "13ab9708b693eedce6678f0c49791d93a72234eb1a5de758e29216989acb8a95", "size_bytes": 1105},
+        {"path": "f4/merge_14.pdf", "sha256": "bf043a323ee7f5c5c523e45571bfd348758ca70c93e31ea35d0f5b947d4419af", "size_bytes": 1105},
+        {"path": "f4/merge_15.pdf", "sha256": "41ca39c775e0c61a6340aeb6a0f2df7b33da5d0d249921c04b1f125ace6d9002", "size_bytes": 1105}
+      ],
+      "fixture_id": "F4",
+      "generator": "pypdf blank pages with index-encoded fixed dimensions",
+      "input_type": "application/pdf"
+    },
+    {
+      "dimensions_or_pages": {"height": 1536, "mode": "RGB", "width": 2048},
+      "expected_output_class": "eight 1024x768 RGB BMP files",
+      "file_count": 8,
+      "files": [
+        {"path": "f5/batch_00.bmp", "sha256": "b3d308ad991741bcbe3255be176838d9bb23f888758cb87f08047042efcd7f28", "size_bytes": 9437238},
+        {"path": "f5/batch_01.bmp", "sha256": "227f15039bbb3da3e878e7c5bf8336090d2d3409acd9dda149c071731ab868e0", "size_bytes": 9437238},
+        {"path": "f5/batch_02.bmp", "sha256": "f9676f663d0fa16a2a484c6dbd3d3218606f2bd1f7cd8a823ca722171318e7a9", "size_bytes": 9437238},
+        {"path": "f5/batch_03.bmp", "sha256": "19b71e0be63c2461a1e66fe57b89ae65d662f6014ae0a932052a8edb645b7c22", "size_bytes": 9437238},
+        {"path": "f5/batch_04.bmp", "sha256": "d36b7e63ca9250dc6d5092e59bfc32574b9ef8842636a15e2761de0ee8a01559", "size_bytes": 9437238},
+        {"path": "f5/batch_05.bmp", "sha256": "62406d1d536635450576a34d501fa1775a106ff20d26556acf08f338e96ad4e2", "size_bytes": 9437238},
+        {"path": "f5/batch_06.bmp", "sha256": "37df2a797c38f9d23f5e1b3939a856ff85133febdf5bf34e9c50a75e1983996b", "size_bytes": 9437238},
+        {"path": "f5/batch_07.bmp", "sha256": "ea765f42279cae1f9ee644b673a374108f6cb51c3a0179df61316e3b27f6dd25", "size_bytes": 9437238}
+      ],
+      "fixture_id": "F5",
+      "generator": "standard-library 24-bit BMP arithmetic pixel patterns",
+      "input_type": "image/bmp"
+    }
+  ],
+  "generation_command": "python -m benchmarks.fixtures --output-dir .benchmarks/fixtures-v1 --verify",
+  "schema_version": "batchstudio-benchmark-fixtures/v1"
+}
