@@ -2,6 +2,31 @@
 
 All notable project changes are recorded here. Dates and release facts are included only when supported by repository and release evidence.
 
+## [1.1.1] - 2026-09-07
+
+This patch candidate consolidates post-1.1.0 correctness work, qualification evidence, and controlled-environment dependency maintenance without expanding BatchStudio's admitted feature set.
+
+### Fixed
+
+- Completed truthful input selection, completion, drag-and-drop, stop, and aggregate-finalization behavior so the UI reports and celebrates only successful outcomes.
+- Made report and final-output creation collision-safe, including concurrent ownership and truthful current-run report viewing.
+- Kept `AGGREGATE_ONLY` workflows fail-closed across compilation, core and UI preflight, input validation, lifecycle failures, and result reporting without adding aggregate composition support.
+- Made PDF text-watermark placement page-aware for page size, rotation, and CropBox geometry while preserving source structure and collision-safe output ownership.
+
+### Changed
+
+- Classified XLS, XLSX, TXT, JSON, and XML truthfully as Level 1 generic-file compatibility only: byte-preserving programmatic rename remains available, while picker, folder, drop, Run preflight, and format-aware processing remain unsupported.
+
+### Quality / qualification
+
+- Added behavioral coverage using a real withdrawn Tk root for input, workflow, navigation, processing, repeat-run, failure, timeout, and thread-dispatch flows.
+- Added fail-closed, pinned English real-OCR qualification for real images, scanned image-only PDFs, native-PDF distinction, toolchain identity, fixture identity, and zero-skip execution on the exact tested commit.
+- Established reproducible performance fixtures, measurement identity, retained baseline evidence, correctness guardrails, and variability-derived regression budgets without claiming a runtime speed improvement.
+
+### Security / maintenance
+
+- Updated the controlled real-OCR qualification environment from setuptools 80.9.0 to 83.0.0, Pygments 2.19.2 to 2.20.0, and pytest 8.4.2 to 9.0.3 to remediate GHSA-h35f-9h28-mq5c, GHSA-5239-wwwm-4pmq, and GHSA-6w46-j5rx-g56g respectively.
+
 ## [1.1.0] - 2026-09-05
 
 This release establishes a single canonical application version source and reconciles the release documentation with completed, evidenced work.
@@ -59,6 +84,7 @@ This release establishes a single canonical application version source and recon
 - Verified the full automated suite, critical end-to-end cases, PDF merge regressions, package build, isolated installation, entrypoint loading, artifact contents, and Git provenance.
 - Verified the OCR missing-capability path; a real OCR success path was not verified on the release machine.
 
+[1.1.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/ggligor1967/BatchStudio/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/ggligor1967/BatchStudio/releases/tag/v1.0.0
