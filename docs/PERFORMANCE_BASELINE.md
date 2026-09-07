@@ -124,4 +124,3 @@ Compare medians only within an identical declared environment. Results from anot
 ## Canonical v1 evidence
 
 The authoritative session results, repeatability comparison, bounded profiling evidence, and optimization-admission conclusion are added only after both clean sessions pass this frozen methodology. No performance number is canonical merely because it appeared in a pilot or terminal log.
-
