@@ -2,7 +2,7 @@
 
 All notable project changes are recorded here. Dates and release facts are included only when supported by repository and release evidence.
 
-## [1.1.1] - 2026-09-07
+## [1.1.1] - Unreleased
 
 This patch candidate consolidates post-1.1.0 correctness work, qualification evidence, and controlled-environment dependency maintenance without expanding BatchStudio's admitted feature set.
 
