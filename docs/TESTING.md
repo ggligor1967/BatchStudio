@@ -56,6 +56,7 @@ Validate the harness without collecting an authoritative baseline:
 ```powershell
 python -m pytest -q tests/test_performance_harness.py
 python -m benchmarks.fixtures --output-dir .benchmarks/fixtures-v1 --verify
+python -m benchmarks.profile_baseline --help
 ```
 
 ## V11-08 Tkinter behavioral flow

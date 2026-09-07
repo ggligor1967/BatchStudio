@@ -19,6 +19,7 @@ from benchmarks.fixtures import (
     verify_fixture_files,
     verify_manifest,
 )
+from benchmarks.profile_baseline import extract_component_rows
 from benchmarks.run_baseline import (
     BenchmarkConfigurationError,
     calculate_summary,
@@ -34,6 +35,9 @@ from benchmarks.workloads import (
     run_workload,
 )
 from core.processor import BatchProcessor, ProcessingStats
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _single_file_manifest(root: Path, content: bytes = b"fixture") -> dict:
@@ -78,12 +82,9 @@ def _valid_session_record(profile: str = "pilot") -> dict:
                 "workload_id": workload_id,
                 "correctness": "PASS",
                 "raw_samples": [copy.deepcopy(raw_sample), {**raw_sample, "iteration": 2}],
-                "summary": {
-                    "n": 2,
-                    "mean_seconds": 1.0,
-                    "standard_deviation_seconds": 0.0,
-                    "median_seconds": 1.0,
-                },
+                "summary": calculate_summary(
+                    [copy.deepcopy(raw_sample), {**raw_sample, "iteration": 2}]
+                ),
             }
         )
     return {
@@ -282,6 +283,57 @@ def test_metadata_validation_is_fail_closed():
         validate_session_record(record)
 
 
+def test_metadata_validation_rejects_summary_drift_from_raw_samples():
+    record = _valid_session_record()
+    record["workload_results"][0]["summary"]["median_seconds"] = 0.5
+
+    with pytest.raises(BenchmarkConfigurationError, match="differs from raw samples"):
+        validate_session_record(record)
+
+
+def test_profiler_component_extraction_uses_exact_source_and_function_identity():
+    raw_stats = {
+        (r"D:\repo\core\processor.py", 515, "process_batch"): (
+            1,
+            2,
+            0.25,
+            0.75,
+            {},
+        ),
+        (r"D:\repo\core\other.py", 10, "process_batch"): (
+            1,
+            1,
+            9.0,
+            9.0,
+            {},
+        ),
+    }
+
+    rows = extract_component_rows(
+        raw_stats,
+        (("BatchProcessor.process_batch", "core/processor.py", "process_batch"),),
+    )
+
+    assert rows == [
+        {
+            "component": "BatchProcessor.process_batch",
+            "source": "D:/repo/core/processor.py:515",
+            "primitive_calls": 1,
+            "total_calls": 2,
+            "total_seconds": 0.25,
+            "cumulative_seconds": 0.75,
+        }
+    ]
+
+
+def test_profiler_component_extraction_rejects_missing_evidence():
+    with pytest.raises(BenchmarkExecutionError, match="expected one pstats match"):
+        extract_component_rows(
+            {},
+            (("BatchProcessor.process_batch", "core/processor.py", "process_batch"),),
+        )
+
+
 def test_pilot_thresholds_retain_raw_calibration_samples(tmp_path: Path):
     pilot_path = tmp_path / "pilot.json"
     pilot_path.write_text(json.dumps(_valid_session_record()), encoding="utf-8")
@@ -294,13 +346,13 @@ def test_pilot_thresholds_retain_raw_calibration_samples(tmp_path: Path):
 
 
 def test_committed_threshold_manifest_matches_frozen_workloads():
-    threshold_path = Path("benchmarks/repeatability_thresholds_v1.json")
+    threshold_path = REPOSITORY_ROOT / "benchmarks/repeatability_thresholds_v1.json"
     thresholds = json.loads(threshold_path.read_text(encoding="utf-8"))
 
     assert thresholds["schema_version"] == "batchstudio-repeatability-thresholds/v1"
     assert set(thresholds["workloads"]) == set(WORKLOAD_DEFINITIONS)
     assert thresholds["source_fixture_manifest_sha256"] == sha256_json_file(
-        Path("benchmarks/fixture_manifest_v1.json")
+        REPOSITORY_ROOT / "benchmarks/fixture_manifest_v1.json"
     )
     assert all(
         workload["pilot_n"] == len(workload["pilot_raw_wall_clock_seconds"])
@@ -313,6 +365,7 @@ def test_session_comparison_rejects_identity_drift_and_preserves_raw_sessions(
 ):
     thresholds = {
         "schema_version": "batchstudio-repeatability-thresholds/v1",
+        "source_fixture_manifest_sha256": "c" * 64,
         "workloads": {
             workload_id: {"repeatability_threshold_percent": 5.0}
             for workload_id in WORKLOAD_DEFINITIONS
@@ -348,14 +401,46 @@ def test_session_comparison_rejects_identity_drift_and_preserves_raw_sessions(
         compare_sessions(first_path, second_path, thresholds_path)
 
 
+def test_session_comparison_rejects_thresholds_for_another_fixture(tmp_path: Path):
+    thresholds = {
+        "schema_version": "batchstudio-repeatability-thresholds/v1",
+        "source_fixture_manifest_sha256": "d" * 64,
+        "workloads": {
+            workload_id: {"repeatability_threshold_percent": 5.0}
+            for workload_id in WORKLOAD_DEFINITIONS
+        },
+    }
+    first = _valid_session_record(profile="canonical")
+    second = copy.deepcopy(first)
+    second["session_id"] = "test-session-2"
+    configuration = {
+        "workloads": {workload_id: {} for workload_id in WORKLOAD_DEFINITIONS},
+        "timeout_seconds_per_workload": 120.0,
+        "outlier_rule": "retain all",
+        "validation_boundary": "after timed region",
+        "threshold_manifest": thresholds,
+    }
+    first["configuration"] = copy.deepcopy(configuration)
+    second["configuration"] = copy.deepcopy(configuration)
+    first_path = tmp_path / "first.json"
+    second_path = tmp_path / "second.json"
+    thresholds_path = tmp_path / "thresholds.json"
+    first_path.write_text(json.dumps(first), encoding="utf-8")
+    second_path.write_text(json.dumps(second), encoding="utf-8")
+    thresholds_path.write_text(json.dumps(thresholds), encoding="utf-8")
+
+    with pytest.raises(BenchmarkConfigurationError, match="another session fixture"):
+        compare_sessions(first_path, second_path, thresholds_path)
+
+
 def test_committed_canonical_evidence_recomputes_exactly():
-    evidence_root = Path(
+    evidence_root = REPOSITORY_ROOT / Path(
         "benchmarks/evidence/v1/win11-i7-1260p-refs-balanced-py313-v1"
     )
     first_path = evidence_root / "session-1.json"
     second_path = evidence_root / "session-2.json"
     comparison_path = evidence_root / "comparison.json"
-    thresholds_path = Path("benchmarks/repeatability_thresholds_v1.json")
+    thresholds_path = REPOSITORY_ROOT / "benchmarks/repeatability_thresholds_v1.json"
 
     recorded = json.loads(comparison_path.read_text(encoding="utf-8"))
     recomputed = compare_sessions(first_path, second_path, thresholds_path)

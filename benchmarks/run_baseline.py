@@ -40,6 +40,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SESSION_SCHEMA_VERSION = "batchstudio-performance-baseline/v1"
 THRESHOLD_SCHEMA_VERSION = "batchstudio-repeatability-thresholds/v1"
 THRESHOLD_PATH = Path(__file__).with_name("repeatability_thresholds_v1.json")
+FIXTURE_MANIFEST_PATH = Path(__file__).with_name("fixture_manifest_v1.json")
 CONSTRAINTS_PATH = Path(__file__).with_name("constraints.txt")
 DEFAULT_TIMEOUT_SECONDS = 120.0
 SESSION_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -280,6 +281,11 @@ def _load_thresholds() -> dict[str, Any]:
         raise BenchmarkConfigurationError("Repeatability threshold schema is invalid")
     if set(thresholds.get("workloads", {})) != set(WORKLOAD_DEFINITIONS):
         raise BenchmarkConfigurationError("Repeatability thresholds do not cover B1-B5 exactly")
+    current_fixture_hash = sha256_json_file(FIXTURE_MANIFEST_PATH)
+    if thresholds.get("source_fixture_manifest_sha256") != current_fixture_hash:
+        raise BenchmarkConfigurationError(
+            "Repeatability thresholds were calibrated against another fixture manifest"
+        )
     return thresholds
 
 
@@ -331,6 +337,10 @@ def validate_session_record(record: dict[str, Any]) -> None:
             raise BenchmarkConfigurationError("Workload result lacks passing raw evidence")
         if result["summary"]["n"] != len(result["raw_samples"]):
             raise BenchmarkConfigurationError("Summary N differs from raw sample count")
+        if result["summary"] != calculate_summary(result["raw_samples"]):
+            raise BenchmarkConfigurationError(
+                f"{result.get('workload_id', 'unknown')} summary differs from raw samples"
+            )
 
 
 def _run_worker(
@@ -483,9 +493,7 @@ def run_session(arguments: argparse.Namespace) -> dict[str, Any]:
             arguments.power_mode,
         ),
         "fixture_manifest": fixture_manifest,
-        "fixture_manifest_sha256": sha256_json_file(
-            Path(__file__).with_name("fixture_manifest_v1.json")
-        ),
+        "fixture_manifest_sha256": sha256_json_file(FIXTURE_MANIFEST_PATH),
         "configuration": {
             "workload_order": workload_order,
             "order_seed": order_seed,

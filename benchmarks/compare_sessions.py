@@ -145,6 +145,10 @@ def compare_sessions(
     if set(thresholds.get("workloads", {})) != set(WORKLOAD_DEFINITIONS):
         raise BenchmarkConfigurationError("Threshold manifest must cover B1-B5 exactly")
     _assert_same_identity(first, second)
+    if thresholds.get("source_fixture_manifest_sha256") != first["fixture_manifest_sha256"]:
+        raise BenchmarkConfigurationError(
+            "Threshold manifest was calibrated against another session fixture"
+        )
     if first["configuration"]["threshold_manifest"] != thresholds:
         raise BenchmarkConfigurationError(
             "Session threshold identity differs from comparison input"

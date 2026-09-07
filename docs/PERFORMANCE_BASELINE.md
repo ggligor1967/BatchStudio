@@ -157,7 +157,18 @@ The machine-readable comparison is `benchmarks/evidence/v1/win11-i7-1260p-refs-b
 
 ## Bounded bottleneck evidence and admission result
 
-One zero-warmup iteration per workload was inspected with standard-library `cProfile`. These diagnostic runs include profiler overhead; cumulative time from concurrent B5 worker threads is non-additive. The retained `profiling-summary.json` reports the exact observations.
+One zero-warmup iteration per workload was inspected with standard-library `cProfile`. These diagnostic runs include profiler overhead; cumulative time from concurrent B5 worker threads is non-additive. The retained `profiling-summary.json` records each exact profiler invocation, the profile artifact hash, the raw worker sample, and the source/function extraction contract. The repository-native runner makes the extraction deterministic:
+
+```powershell
+$sha = git rev-parse HEAD
+python -m benchmarks.profile_baseline `
+  --environment-id win11-i7-1260p-refs-balanced-py313-v1 `
+  --workspace-root .benchmarks/profile-v1 `
+  --expected-repository-sha $sha `
+  --output .benchmarks/profiling-summary.json
+```
+
+The workspace must be absent or empty and the worktree must be clean. The `.pstats` artifacts remain under the ignored workspace; their SHA-256 identities and exact commands are retained in the summary. Profiling evidence is diagnostic and is never substituted for the two canonical timing sessions.
 
 - B1 distributed time across processor/per-file orchestration, ownership/path work, and copying; no isolated dominant component was established.
 - B2 attributed 0.141 seconds cumulative to `ImageResizeOperation._execute` within 0.249 seconds for `BatchProcessor.process_batch`, including 0.088 seconds in Pillow resize.
