@@ -209,6 +209,34 @@ def test_b1_smoke_uses_real_processor_and_preserves_collision_sentinel(tmp_path:
     assert all(sample["output_bytes"] == len(b"real B1 fixture") for sample in samples)
 
 
+def test_relative_work_root_produces_valid_output_fingerprint(
+    tmp_path: Path,
+    monkeypatch,
+):
+    fixture_root = tmp_path / "fixtures"
+    manifest = _single_file_manifest(fixture_root, b"relative path fixture")
+    definition = replace(
+        get_workload_definition("B1"),
+        input_repetitions=1,
+        input_count=1,
+        expected_output_count=1,
+    )
+    monkeypatch.chdir(tmp_path)
+
+    samples = run_workload(
+        definition,
+        manifest,
+        fixture_root,
+        Path("relative-work"),
+        warmups=0,
+        repetitions=1,
+    )
+
+    assert samples[0]["correctness"] == "PASS"
+    assert samples[0]["output_sha256"]["file_count"] == 1
+    assert len(samples[0]["output_sha256"]["manifest_sha256"]) == 64
+
+
 def test_summary_uses_all_raw_timings_without_mutation():
     samples = [
         {

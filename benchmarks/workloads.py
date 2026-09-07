@@ -255,7 +255,7 @@ def execute_iteration(
     iteration_number: int,
 ) -> dict[str, Any]:
     input_files, expected_hashes = _fixture_files(definition, fixture_manifest, fixture_root)
-    output_root = iteration_root / "output"
+    output_root = (iteration_root / "output").resolve()
     output_root.mkdir(parents=True)
     sentinel = _sentinel_path(definition, input_files, output_root)
     sentinel.write_bytes(SENTINEL_BYTES)
