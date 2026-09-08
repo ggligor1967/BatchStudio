@@ -3,7 +3,9 @@
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
+import os
 import threading
+import tkinter as tk
 
 import pytest
 
@@ -244,19 +246,22 @@ def test_drag_drop_labels_are_neutral_before_registration(monkeypatch):
 
 
 def test_drag_drop_registration_success_enables_capability_labels(monkeypatch):
-    monkeypatch.setattr(input_panel, "HAS_DND", True)
-    monkeypatch.setattr(input_panel, "DND_FILES", "dnd-files", raising=False)
     panel = InputPanel.__new__(InputPanel)
+    panel.main_window = SimpleNamespace(
+        dnd_status=SimpleNamespace(tkdnd_loaded=True, targets_registered=False, error=None)
+    )
     panel.file_list_frame = Mock()
     panel.file_listbox = Mock()
     panel.drop_label = Mock()
 
     panel._setup_drag_drop()
 
-    panel.file_listbox.drop_target_register.assert_called_once_with(input_panel.DND_FILES)
-    assert panel.file_listbox.dnd_bind.call_count == 3
+    for target in (panel.file_listbox, panel.drop_label):
+        target.drop_target_register.assert_called_once_with(input_panel.DND_FILES)
+        assert target.dnd_bind.call_count == 4
+    assert panel.main_window.dnd_status.targets_registered is True
     panel.file_list_frame.config.assert_called_once_with(
-        text="Selected Files (Drag & Drop supported)"
+        text="Selected Files (native file drop available)"
     )
     panel.drop_label.config.assert_called_once_with(
         text="📂 Drop files here\nor use buttons above"
@@ -267,19 +272,25 @@ def test_drag_drop_registration_success_enables_capability_labels(monkeypatch):
 def test_drag_drop_unavailable_or_failed_keeps_capability_labels_disabled(
     monkeypatch, available
 ):
-    monkeypatch.setattr(input_panel, "HAS_DND", available)
     panel = InputPanel.__new__(InputPanel)
+    panel.main_window = SimpleNamespace(
+        dnd_status=SimpleNamespace(tkdnd_loaded=available, targets_registered=False, error=None)
+    )
     panel.file_list_frame = Mock()
     panel.file_listbox = Mock()
     panel.drop_label = Mock()
+    panel._reset_drop_feedback = Mock()
     if available:
-        panel.file_listbox.drop_target_register.side_effect = RuntimeError("not registered")
+        panel.drop_label.drop_target_register.side_effect = RuntimeError("not registered")
 
     panel._setup_drag_drop()
 
     panel.file_list_frame.config.assert_not_called()
     panel.drop_label.config.assert_not_called()
-    panel.file_listbox.bind.assert_called_once_with("<Button-1>", panel._on_click)
+    assert panel.main_window.dnd_status.targets_registered is False
+    if available:
+        panel.file_listbox.drop_target_unregister.assert_called_once_with()
+        assert "not registered" in panel.main_window.dnd_status.error
 
 
 def test_main_window_initialization_does_not_create_cwd_workflows(tmp_path, monkeypatch):
@@ -440,9 +451,10 @@ def panel(monkeypatch):
     )
     panel.frame = Mock()
     panel.file_listbox = Mock()
+    panel.drop_label = Mock()
     panel._update_stats = Mock()
     panel._update_drop_zone_visibility = Mock()
-    panel._load_input_support = lambda check, complete: complete(check())
+    panel._load_input_support = lambda check, complete: (complete(check()), True)[1]
     monkeypatch.setattr(input_panel.messagebox, "showwarning", Mock())
     return panel
 
@@ -894,3 +906,94 @@ def test_pass_cache_keeps_concrete_delegate_and_configuration_distinct(readiness
     direct = registry.get_operation("ocr_image", {"mode": "ocr", "language": "eng"})
     assert direct.get_capability_error() is None
     assert ocr_ops.get_image_ocr_readiness.call_count == 2
+
+
+def test_product_d2_drop_parser_preserves_tcl_list_paths():
+    interpreter = tk.Tcl()
+    expected = (
+        r"C:\synthetic input\alpha one.png",
+        r"C:\synthetic input\acolade {draft}.png",
+        r"C:\synthetic input\diacritice șțâîă.png",
+    )
+    interpreter.tk.call("set", "product_d2_payload", expected)
+    payload = interpreter.eval("set product_d2_payload")
+    panel = InputPanel.__new__(InputPanel)
+    panel.frame = SimpleNamespace(tk=interpreter.tk)
+
+    assert panel._parse_drop_data(payload) == list(expected)
+
+
+def test_product_d2_malformed_tcl_payload_is_rejected():
+    panel = InputPanel.__new__(InputPanel)
+    panel.frame = SimpleNamespace(tk=tk.Tcl().tk)
+
+    with pytest.raises(ValueError, match="Tcl file list"):
+        panel._parse_drop_data(r"{C:\synthetic input\unfinished.png")
+
+
+def test_product_d2_registration_covers_empty_label_and_populated_list():
+    panel = InputPanel.__new__(InputPanel)
+    panel.main_window = SimpleNamespace(
+        dnd_status=SimpleNamespace(
+            python_package_importable=True,
+            tkdnd_loaded=True,
+            targets_registered=False,
+            error=None,
+        )
+    )
+    panel.file_list_frame = Mock()
+    panel.file_listbox = Mock()
+    panel.drop_label = Mock()
+
+    panel._setup_drag_drop()
+
+    for target in (panel.file_listbox, panel.drop_label):
+        target.drop_target_register.assert_called_once()
+        bound_events = [call.args[0] for call in target.dnd_bind.call_args_list]
+        assert bound_events == [
+            "<<DropEnter>>",
+            "<<DropPosition>>",
+            "<<DropLeave>>",
+            "<<Drop>>",
+        ]
+    assert panel.main_window.dnd_status.targets_registered is True
+
+
+def test_product_d2_copy_negotiation_never_confirms_move():
+    panel = InputPanel.__new__(InputPanel)
+    panel.main_window = SimpleNamespace(dnd_status=SimpleNamespace(targets_registered=True))
+    panel._show_drop_feedback = Mock()
+    panel._reset_drop_feedback = Mock()
+
+    assert panel._on_drop_enter(SimpleNamespace(actions=("copy", "move"), action="move")) == "copy"
+    assert panel._on_drop_position(SimpleNamespace(actions=("move",), action="move")) == "refuse_drop"
+
+
+def test_product_d2_equivalent_windows_paths_are_not_added_twice(
+    tmp_path, panel, readiness
+):
+    intermediate = tmp_path / "folder"
+    intermediate.mkdir()
+    source = tmp_path / "input.png"
+    source.write_bytes(b"input")
+    equivalent = os.path.join(str(intermediate), "..", source.name)
+
+    panel._accept_files([str(source), equivalent])
+
+    assert panel.selected_files == [str(source)]
+    panel.file_listbox.insert.assert_called_once_with("end", source.name)
+
+
+def test_product_d2_same_basename_in_distinct_directories_remains_distinct(
+    tmp_path, panel, readiness
+):
+    first = tmp_path / "first" / "input.png"
+    second = tmp_path / "second" / "input.png"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    first.write_bytes(b"first")
+    second.write_bytes(b"second")
+
+    panel._accept_files([str(first), str(second)])
+
+    assert panel.selected_files == [str(first), str(second)]

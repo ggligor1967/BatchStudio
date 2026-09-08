@@ -52,9 +52,10 @@ def make_input_panel(monkeypatch):
     )
     panel.frame = Mock()
     panel.file_listbox = Mock()
+    panel.drop_label = Mock()
     panel._update_stats = Mock()
     panel._update_drop_zone_visibility = Mock()
-    panel._load_input_support = lambda check, complete: complete(check())
+    panel._load_input_support = lambda check, complete: (complete(check()), True)[1]
     monkeypatch.setattr(input_panel.messagebox, "showwarning", Mock())
     return panel
 

@@ -18,12 +18,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from core import __version__
 from ui import MainWindow
+from ui.dnd_support import enable_native_file_drop
+
+
+def create_application_root():
+    """Create the sole Tk interpreter and initialize optional native DnD on it."""
+    root = tk.Tk()
+    return root, enable_native_file_drop(root)
 
 
 def main():
     """Main application entry point."""
-    # Create root window
-    root = tk.Tk()
+    root, dnd_status = create_application_root()
     
     # Set application icon (if available)
     try:
@@ -35,7 +41,7 @@ def main():
         pass
     
     # Create main window
-    app = MainWindow(root)
+    app = MainWindow(root, dnd_status=dnd_status)
     
     # Start the application
     root.mainloop()

@@ -40,11 +40,26 @@ For development tools, install the `dev` extra:
 python -m pip install ".[dev]"
 ```
 
+For native Windows Explorer file drag-and-drop, install the already-declared
+optional `dnd` extra in the same environment:
+
+```powershell
+python -m pip install "batchstudio[dnd]"
+```
+
+From a source checkout, use `python -m pip install ".[dev,dnd]"` for development
+and DnD verification. If the extra or native tkdnd library cannot load, both
+entrypoints still start the ordinary Tk application with file/folder picker
+fallback and without a misleading drop label.
+
 `requirements.txt` represents the source-development environment and additionally lists `pytesseract` and `pdf2image`. Those two packages do not by themselves provide the Tesseract executable, Poppler utilities, or OCR language packs. See [OCR](OCR.md).
 
 ## Entrypoints
 
-An installed package exposes both `batchstudio` and `batchstudio-gui`; both call `main:main`. From a checkout, use `python main.py`.
+An installed package exposes both `batchstudio` and `batchstudio-gui`; both call
+`main:main`, which creates one Tk root and attempts optional tkdnd initialization
+on that same interpreter before constructing `MainWindow`. From a checkout, use
+`python main.py`.
 
 ## Verify installation
 

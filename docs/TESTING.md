@@ -14,11 +14,50 @@ The active `main-protection` ruleset requires a pull request branch to be up to 
 
 The first six run for pull requests and pushes to `main`; `dependency-review` is intentionally pull-request-only. The Windows and Ubuntu jobs validate non-interactive compatibility and do not prove interactive Linux GUI behavior. `repository-truth` enforces version/document/link hygiene, artifact exclusions, stable job names, changed-line whitespace, and full-SHA action pins. `package-build-install` audits one wheel and one source distribution, then installs and imports the wheel from outside the repository in a fresh virtual environment.
 
+The Windows CI jobs install the existing `dnd` extra and exercise the real
+Tk/tkdnd integration. Ubuntu intentionally installs the base development extra
+without DnD and exercises picker fallback; this is not Linux native-DnD
+qualification. `package-build-install` additionally installs the built wheel
+with `[dnd]` in a second isolated environment and loads tkdnd through the normal
+root bootstrap.
+
+## PRODUCT-D2-I1 native Windows file drag-and-drop
+
+This is the single canonical DND-01–DND-12 acceptance matrix. Issue #42, the
+roadmap, and the implementation PR link here rather than restating criteria.
+Operational results belong in issue/PR evidence and must identify the exact
+candidate SHA/tree; a skip or unexecuted row is not a pass.
+
+| ID | Verification method | Required observed result and evidence |
+|---|---|---|
+| DND-01 | Start `python main.py` or an installed entrypoint normally; inspect runtime status and Tcl `package provide tkdnd`. | One application root; Python package, native tkdnd version, and target registration are independently confirmed. A special test-only root is insufficient. |
+| DND-02 | Native Explorer drags onto the empty label, empty list surface, and populated list, with sequential captures and an action log. | Every visible advertised target accepts the drop once; no duplicate is added by one gesture. |
+| DND-03 | Native multi-file Explorer drop, configure existing `file_rename`, execute a non-dry Run, then inspect UI results and filesystem hashes. | Exact input/output/result counts match and every copied output hash equals its source hash. |
+| DND-04 | Unit route matrix plus a native mixed eligible/unadmitted/workflow-incompatible lot. | Only the eligible subset enters selection and Run; each refusal is reported and creates no output. |
+| DND-05 | Repeated drop, picker→drop, drop→picker, Windows-equivalent spellings, and same-basename files from distinct directories. | Equivalent paths appear and execute once; distinct paths remain distinct; added counters exclude duplicates. |
+| DND-06 | Tcl-list parser regressions and native files/directories containing spaces and diacritics; parser coverage also includes braces and multiple paths. | Exact path identity survives selection and output; no whitespace, diacritic, or brace is stripped. |
+| DND-07 | Fresh isolated environment with the base wheel and no `tkinterdnd2`; normal picker→selection→Run. | App starts without a DnD claim and the picker flow produces the verified result. |
+| DND-08 | Controlled loader and target-registration failures, followed by real picker use. | No false DnD state or orphan root; the same root remains usable. Injections are labeled error tests, not native-drop evidence. |
+| DND-09 | Compare picker/folder/drop decisions and remove a selected source or change workflow compatibility before Run. | Route decisions match and Run revalidation refuses stale/unavailable/incompatible inputs before processing/output preparation. |
+| DND-10 | Empty/malformed payloads, successive drops during validation, DropLeave/drop/refusal/error feedback, Clear All, and workflow-change stale-result regressions. | No uncontrolled Tk callback/traceback; busy input is explicitly refused; feedback resets; cleared/stale results are not reintroduced. |
+| DND-11 | Attempt a MOVE-capable native drag and hash sources before drop, after drop, and after Run. | BatchStudio negotiates COPY or refuses; drop alone creates no result and never moves/deletes a source; only Run creates outputs. |
+| DND-12 | Build final wheel/sdist; install base and `[dnd]` wheel non-editably outside the checkout; launch `batchstudio-gui` and repeat the primary native flow. | Both entrypoints resolve to the normal bootstrap; base fallback and DnD install are verified on the final SHA; artifacts/checks and native evidence refer to that same candidate. |
+
+Evidence levels remain distinct:
+
+1. unit tests and controlled doubles;
+2. real Tk interpreter plus real tkdnd extension and target bindings;
+3. native Windows Explorer mouse gesture into an unpatched, normally launched app.
+
+Levels 1 and 2 do not substitute for level 3. Native automation uses conditional
+waits and finite timeouts; direct calls to drop/admission/processor handlers,
+`event_generate`, or listbox insertion are never reported as level-3 evidence.
+
 V11-06 additionally requires the separately readable `real-ocr-qualification` job for candidate and final-main OCR evidence. It runs on pull requests and pushes to `main`. It is an issue-level release gate in addition to the seven ruleset-required checks; it is not silently folded into the general CI matrix.
 
 ## Test topology
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs eighteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, V12-02 to 462, V12-03 to 506, V12-04 to 533, V12-PERF to 558, and PRODUCT-D1-I1 to 633 on a supported graphical Windows session:
+`pyproject.toml` sets `testpaths = ["tests"]`, so normal discovery runs nineteen test modules under `tests/`. V11-01 increased discovery from 24 to 77 tests, V11-02 to 107, V11-03/V11-04 to 203, V11-05 to 289, V11-07 to 365, V11-R to 379, V11-07R to 401, V11-07R2 to 417, V11-08 to 422, V12-01 to 434, V12-02 to 462, V12-03 to 506, V12-04 to 533, V12-PERF to 558, PRODUCT-D1-I1 to 633, and PRODUCT-D2-I1 to 654 on a supported graphical Windows session with the declared DnD extra:
 
 - `tests/test_operations.py`: result contract, resize output, and aggregate registration.
 - `tests/test_processor.py`: path validation, operation chains, dry run, duplicate allocation, traversal-shaped naming, report encoding, and preservation of empty non-merge validation.
@@ -33,7 +72,8 @@ V11-06 additionally requires the separately readable `real-ocr-qualification` jo
 - `tests/test_dry_run_contracts.py`: 53 V11-04 cases for registered writers, read-only validation, empty input, unsupported operations, provenance/UI option mutation, automatic/manual/direct reports, normal report/probe preservation, and write-interceptor calibration.
 - `tests/test_ocr_contracts.py`: 86 deterministic V11-05 cases covering schema/legacy-key parity, all four OCR templates, separate dependency failures, live readiness refresh, PDF modes and forwarding, batch delegates, and schema/status UI routes.
 
-- `tests/test_input_capabilities.py`: 110 V11-07/V11-07R/V11-07R2 cases for naming-hint placeholders, outcome-accurate completion and success-only celebration, aggregate stop/finalization states, truthful DnD labels, launch filesystem behavior, About metadata, the images/PDF/CSV UI policy, retained core and OCR-to-rename compatibility, independent image/native PDF/PDF OCR states, unsupported and unavailable selection boundaries, picker/folder/drop routes, stale/failed worker probes, and run preflight. Runtime readiness is mocked; OCR qualification is not repeated. Run independently with `python -m pytest -q tests/test_input_capabilities.py`.
+- `tests/test_input_capabilities.py`: 116 V11-07/V11-07R/V11-07R2 and PRODUCT-D2-I1 cases for naming-hint placeholders, outcome-accurate completion and success-only celebration, aggregate stop/finalization states, truthful DnD labels, Tcl payload parsing, COPY negotiation, visible target registration, Windows-equivalent deduplication, launch filesystem behavior, About metadata, the images/PDF/CSV UI policy, retained core and OCR-to-rename compatibility, independent image/native PDF/PDF OCR states, unsupported and unavailable selection boundaries, picker/folder/drop routes, stale/failed worker probes, and run preflight. Runtime readiness is mocked; OCR qualification is not repeated. Run independently with `python -m pytest -q tests/test_input_capabilities.py`.
+- `tests/test_native_dnd.py`: 15 PRODUCT-D2-I1 cases for Python-package absence, controlled native-load and package-identity failures, unrelabelled Tk startup failure, normal-root real tkdnd loading, both target bindings, malformed/empty payload refusal, serialized validation, Clear All cancellation, same-basename selection identity, picker/drop duplicate order, mixed-lot admission, and Run revalidation. Windows requires the declared `dnd` extra; non-Windows runs the portable unit/fallback cases and skips Windows integration explicitly.
 - `tests/test_format_capability_decisions.py`: 44 V12-03 cases for XLS, XLSX, TXT, JSON, and XML classification, core validation, picker and preflight restriction, byte-preserving generic rename, picker/folder/drop rejection, Run-boundary refusal, operation/template exclusion, and canonical decision documentation. CSV, PNG, and PDF are preserved admitted controls across every UI route. Run independently with `python -m pytest -q tests/test_format_capability_decisions.py`.
 - `tests/test_pdf_watermark_geometry.py`: 27 V12-04 cases covering deterministic F1-F11 fixture hashes and geometry, exact visible-coordinate placement, A4/Letter/custom and mixed page sizes, rotations 90/180/270, non-default CropBoxes, shrink-only containment, long and empty text, source structure/style preservation, result paths, occupied-destination safety, and fail-closed invalid geometry. Run independently with `python -m pytest -q tests/test_pdf_watermark_geometry.py`.
 - `tests/test_performance_harness.py`: 25 V12-PERF cases for deterministic fixtures, hash tampering, workload/configuration rejection, bounded timeouts, failure propagation, real B1 execution and collision ownership, relative worker roots, statistics, worker identity, metadata, line-ending-independent metadata hashes, fixture-bound thresholds, deterministic profiler extraction, calibration evidence, exact session comparison, committed-evidence recomputation, profiling-reproduction identity, and no-overwrite evidence writes. Run independently with `python -m pytest -q tests/test_performance_harness.py`.
@@ -45,6 +85,12 @@ Run the discovered suite:
 
 ```powershell
 pytest -q
+```
+
+Run PRODUCT-D2-I1 unit, format, and real-Tk integration coverage:
+
+```powershell
+python -m pytest -q tests/test_native_dnd.py tests/test_input_capabilities.py tests/test_format_capability_decisions.py tests/test_tkinter_behavioral_flow.py
 ```
 
 ## V12-PERF reproducible baseline

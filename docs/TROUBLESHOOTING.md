@@ -8,6 +8,18 @@ Run `python test_installation.py` from a source checkout to verify imports and e
 
 Core path validation requires an existing regular file, an allow-listed extension, and a size no greater than 500 MiB. Product admission is narrower: XLS, XLSX, TXT, JSON, and XML retain generic core compatibility but are rejected by picker, folder, drop, and Run preflight because they have no format-aware input operation. Match the input to [Operations](OPERATIONS.md#capability-levels-and-v12-03-decisions).
 
+## File drag-and-drop is unavailable
+
+Install the optional extra in the same isolated environment that launches
+BatchStudio: `python -m pip install "batchstudio[dnd]"`, or
+`python -m pip install ".[dnd]"` from a checkout. Restart the application.
+The input heading advertises native file drop only after the Python package is
+imported, tkdnd is loaded into the application's Tk interpreter, and both visible
+targets register successfully. If it remains neutral, use **Add Files** or **Add
+Folder** and collect the exact Python, Tcl/Tk, tkinterdnd2, tkdnd, and Windows
+versions for diagnosis. Text, URLs, virtual attachments, and MOVE-only gestures
+are not accepted as file drops.
+
 ## Workflow compilation fails
 
 - **Unknown operation**: the JSON references an ID not present in the registry.

@@ -48,6 +48,11 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dist-dir", type=Path, required=True)
     parser.add_argument("--expected-version", required=True)
+    parser.add_argument(
+        "--verify-dnd",
+        action="store_true",
+        help="also install the wheel with its dnd extra and load tkdnd through the real bootstrap",
+    )
     return parser.parse_args()
 
 
@@ -120,6 +125,17 @@ def verify_distribution_metadata(
         raise PackageVerificationError(f"{source} is missing the MIT SPDX license expression")
     if not any(value.endswith("LICENSE") for value in metadata.get_all("License-File", [])):
         raise PackageVerificationError(f"{source} is missing LICENSE metadata")
+    if "dnd" not in metadata.get_all("Provides-Extra", []):
+        raise PackageVerificationError(f"{source} is missing the declared dnd extra")
+    dnd_requirements = [
+        value
+        for value in metadata.get_all("Requires-Dist", [])
+        if value.lower().startswith("tkinterdnd2")
+    ]
+    if len(dnd_requirements) != 1 or 'extra == "dnd"' not in dnd_requirements[0]:
+        raise PackageVerificationError(
+            f"{source} has an invalid tkinterdnd2 extra requirement: {dnd_requirements}"
+        )
 
 
 def virtual_environment_python(environment_directory: Path) -> Path:
@@ -128,9 +144,11 @@ def virtual_environment_python(environment_directory: Path) -> Path:
     return environment_directory / "bin" / "python"
 
 
-def verify_isolated_wheel_install(wheel: Path, expected_version: str) -> None:
+def verify_isolated_wheel_install(
+    wheel: Path, expected_version: str, *, verify_dnd: bool = False
+) -> None:
     probe = f"""
-from importlib import import_module, metadata
+from importlib import import_module, metadata, util
 
 distribution = metadata.distribution("batchstudio")
 assert distribution.version == {expected_version!r}, distribution.version
@@ -144,7 +162,20 @@ entry_points = [
 assert len(entry_points) == 1, entry_points
 loaded_entrypoint = entry_points[0].load()
 assert callable(loaded_entrypoint), loaded_entrypoint
-print("Installed package imports and batchstudio-gui entrypoint verified.")
+verify_dnd = {verify_dnd!r}
+if verify_dnd:
+    from main import create_application_root
+
+    root, status = create_application_root()
+    try:
+        assert status.python_package_importable, status
+        assert status.tkdnd_loaded, status
+        assert status.tkdnd_version == root.tk.call("package", "provide", "tkdnd"), status
+    finally:
+        root.destroy()
+else:
+    assert util.find_spec("tkinterdnd2") is None
+print("Installed package imports, entrypoint, and optional DnD state verified.")
 """
     with tempfile.TemporaryDirectory(prefix="batchstudio-wheel-") as temporary_directory:
         temporary_root = Path(temporary_directory)
@@ -160,7 +191,7 @@ print("Installed package imports and batchstudio-gui entrypoint verified.")
                 "pip",
                 "install",
                 "--disable-pip-version-check",
-                str(wheel.resolve()),
+                str(wheel.resolve()) + ("[dnd]" if verify_dnd else ""),
             ],
             cwd=probe_directory,
             check=True,
@@ -192,6 +223,10 @@ def main() -> int:
     verify_distribution_metadata(wheel_metadata, arguments.expected_version, wheels[0].name)
     verify_distribution_metadata(sdist_metadata, arguments.expected_version, sdists[0].name)
     verify_isolated_wheel_install(wheels[0], arguments.expected_version)
+    if arguments.verify_dnd:
+        verify_isolated_wheel_install(
+            wheels[0], arguments.expected_version, verify_dnd=True
+        )
     print(f"Verified wheel and sdist for BatchStudio {arguments.expected_version}.")
     return 0
 

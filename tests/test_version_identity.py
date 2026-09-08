@@ -148,7 +148,7 @@ def test_ocr_docs_distinguish_mocked_and_controlled_real_qualification():
     assert "#10" in ocr
 
 
-def test_roadmap_marks_v12_perf_complete_without_admitting_optimization():
+def test_roadmap_marks_v12_perf_complete_and_admits_only_product_d2_i1():
     text = _read_text("docs/ROADMAP.md")
     lowered = text.lower()
     assert "v11-08" in lowered
@@ -166,7 +166,14 @@ def test_roadmap_marks_v12_perf_complete_without_admitting_optimization():
     assert "#37" in text
     assert "product-d1-i1" in lowered
     execution_order = text.split("## Canonical post-v1.1 execution order", 1)[1].split("```text", 1)[1].split("```", 1)[0]
-    assert execution_order.strip() == "No implementation unit is currently admitted."
+    assert execution_order.strip() == (
+        "PRODUCT-D2-I1 — Native Windows file drag-and-drop (issue #42)"
+    )
+    admitted = text.split("```", 2)[2].split("## Completed post-v1.1 units", 1)[0]
+    assert "PRODUCT-D2-I1 is the only admitted implementation unit" in admitted
+    assert "TESTING.md#product-d2-i1-native-windows-file-drag-and-drop" in admitted
+    assert "Workflow-step reordering" in admitted
+    assert "completion of V12-PERF is not authorization to optimize production code" in text
     completion = text.split("## PRODUCT-D1-I1", 1)[1]
     assert "Implementation completed in [PR #41]" in completion
     assert "https://github.com/ggligor1967/BatchStudio/pull/41" in completion
