@@ -11,14 +11,16 @@ from ui.input_panel import InputPanel
 from ui.workflow_panel import WorkflowPanel
 from ui.run_panel import RunPanel
 from ui.logs_panel import LogsPanel
+from ui.dnd_support import uninitialized_native_dnd_status
 from core import __version__, BatchProcessor, get_settings
 
 
 class MainWindow:
     """Main application window."""
     
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: tk.Tk, dnd_status=None):
         self.root = root
+        self.dnd_status = dnd_status or uninitialized_native_dnd_status()
         self.root.title("BatchStudio - Batch Processing Studio")
         
         # Load settings

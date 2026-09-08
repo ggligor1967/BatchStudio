@@ -32,7 +32,7 @@ jobs:
       - name: Install project and development dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,dnd]"
       - name: Compile supported Python sources
         run: python -m compileall core ui tests main.py test_installation.py test_pdf_merge_fix.py test_pdf_merge_simple.py
       - name: Run the non-interactive suite
@@ -55,7 +55,7 @@ jobs:
       - name: Install project and development dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,dnd]"
       - name: Compile supported Python sources
         run: python -m compileall core ui tests main.py test_installation.py test_pdf_merge_fix.py test_pdf_merge_simple.py
       - name: Run the non-interactive suite
@@ -105,7 +105,7 @@ jobs:
       - name: Install project and development dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,dnd]"
       - name: Report optional OCR runtime capability
         run: python -c "import shutil; print('Tesseract=' + (shutil.which('tesseract') or 'UNAVAILABLE')); print('Poppler-pdfinfo=' + (shutil.which('pdfinfo') or 'UNAVAILABLE'))"
       - name: Run release regression checks

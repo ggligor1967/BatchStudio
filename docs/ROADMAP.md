@@ -5,8 +5,16 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-No implementation unit is currently admitted.
+PRODUCT-D2-I1 — Native Windows file drag-and-drop (issue #42)
 ```
+
+PRODUCT-D2-I1 is the only admitted implementation unit. Its scope is native Windows
+Explorer file drop into the existing input selection, shared picker/Run admission,
+and a real existing-workflow Run. The single acceptance matrix is
+[DND-01–DND-12](TESTING.md#product-d2-i1-native-windows-file-drag-and-drop);
+issue [#42](https://github.com/ggligor1967/BatchStudio/issues/42) tracks the unit.
+Workflow-step reordering, OCR, planner, aggregation, and format-policy redesign are
+not admitted.
 
 The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), V12-03 format-capability decision (issue #33), V12-04 page-aware PDF watermark placement (issue #35), and V12-PERF reproducible performance baseline (issue #37) are no longer active or schedulable roadmap items. A new candidate requires evidence, an approved tracking issue, and explicit admission; completion of V12-PERF is not authorization to optimize production code.
 

@@ -25,8 +25,13 @@ This document records observed boundaries of the current implementation, includi
 ## User interface
 
 - The desktop UI is Tkinter-based and requires an interactive graphical session.
-- Workflow ordering uses buttons; workflow-step drag-and-drop is not implemented.
-- The optional input drag-and-drop hook is not a verified release capability.
+- Workflow ordering uses buttons. Workflow-step drag-and-drop is not implemented.
+- Native input-file drag-and-drop requires the optional `dnd` extra, a loadable
+  platform tkdnd extension, and successful registration of both visible targets.
+  Any failure falls back to the file/folder picker and is not DnD availability.
+- PRODUCT-D2-I1 qualifies only the exact Windows/Python/Tcl/Tk/tkinterdnd2/tkdnd
+  candidate recorded in its PR evidence. It does not qualify native input drop on
+  Linux or macOS, or a standalone executable that was not built and tested.
 - Dark styling is basic and can vary with the operating system/Tk theme.
 - There is no command-line batch-processing interface; installed console and GUI entrypoints both launch the desktop application.
 - The Preferences command displays an informational placeholder rather than an editable settings dialog.

@@ -1,6 +1,6 @@
 """
 BatchStudio - Input Panel
-File selection and preview interface with an optional tkinterdnd2 drop hook.
+File selection and preview interface with optional native file drag-and-drop.
 """
 
 import tkinter as tk
@@ -13,15 +13,8 @@ from queue import Empty, SimpleQueue
 import threading
 
 from core.operations.registry import OperationRegistry
+from ui.dnd_support import COPY, DND_FILES, REFUSE_DROP
 from ui.input_support import InputCapabilityRegistry, get_input_error, get_picker_filetypes
-
-# Try to import tkinterdnd2 for drag & drop support
-try:
-    from tkinterdnd2 import DND_FILES, TkinterDnD
-    HAS_DND = True
-except ImportError:
-    DND_FILES = None
-    HAS_DND = False
 
 # Try to import pypdf for PDF preview
 try:
@@ -42,6 +35,9 @@ class InputPanel:
         self.main_window = main_window
         self.frame = ttk.Frame(parent)
         self.selected_files = []
+        self._selected_file_identities = set()
+        self._displayed_files = []
+        self._selection_token = None
         self.file_previews = {}
         self._preview_cache_order = []  # Track order for LRU cache
         
@@ -116,6 +112,8 @@ class InputPanel:
                                    text="📂 Use buttons above to add files",
                                    font=('Segoe UI', 12),
                                    foreground='gray')
+        self._default_drop_background = self.file_listbox.cget("background")
+        self._default_drop_foreground = self.drop_label.cget("foreground")
         
         # Right: Preview and info
         preview_frame = ttk.LabelFrame(content_frame, text="Preview", padding=10)
@@ -162,25 +160,51 @@ class InputPanel:
     
     def _setup_drag_drop(self):
         """Setup drag and drop functionality."""
-        if HAS_DND:
-            try:
-                # Register the listbox as a drop target
-                self.file_listbox.drop_target_register(DND_FILES)
-                self.file_listbox.dnd_bind('<<Drop>>', self._on_drop)
-                self.file_listbox.dnd_bind('<<DragEnter>>', self._on_drag_enter)
-                self.file_listbox.dnd_bind('<<DragLeave>>', self._on_drag_leave)
-                self.file_list_frame.config(text="Selected Files (Drag & Drop supported)")
-                self.drop_label.config(text="📂 Drop files here\nor use buttons above")
-            except Exception as e:
-                print(f"Drag & drop setup failed: {e}")
-        
-        # Also bind native tkinter events for basic drag support
-        self.file_listbox.bind('<Button-1>', self._on_click)
+        status = getattr(self.main_window, "dnd_status", None)
+        if status is None or not status.tkdnd_loaded:
+            return
+
+        targets = (self.file_listbox, self.drop_label)
+        registered_targets = []
+        try:
+            for target in targets:
+                target.drop_target_register(DND_FILES)
+                registered_targets.append(target)
+                target.dnd_bind("<<DropEnter>>", self._on_drop_enter)
+                target.dnd_bind("<<DropPosition>>", self._on_drop_position)
+                target.dnd_bind("<<DropLeave>>", self._on_drop_leave)
+                target.dnd_bind("<<Drop>>", self._on_drop)
+        except Exception as error:
+            for target in registered_targets:
+                try:
+                    target.drop_target_unregister()
+                except Exception:
+                    pass
+            status.targets_registered = False
+            status.error = f"{type(error).__name__}: {error}"
+            self._reset_drop_feedback()
+            return
+
+        status.targets_registered = True
+        status.error = None
+        self.file_list_frame.config(text="Selected Files (native file drop available)")
+        self.drop_label.config(text="📂 Drop files here\nor use buttons above")
     
     def _on_drop(self, event):
         """Handle file drop event."""
-        # Parse dropped files (format varies by OS)
-        files = self._parse_drop_data(event.data)
+        action = self._negotiate_drop_action(event)
+        if action == REFUSE_DROP:
+            self._reset_drop_feedback()
+            self.main_window.set_status("Drop refused; the source must allow copying.", "warning")
+            return REFUSE_DROP
+
+        try:
+            files = self._parse_drop_data(event.data)
+        except ValueError as error:
+            self._reset_drop_feedback()
+            self.main_window.set_status(str(error), "warning")
+            messagebox.showwarning("Drop refused", str(error))
+            return REFUSE_DROP
 
         def candidates():
             for filepath in files:
@@ -189,45 +213,59 @@ class InputPanel:
                 else:
                     yield filepath
 
-        self._accept_files(candidates())
-
-        # Reset listbox appearance
-        self.file_listbox.config(bg="white")
-        return event.action
+        started = self._accept_files(candidates())
+        self._reset_drop_feedback()
+        return COPY if started else REFUSE_DROP
     
     def _parse_drop_data(self, data):
-        """Parse dropped file data (handles different OS formats)."""
-        files = []
-        
-        # Handle Windows format with curly braces for paths with spaces
-        if '{' in data:
-            import re
-            # Match paths in curly braces or standalone paths
-            pattern = r'\{([^}]+)\}|(\S+)'
-            matches = re.findall(pattern, data)
-            for match in matches:
-                path = match[0] if match[0] else match[1]
-                if path:
-                    files.append(path)
+        """Parse the native payload as the Tcl list emitted by tkdnd."""
+        if not isinstance(data, str) or not data:
+            raise ValueError("Drop refused: empty Tcl file list.")
+        try:
+            files = self.frame.tk.splitlist(data)
+        except (tk.TclError, ValueError) as error:
+            raise ValueError("Drop refused: malformed Tcl file list.") from error
+        if not files or any(not isinstance(path, str) or not path for path in files):
+            raise ValueError("Drop refused: empty Tcl file list.")
+        return list(files)
+
+    def _negotiate_drop_action(self, event):
+        actions = getattr(event, "actions", ())
+        if isinstance(actions, str):
+            try:
+                actions = self.frame.tk.splitlist(actions)
+            except (tk.TclError, ValueError):
+                actions = ()
+        if COPY in actions or (not actions and getattr(event, "action", None) == COPY):
+            return COPY
+        return REFUSE_DROP
+
+    def _on_drop_enter(self, event):
+        """Negotiate a non-destructive action and show target feedback."""
+        action = self._negotiate_drop_action(event)
+        if action == COPY:
+            self._show_drop_feedback()
         else:
-            # Simple space-separated list
-            files = data.split()
-        
-        return [f.strip() for f in files if f.strip()]
-    
-    def _on_drag_enter(self, event):
-        """Visual feedback when dragging over."""
-        self.file_listbox.config(bg='#e8f4fc')
-        return event.action
-    
-    def _on_drag_leave(self, event):
-        """Reset visual feedback."""
-        self.file_listbox.config(bg='white')
-        return event.action
-    
-    def _on_click(self, event):
-        """Handle click in listbox."""
-        pass  # Placeholder for future drag-to-reorder
+            self._reset_drop_feedback()
+        return action
+
+    def _on_drop_position(self, event):
+        """Maintain COPY-only negotiation while the pointer moves."""
+        return self._on_drop_enter(event)
+
+    def _on_drop_leave(self, event):
+        """Reset target feedback when the pointer leaves."""
+        self._reset_drop_feedback()
+
+    def _show_drop_feedback(self):
+        self.file_listbox.config(background="#e8f4fc")
+        self.drop_label.config(foreground="#667eea")
+
+    def _reset_drop_feedback(self):
+        background = getattr(self, "_default_drop_background", "white")
+        foreground = getattr(self, "_default_drop_foreground", "gray")
+        self.file_listbox.config(background=background)
+        self.drop_label.config(foreground=foreground)
     
     def _select_all(self, event):
         """Select all files in listbox."""
@@ -236,21 +274,47 @@ class InputPanel:
     
     def _add_single_file(self, filepath):
         """Insert a worker-validated file once; this method only updates UI state."""
-        if filepath in self.selected_files:
+        filepath = os.fspath(filepath)
+        identity = self._selection_identity(filepath)
+        identities = getattr(self, "_selected_file_identities", None)
+        if identities is None:
+            identities = {self._selection_identity(path) for path in self.selected_files}
+            self._selected_file_identities = identities
+        if identity in identities:
             return False
 
+        identities.add(identity)
         self.selected_files.append(filepath)
-        self.file_listbox.insert(tk.END, os.path.basename(filepath))
+        filter_var = getattr(self, "filter_var", None)
+        filter_text = filter_var.get().lower() if filter_var is not None else ""
+        if filter_text in os.path.basename(filepath).lower():
+            self.file_listbox.insert(tk.END, os.path.basename(filepath))
+            displayed_files = getattr(self, "_displayed_files", None)
+            if displayed_files is None:
+                displayed_files = []
+                self._displayed_files = displayed_files
+            displayed_files.append(filepath)
         self._update_drop_zone_visibility()
         return True
-    
+
+    @staticmethod
+    def _selection_identity(filepath):
+        normalized = os.path.abspath(os.path.normpath(os.fspath(filepath)))
+        return os.path.normcase(normalized)
+
     def _folder_files(self, folder):
         for root, dirs, files in os.walk(folder):
             for filename in files:
                 yield os.path.join(root, filename)
 
     def _load_input_support(self, check, complete):
-        """Keep runtime probes off Tk; only publish the latest selection request."""
+        """Run one input probe at a time and publish its result only on Tk."""
+        if getattr(self, "_selection_token", None) is not None:
+            message = "An input availability check is already in progress; try again when it finishes."
+            self.main_window.set_status(message, "warning")
+            messagebox.showwarning("Input check in progress", message)
+            return False
+
         token = object()
         self._selection_token = token
         results = SimpleQueue()
@@ -263,21 +327,28 @@ class InputPanel:
                 results.put((None, "Input availability check failed; please try again."))
 
         def poll():
-            if not self.frame.winfo_exists() or self._selection_token is not token:
+            if not self.frame.winfo_exists() or getattr(self, "_selection_token", None) is not token:
                 return
             try:
                 result, error = results.get_nowait()
             except Empty:
                 self.frame.after(50, poll)
                 return
+            self._selection_token = None
             if error:
                 self.main_window.set_status(error, 'warning')
                 messagebox.showwarning("Input unavailable", error)
             else:
                 complete(result)
 
-        threading.Thread(target=probe, daemon=True).start()
+        worker = threading.Thread(target=probe, daemon=True)
+        try:
+            worker.start()
+        except Exception:
+            self._selection_token = None
+            raise
         self.frame.after(0, poll)
+        return True
 
     def _accept_files(self, files):
         workflow = deepcopy(self.main_window.get_workflow())
@@ -308,7 +379,7 @@ class InputPanel:
                     message += f"\n... and {len(rejected) - 10} more rejected inputs."
                 messagebox.showwarning("Inputs rejected", message)
 
-        self._load_input_support(check, complete)
+        return self._load_input_support(check, complete)
 
     def _update_drop_zone_visibility(self):
         """Show/hide drop zone based on file count."""
@@ -322,11 +393,12 @@ class InputPanel:
         filter_text = self.filter_var.get().lower()
         
         self.file_listbox.delete(0, tk.END)
-        
+        self._displayed_files = []
         for filepath in self.selected_files:
             filename = os.path.basename(filepath).lower()
             if filter_text in filename:
                 self.file_listbox.insert(tk.END, os.path.basename(filepath))
+                self._displayed_files.append(filepath)
     
     def _remove_selected(self):
         """Remove selected files from list."""
@@ -334,15 +406,10 @@ class InputPanel:
         if not selection:
             return
         
-        # Get actual filenames from listbox (may be filtered)
-        files_to_remove = []
-        for index in selection:
-            display_name = self.file_listbox.get(index)
-            # Find matching file in selected_files
-            for filepath in self.selected_files:
-                if os.path.basename(filepath) == display_name:
-                    files_to_remove.append(filepath)
-                    break
+        displayed_files = getattr(self, "_displayed_files", self.selected_files)
+        files_to_remove = [
+            displayed_files[index] for index in selection if index < len(displayed_files)
+        ]
         
         # Remove files
         for filepath in files_to_remove:
@@ -353,6 +420,9 @@ class InputPanel:
                 del self.file_previews[filepath]
                 if filepath in self._preview_cache_order:
                     self._preview_cache_order.remove(filepath)
+        self._selected_file_identities = {
+            self._selection_identity(path) for path in self.selected_files
+        }
         
         # Refresh display
         self._filter_files()
@@ -390,10 +460,17 @@ class InputPanel:
 
     def _clear_all(self):
         """Clear all selected files."""
-        self._selection_token = object()
-        if self.selected_files and messagebox.askyesno("Clear All",
-                                                       "Remove all files from the list?"):
+        validation_pending = getattr(self, "_selection_token", None) is not None
+        if not self.selected_files and not validation_pending:
+            return
+        prompt = "Remove all files from the list?"
+        if validation_pending:
+            prompt = "Remove all files and cancel the pending input check?"
+        if messagebox.askyesno("Clear All", prompt):
+            self._selection_token = None
             self.selected_files = []
+            self._selected_file_identities = set()
+            self._displayed_files = []
             self.file_listbox.delete(0, tk.END)
             self.preview_canvas.delete('all')
             self.info_text.delete(1.0, tk.END)
@@ -426,13 +503,8 @@ class InputPanel:
         if not selection:
             return
         
-        # Get the display name and find matching filepath
-        display_name = self.file_listbox.get(selection[0])
-        filepath = None
-        for f in self.selected_files:
-            if os.path.basename(f) == display_name:
-                filepath = f
-                break
+        displayed_files = getattr(self, "_displayed_files", self.selected_files)
+        filepath = displayed_files[selection[0]] if selection[0] < len(displayed_files) else None
         
         if filepath:
             self._show_preview(filepath)
