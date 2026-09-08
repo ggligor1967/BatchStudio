@@ -130,7 +130,10 @@ def test_normal_bootstrap_loads_real_tkdnd_and_registers_both_targets(tmp_path, 
 @pytest.mark.parametrize("payload", ("", r"{C:\synthetic input\unfinished.png"))
 def test_empty_or_malformed_drop_resets_feedback_without_starting_admission(monkeypatch, payload):
     panel = InputPanel.__new__(InputPanel)
-    panel.frame = SimpleNamespace(tk=tk.Tcl().tk)
+    tcl_interpreter = Mock()
+    if payload:
+        tcl_interpreter.splitlist.side_effect = tk.TclError("injected malformed Tcl list")
+    panel.frame = SimpleNamespace(tk=tcl_interpreter)
     panel.main_window = SimpleNamespace(set_status=Mock())
     panel.file_listbox = Mock()
     panel.drop_label = Mock()
