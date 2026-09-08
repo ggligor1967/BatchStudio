@@ -184,6 +184,9 @@ print("Installed package imports, entrypoint, and optional DnD state verified.")
         probe_directory.mkdir()
         venv.EnvBuilder(with_pip=True, clear=True).create(environment_directory)
         python = virtual_environment_python(environment_directory)
+        install_requirement = (
+            f"batchstudio[dnd] @ {wheel.resolve().as_uri()}" if verify_dnd else str(wheel.resolve())
+        )
         subprocess.run(
             [
                 str(python),
@@ -191,7 +194,7 @@ print("Installed package imports, entrypoint, and optional DnD state verified.")
                 "pip",
                 "install",
                 "--disable-pip-version-check",
-                str(wheel.resolve()) + ("[dnd]" if verify_dnd else ""),
+                install_requirement,
             ],
             cwd=probe_directory,
             check=True,

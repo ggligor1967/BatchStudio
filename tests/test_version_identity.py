@@ -114,6 +114,37 @@ def test_package_verifier_rejects_expected_version_divergence():
     assert verifier.read_canonical_version() == CANONICAL
 
 
+def test_package_verifier_uses_dnd_extra_direct_reference(monkeypatch, tmp_path):
+    verifier = _load_script("product_d2_i1_verify_package", "scripts/verify_package.py")
+    wheel = tmp_path / "dist with spaces" / "batchstudio-1.1.1-py3-none-any.whl"
+    calls = []
+
+    class FakeEnvironmentBuilder:
+        def __init__(self, **_kwargs):
+            pass
+
+        def create(self, _environment_directory):
+            pass
+
+    def record_subprocess(arguments, **kwargs):
+        calls.append((arguments, kwargs))
+
+    monkeypatch.setattr(verifier.venv, "EnvBuilder", FakeEnvironmentBuilder)
+    monkeypatch.setattr(verifier.subprocess, "run", record_subprocess)
+
+    verifier.verify_isolated_wheel_install(wheel, CANONICAL, verify_dnd=True)
+
+    install_calls = [arguments for arguments, _kwargs in calls if "install" in arguments]
+    assert len(install_calls) == 1
+    assert install_calls[0][1:] == [
+        "-m",
+        "pip",
+        "install",
+        "--disable-pip-version-check",
+        f"batchstudio[dnd] @ {wheel.resolve().as_uri()}",
+    ]
+
+
 def test_package_workflow_expected_version_matches_canonical():
     workflow = _read_text(".github/workflows/package.yml")
     assert re.findall(r"--expected-version\s+(\S+)", workflow) == [CANONICAL]
