@@ -5,16 +5,8 @@ This is the only canonical location for unimplemented work. Items are candidates
 ## Canonical post-v1.1 execution order
 
 ```text
-PRODUCT-D2-I1 — Native Windows file drag-and-drop (issue #42)
+No implementation unit is currently admitted.
 ```
-
-PRODUCT-D2-I1 is the only admitted implementation unit. Its scope is native Windows
-Explorer file drop into the existing input selection, shared picker/Run admission,
-and a real existing-workflow Run. The single acceptance matrix is
-[DND-01–DND-12](TESTING.md#product-d2-i1-native-windows-file-drag-and-drop);
-issue [#42](https://github.com/ggligor1967/BatchStudio/issues/42) tracks the unit.
-Workflow-step reordering, OCR, planner, aggregation, and format-policy redesign are
-not admitted.
 
 The completed `BACKLOG-H0` governance gate, V11-08 behavioral Tkinter coverage, V12-01 final-name collision protection (issue #25), V12-02 aggregate semantic hardening (issue #27), V11-06 controlled real-OCR qualification (issue #10), V12-03 format-capability decision (issue #33), V12-04 page-aware PDF watermark placement (issue #35), and V12-PERF reproducible performance baseline (issue #37) are no longer active or schedulable roadmap items. A new candidate requires evidence, an approved tracking issue, and explicit admission; completion of V12-PERF is not authorization to optimize production code.
 
@@ -29,6 +21,31 @@ V12-03 (issue #33) selected `RESTRICT_TO_GENERIC_COMPATIBILITY` for XLS, XLSX, T
 V12-04 (issue #35) replaced the fixed Letter watermark overlay with a per-page CropBox and rotation contract. Its byte-deterministic F1-F11 fixtures cover A4, Letter, small and large custom pages, mixed page sizes, rotations 90/180/270, and non-default CropBoxes. Structural tests assert exact visible-coordinate placement, shrink-only containment, page geometry, source content, style, page count, and output ownership without raster comparison or dependency changes; see [Operations](OPERATIONS.md#pdf-watermark-geometry-contract).
 
 V12-PERF (issue #37) established deterministic F1-F5 fixtures and hashes, frozen B1-B5 workloads, exact environment and dependency identity, warm measurement and variance policies, fail-closed correctness guardrails, retained raw samples, two-session repeatability evidence, and noise-derived regression budgets. Both sessions passed at source commit `1bfae7b091f9ce8dca64219792c3438604ea2ad5`; bounded profiling established no actionable bottleneck, so no optimization unit is admitted. The unit changed no production runtime behavior; see [Reproducible performance baseline](PERFORMANCE_BASELINE.md).
+
+## PRODUCT-D2-I1 — Native Windows file drag-and-drop
+
+Implementation completed in [PR #43](https://github.com/ggligor1967/BatchStudio/pull/43)
+for issue [#42](https://github.com/ggligor1967/BatchStudio/issues/42).
+The final implementation candidate `c9245db82923d3d073f237bc3025a149b0827211`
+was integrated by protected squash as
+`e7072b3d7497abd14c3dc8634676c220a202ae8f`, preserving tree
+`37ae1c52928d1f964dd66ae68be8c37feac11f8b`.
+Post-merge CI, package validation, controlled real-OCR qualification, and CodeQL
+completed successfully on that exact `main` SHA; the first hosted Windows/Python
+3.10 CI attempt failed because the runner could not read its own Tcl `init.tcl`,
+and the isolated rerun on the unchanged SHA succeeded.
+
+Acceptance remains the single canonical
+[DND-01–DND-12 matrix](TESTING.md#product-d2-i1-native-windows-file-drag-and-drop).
+The qualified scope is native Windows Explorer input-file drop through the normal
+application bootstrap, shared picker/Run admission, COPY-only source safety,
+optional-dependency fallback, difficult Windows paths, and a real installed-wheel
+workflow Run. Workflow-step drag-and-drop remains unimplemented. Linux/macOS native
+DnD and untested standalone executables are not qualified by this unit.
+
+This unit is no longer scheduled for implementation. Integration does not authorize
+or imply a tag, release, version change, or package publication. No new
+implementation unit is admitted by this completion record.
 
 ## PRODUCT-D1-I1 — Multi-step dry-run planning
 
