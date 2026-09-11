@@ -1,7 +1,7 @@
 # Exact Python dependency identity used by the canonical V12-PERF v1 baseline.
 # Install the source checkout with:
 # python -m pip install -c benchmarks/constraints.txt -e .
-charset-normalizer==3.4.4
+charset-normalizer==3.5.1
 et_xmlfile==2.0.0
 numpy==2.3.5
 openpyxl==3.1.5
